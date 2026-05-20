@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-05-19)
 ## Current Position
 
 Phase: 1 of 4 (Foundation)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-05-19 — Roadmap created (4 phases, 31/31 requirements mapped)
+Plan: 1 of TBD in current phase
+Status: In progress
+Last activity: 2026-05-20 — Plan 01-01 complete (project scaffold + utils.py + 23 tests)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] ~10%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: —
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: 5 min
+- Total execution time: 0.08 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-foundation | 1 | 5 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: —
+- Last 5 plans: 01-01 (5 min)
 - Trend: —
 
 *Updated after each plan completion*
@@ -45,6 +45,9 @@ Recent decisions affecting current work:
 - Roadmap: 4 coarse phases derived from 31 v1 requirements in dependency order
 - Stack: pymodbus==3.13.0 pinned exactly (3.x API break from 2.x; unit= removed at 3.5)
 - Stack: tzdata mandatory on Windows; backports.zoneinfo for Python 3.8 compatibility
+- [01-01] SensorReading defined in utils.py (not sensor.py) to break circular import between sensor.py and csv_logger.py
+- [01-01] setup_logging takes log_dir param (not hardcoded) to allow tmp_path fixture isolation in tests
+- [01-01] StreamHandler test filter uses type() is exact match to exclude pytest LogCaptureHandler subclass
 
 ### Pending Todos
 
@@ -57,6 +60,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-19
-Stopped at: Roadmap and STATE.md written; REQUIREMENTS.md traceability updated; ready to plan Phase 1
+Last session: 2026-05-20
+Stopped at: Completed 01-01-PLAN.md — project scaffold, src/utils.py, 23 tests green
 Resume file: None

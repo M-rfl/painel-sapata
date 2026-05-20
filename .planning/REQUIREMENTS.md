@@ -28,7 +28,7 @@
 
 - [ ] **STORE-01**: Arquivo CSV criado no startup com nome baseado em data/hora (ex: `wtvb01_20260519_143201.csv`)
 - [ ] **STORE-02**: CSV contém colunas: timestamp, ax_g, ay_g, az_g, vx_mm_s, vy_mm_s, vz_mm_s, angle_x, angle_y, angle_z, temperature_c, dx_um, dy_um, dz_um, freq_x_hz, freq_y_hz, freq_z_hz, sensor_id
-- [ ] **STORE-03**: Timestamp em formato ISO 8601 com offset UTC explícito e microssegundos (ex: `2026-05-19T14:32:01.123456-03:00`) usando timezone America/Sao_Paulo
+- [x] **STORE-03**: Timestamp em formato ISO 8601 com offset UTC explícito e microssegundos (ex: `2026-05-19T14:32:01.123456-03:00`) usando timezone America/Sao_Paulo
 - [ ] **STORE-04**: Arquivo CSV é flushed após cada linha para evitar perda de dados em crash ou desligamento abrupto
 - [ ] **STORE-05**: Diretório de saída é criado automaticamente se não existir
 - [ ] **STORE-06**: Em falha de leitura parcial, linha é gravada com campos em branco para os canais falhos, preservando timestamp e dados parciais
@@ -47,16 +47,16 @@
 
 ### Utilities & Logging (UTIL)
 
-- [ ] **UTIL-01**: Log de erros e status gravado em arquivo rotativo (logging.handlers.RotatingFileHandler)
-- [ ] **UTIL-02**: Nível de log configurável; erros de comunicação Modbus sempre registrados com timestamp
-- [ ] **UTIL-03**: Módulos organizados em src/ (sensor.py, config_loader.py, csv_logger.py, utils.py) com src/__init__.py
+- [x] **UTIL-01**: Log de erros e status gravado em arquivo rotativo (logging.handlers.RotatingFileHandler)
+- [x] **UTIL-02**: Nível de log configurável; erros de comunicação Modbus sempre registrados com timestamp
+- [x] **UTIL-03**: Módulos organizados em src/ (sensor.py, config_loader.py, csv_logger.py, utils.py) com src/__init__.py
 
 ### Documentation (DOC)
 
 - [ ] **DOC-01**: README.md com instruções de instalação (pip install -r requirements.txt) para Windows, Linux e macOS
 - [ ] **DOC-02**: README.md inclui como identificar porta serial no Windows (Gerenciador de Dispositivos), Linux (ls /dev/ttyUSB*) e macOS (ls /dev/tty.usb*)
 - [ ] **DOC-03**: README.md inclui seção de troubleshooting com os 12 cenários especificados: sensor não responde, porta COM não encontrada, porta ocupada, erro de permissão, valores zerados, inversão A/B, baud rate incorreto, slave ID incorreto, driver USB–RS485 não instalado, diferença entre COM3/COM4, como testar com software WitMotion antes do Python
-- [ ] **DOC-04**: requirements.txt com versões pinadas (pymodbus==3.13.0, pyserial, PyYAML, tzdata, backports.zoneinfo)
+- [x] **DOC-04**: requirements.txt com versões pinadas (pymodbus==3.13.0, pyserial, PyYAML, tzdata, backports.zoneinfo)
 
 ## v2 Requirements
 
