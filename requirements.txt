@@ -1,0 +1,9 @@
+# Core runtime dependencies
+pymodbus==3.13.0          # pin exact — API changed within 3.x; unit= removed at 3.5
+pyserial>=3.5             # serial port enumeration and RTU transport
+PyYAML>=6.0               # config.yaml loading — use yaml.safe_load() always
+tzdata>=2024.1            # MANDATORY on Windows: ZoneInfo needs IANA database
+backports.zoneinfo>=0.2.1; python_version<"3.9"  # zoneinfo backport for Python 3.8
+
+# Development / test
+pytest>=7.0
