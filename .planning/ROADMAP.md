@@ -29,7 +29,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. `utils.to_signed16(32768)` returns -32768 and `utils.to_signed16(0)` returns 0 — unit tests pass for the five boundary values (0, 1, 32767, 32768, 65535)
   4. `datetime.now(ZoneInfo("America/Sao_Paulo")).isoformat()` runs without error on Windows (tzdata installed), producing an ISO 8601 string with `-03:00` offset
   5. `requirements.txt` contains pinned versions for pymodbus==3.13.0, pyserial, PyYAML, tzdata, and backports.zoneinfo; `pip install -r requirements.txt` completes cleanly
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Project scaffold, requirements.txt, src/utils.py (to_signed16, get_timestamp_br, setup_logging, SensorReading), test suite
+- [ ] 01-02-PLAN.md — src/config_loader.py (AppConfig, validation), config.yaml, list_serial_ports.py, test suite
 
 ### Phase 2: Sensor Layer
 **Goal**: The WitMotionSensor class connects to the physical sensor, reads all 19 registers in a single burst call, converts them to correct physical units, and handles transient errors gracefully — verified against live hardware.
@@ -71,7 +75,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 0/2 | Not started | - |
 | 2. Sensor Layer | 0/TBD | Not started | - |
 | 3. Acquisition Loop | 0/TBD | Not started | - |
 | 4. Documentation & Hardening | 0/TBD | Not started | - |
