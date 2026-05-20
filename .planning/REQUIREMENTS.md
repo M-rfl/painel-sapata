@@ -10,7 +10,7 @@
 - [ ] **CONN-01**: Sistema conecta ao sensor WitMotion WTVB01-485 via Modbus RTU na porta serial configurada (COM* no Windows, /dev/ttyUSB* no Linux, /dev/tty.usbserial* no macOS)
 - [ ] **CONN-02**: Sistema desconecta graciosamente ao pressionar Ctrl+C, fechando a conexão Modbus e o arquivo CSV corretamente
 - [ ] **CONN-03**: Em falhas de comunicação transientes, sistema registra o erro, exibe aviso no terminal e continua tentando — não encerra o processo
-- [ ] **CONN-04**: Script list_serial_ports.py lista todas as portas seriais disponíveis com nome do dispositivo (ex: "COM3 - USB-SERIAL CH340")
+- [x] **CONN-04**: Script list_serial_ports.py lista todas as portas seriais disponíveis com nome do dispositivo (ex: "COM3 - USB-SERIAL CH340")
 
 ### Data Acquisition (ACQ)
 
@@ -41,9 +41,9 @@
 
 ### Configuration (CFG)
 
-- [ ] **CFG-01**: Arquivo config.yaml com campos: serial_port, baudrate, slave_id, sample_interval_seconds, output_folder, csv_filename_prefix
-- [ ] **CFG-02**: Configuração validada no startup com mensagens de erro legíveis (ex: "serial_port não configurado — edite config.yaml")
-- [ ] **CFG-03**: Valores padrão para parâmetros opcionais: baudrate=9600, slave_id=80, sample_interval_seconds=0.1, output_folder="data"
+- [x] **CFG-01**: Arquivo config.yaml com campos: serial_port, baudrate, slave_id, sample_interval_seconds, output_folder, csv_filename_prefix
+- [x] **CFG-02**: Configuração validada no startup com mensagens de erro legíveis (ex: "serial_port não configurado — edite config.yaml")
+- [x] **CFG-03**: Valores padrão para parâmetros opcionais: baudrate=9600, slave_id=80, sample_interval_seconds=0.1, output_folder="data"
 
 ### Utilities & Logging (UTIL)
 
@@ -97,7 +97,7 @@
 | CONN-01 | Phase 2 | Pending |
 | CONN-02 | Phase 3 | Pending |
 | CONN-03 | Phase 2 | Pending |
-| CONN-04 | Phase 1 | Pending |
+| CONN-04 | Phase 1 | Complete |
 | ACQ-01 | Phase 2 | Pending |
 | ACQ-02 | Phase 2 | Pending |
 | ACQ-03 | Phase 2 | Pending |
@@ -116,9 +116,9 @@
 | DISP-01 | Phase 3 | Pending |
 | DISP-02 | Phase 3 | Pending |
 | DISP-03 | Phase 3 | Pending |
-| CFG-01 | Phase 1 | Pending |
-| CFG-02 | Phase 1 | Pending |
-| CFG-03 | Phase 1 | Pending |
+| CFG-01 | Phase 1 | Complete |
+| CFG-02 | Phase 1 | Complete |
+| CFG-03 | Phase 1 | Complete |
 | UTIL-01 | Phase 1 | Pending |
 | UTIL-02 | Phase 1 | Pending |
 | UTIL-03 | Phase 1 | Pending |

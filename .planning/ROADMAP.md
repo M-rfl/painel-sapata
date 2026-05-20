@@ -12,7 +12,7 @@ Four phases build bottom-up in dependency order: Foundation lays the project ske
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Project skeleton, config loader, timezone utility, list_serial_ports — no hardware needed
+- [x] **Phase 1: Foundation** - Project skeleton, config loader, timezone utility, list_serial_ports — no hardware needed (completed 2026-05-20)
 - [ ] **Phase 2: Sensor Layer** - WitMotionSensor class with Modbus RTU connection, burst register read, all channel conversions
 - [ ] **Phase 3: Acquisition Loop** - main.py wiring everything together: CSV logger, terminal display, graceful shutdown
 - [ ] **Phase 4: Documentation & Hardening** - Complete README.md with troubleshooting, pinned requirements.txt, code review
@@ -75,7 +75,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 1/2 | In progress | - |
+| 1. Foundation | 2/2 | Complete   | 2026-05-20 |
 | 2. Sensor Layer | 0/TBD | Not started | - |
 | 3. Acquisition Loop | 0/TBD | Not started | - |
 | 4. Documentation & Hardening | 0/TBD | Not started | - |
