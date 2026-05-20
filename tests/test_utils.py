@@ -101,8 +101,7 @@ def test_setup_logging_console_handler_level(tmp_path: Path) -> None:
 
     stream_handlers = [
         h for h in root.handlers
-        if isinstance(h, logging.StreamHandler)
-        and not hasattr(h, 'maxBytes')  # exclude RotatingFileHandler (subclass)
+        if type(h) is logging.StreamHandler  # exact type: excludes RotatingFileHandler and pytest's LogCaptureHandler
     ]
     assert stream_handlers, "No StreamHandler found on root logger"
     assert stream_handlers[0].level >= logging.WARNING
