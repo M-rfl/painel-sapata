@@ -8,7 +8,7 @@
 ### Connection (CONN)
 
 - [x] **CONN-01**: Sistema conecta ao sensor WitMotion WTVB01-485 via Modbus RTU na porta serial configurada (COM* no Windows, /dev/ttyUSB* no Linux, /dev/tty.usbserial* no macOS)
-- [ ] **CONN-02**: Sistema desconecta graciosamente ao pressionar Ctrl+C, fechando a conexão Modbus e o arquivo CSV corretamente
+- [x] **CONN-02**: Sistema desconecta graciosamente ao pressionar Ctrl+C, fechando a conexão Modbus e o arquivo CSV corretamente
 - [x] **CONN-03**: Em falhas de comunicação transientes, sistema registra o erro, exibe aviso no terminal e continua tentando — não encerra o processo
 - [x] **CONN-04**: Script list_serial_ports.py lista todas as portas seriais disponíveis com nome do dispositivo (ex: "COM3 - USB-SERIAL CH340")
 
@@ -26,18 +26,18 @@
 
 ### Data Storage (STORE)
 
-- [ ] **STORE-01**: Arquivo CSV criado no startup com nome baseado em data/hora (ex: `wtvb01_20260519_143201.csv`)
-- [ ] **STORE-02**: CSV contém colunas: timestamp, ax_g, ay_g, az_g, vx_mm_s, vy_mm_s, vz_mm_s, angle_x, angle_y, angle_z, temperature_c, dx_um, dy_um, dz_um, freq_x_hz, freq_y_hz, freq_z_hz, sensor_id
+- [x] **STORE-01**: Arquivo CSV criado no startup com nome baseado em data/hora (ex: `wtvb01_20260519_143201.csv`)
+- [x] **STORE-02**: CSV contém colunas: timestamp, ax_g, ay_g, az_g, vx_mm_s, vy_mm_s, vz_mm_s, angle_x, angle_y, angle_z, temperature_c, dx_um, dy_um, dz_um, freq_x_hz, freq_y_hz, freq_z_hz, sensor_id
 - [x] **STORE-03**: Timestamp em formato ISO 8601 com offset UTC explícito e microssegundos (ex: `2026-05-19T14:32:01.123456-03:00`) usando timezone America/Sao_Paulo
-- [ ] **STORE-04**: Arquivo CSV é flushed após cada linha para evitar perda de dados em crash ou desligamento abrupto
-- [ ] **STORE-05**: Diretório de saída é criado automaticamente se não existir
-- [ ] **STORE-06**: Em falha de leitura parcial, linha é gravada com campos em branco para os canais falhos, preservando timestamp e dados parciais
+- [x] **STORE-04**: Arquivo CSV é flushed após cada linha para evitar perda de dados em crash ou desligamento abrupto
+- [x] **STORE-05**: Diretório de saída é criado automaticamente se não existir
+- [x] **STORE-06**: Em falha de leitura parcial, linha é gravada com campos em branco para os canais falhos, preservando timestamp e dados parciais
 
 ### Display (DISP)
 
-- [ ] **DISP-01**: Leituras são exibidas no terminal em tempo real com timestamp e valores formatados por canal
-- [ ] **DISP-02**: Mensagens de status de conexão exibidas no terminal (conectado, erro, reconectando)
-- [ ] **DISP-03**: Ao encerrar com Ctrl+C, exibe resumo da sessão (total de leituras, arquivo CSV gerado, duração)
+- [x] **DISP-01**: Leituras são exibidas no terminal em tempo real com timestamp e valores formatados por canal
+- [x] **DISP-02**: Mensagens de status de conexão exibidas no terminal (conectado, erro, reconectando)
+- [x] **DISP-03**: Ao encerrar com Ctrl+C, exibe resumo da sessão (total de leituras, arquivo CSV gerado, duração)
 
 ### Configuration (CFG)
 
@@ -95,7 +95,7 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | CONN-01 | Phase 2 | Complete |
-| CONN-02 | Phase 3 | Pending |
+| CONN-02 | Phase 3 | Complete |
 | CONN-03 | Phase 2 | Complete |
 | CONN-04 | Phase 1 | Complete |
 | ACQ-01 | Phase 2 | Complete |
@@ -107,15 +107,15 @@
 | ACQ-07 | Phase 2 | Complete |
 | ACQ-08 | Phase 2 | Complete |
 | ACQ-09 | Phase 2 | Complete |
-| STORE-01 | Phase 3 | Pending |
-| STORE-02 | Phase 3 | Pending |
-| STORE-03 | Phase 1 | Pending |
-| STORE-04 | Phase 3 | Pending |
-| STORE-05 | Phase 3 | Pending |
-| STORE-06 | Phase 3 | Pending |
-| DISP-01 | Phase 3 | Pending |
-| DISP-02 | Phase 3 | Pending |
-| DISP-03 | Phase 3 | Pending |
+| STORE-01 | Phase 3 | Complete |
+| STORE-02 | Phase 3 | Complete |
+| STORE-03 | Phase 1 | Complete |
+| STORE-04 | Phase 3 | Complete |
+| STORE-05 | Phase 3 | Complete |
+| STORE-06 | Phase 3 | Complete |
+| DISP-01 | Phase 3 | Complete |
+| DISP-02 | Phase 3 | Complete |
+| DISP-03 | Phase 3 | Complete |
 | CFG-01 | Phase 1 | Complete |
 | CFG-02 | Phase 1 | Complete |
 | CFG-03 | Phase 1 | Complete |
