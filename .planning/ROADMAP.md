@@ -75,7 +75,11 @@ Plans:
   2. README.md covers serial port identification for all three OS (Windows Device Manager, `ls /dev/ttyUSB*` on Linux, `ls /dev/tty.usbserial*` on macOS) and `list_serial_ports.py` usage
   3. README.md troubleshooting section addresses all 12 specified scenarios: sensor not responding, COM port not found, port busy, permission error, zero values, A/B inversion, wrong baud rate, wrong slave ID, USB-RS485 driver not installed, COM3 vs COM4 confusion, how to test with WitMotion software before Python
   4. Code review confirms: `to_signed16()` applied before every scale factor; `buffering=1` (or explicit `flush()`) on every CSV write; no naive `datetime.now()` calls; `REG_COUNT = 0x46 - 0x34 + 1` defined as a named constant
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Wave 0 TDD: tests/test_docs.py (9 RED tests) — DOC-01, DOC-02, DOC-03 content checks + 4 hardening assertions
+- [ ] 04-02-PLAN.md — README.md (full user guide, 12 scenarios) + _REG_COUNT hardening fix in src/sensor.py
 
 ## Progress
 
@@ -87,4 +91,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Foundation | 2/2 | Complete   | 2026-05-20 |
 | 2. Sensor Layer | 0/2 | Not started | - |
 | 3. Acquisition Loop | 3/3 | Complete   | 2026-05-21 |
-| 4. Documentation & Hardening | 0/TBD | Not started | - |
+| 4. Documentation & Hardening | 0/2 | Not started | - |
