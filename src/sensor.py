@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 _REG_START = 0x34    # First Modbus holding register in burst (address 52)
-_REG_COUNT = 19      # Reads 0x34 through 0x46 inclusive
+_REG_COUNT = 0x46 - 0x34 + 1  # = 19; reads 0x34 through 0x46 inclusive
 _MAX_CONSECUTIVE_ERRORS = 5  # Log ERROR after this many consecutive read failures
 
 # Scale factors — confirmed from official WTVB01-485 Data Sheet & User Manual V251216
