@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Real-Time Visualization
-status: defining_requirements
-stopped_at: Milestone v1.1 started 2026-05-21 — defining requirements
+status: roadmap_ready
+stopped_at: Phase 5 — Visualizer Module (not started)
 last_updated: "2026-05-21T00:00:00.000Z"
-last_activity: 2026-05-21 — Milestone v1.1 started
+last_activity: 2026-05-21 — Roadmap created for v1.1
 progress:
-  total_phases: 0
+  total_phases: 2
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,16 +21,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-21 — v1.1 started)
 
 **Core value:** O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não funcionar, nada mais importa.
-**Current focus:** Defining requirements for v1.1 Real-Time Visualization
+**Current focus:** Phase 5 — Visualizer Module (ready to plan)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-05-21 — Milestone v1.1 started
+Phase: 5 — Visualizer Module
+Plan: Not started
+Status: Roadmap ready — awaiting plan-phase
+Last activity: 2026-05-21 — v1.1 roadmap created
 
 Progress: [░░░░░░░░░░] 0%
+
+```
+Phase 5: Visualizer Module    [░░░░░░░░░░] Not started
+Phase 6: main.py Integration  [░░░░░░░░░░] Not started
+```
 
 ## Accumulated Context
 
@@ -40,12 +45,17 @@ Decisions from v1.0 are logged in PROJECT.md Key Decisions table.
 
 v1.1 architectural decisions:
 - Matplotlib main thread / acquisition background thread (Windows Tk backend constraint)
-- deque maxlen=300 per channel (30s × 10Hz) for rolling buffer — thread-safe in CPython
-- --gui flag via argparse — default (no flag) stays exactly as v1.0
+- deque maxlen=300 per channel (30s × 10 Hz) for rolling buffer — thread-safe in CPython
+- `--gui` flag via argparse — default (no flag) stays exactly as v1.0
+- 13 live channels: ax_g, ay_g, az_g, vib_x/y/z_mm_s, disp_x/y/z_um, freq_x/y/z_hz, temp_c
+- angle_x/y/z always None (RESERVED registers 0x3D-0x3F) — NOT included in visualization
+- 5 subplots: Acceleration (g), Velocity (mm/s), Displacement (µm), Frequency (Hz), Temperature (°C)
+- Phase 5 designed to be testable standalone with mock data before touching main.py
 
 ### Pending Todos
 
-None — requirements being defined.
+- Plan Phase 5: Visualizer Module
+- Plan Phase 6: main.py Integration
 
 ### Blockers/Concerns (carried from v1.0)
 
@@ -55,5 +65,6 @@ None — requirements being defined.
 ## Session Continuity
 
 Last session: 2026-05-21
-Stopped at: Milestone v1.1 started — defining requirements
-Resume file: None
+Stopped at: v1.1 roadmap created — ready to plan Phase 5
+Resume file: .planning/ROADMAP.md
+Next action: `/gsd:plan-phase 5`
