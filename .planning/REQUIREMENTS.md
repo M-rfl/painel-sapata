@@ -53,9 +53,9 @@
 
 ### Documentation (DOC)
 
-- [ ] **DOC-01**: README.md com instruções de instalação (pip install -r requirements.txt) para Windows, Linux e macOS
-- [ ] **DOC-02**: README.md inclui como identificar porta serial no Windows (Gerenciador de Dispositivos), Linux (ls /dev/ttyUSB*) e macOS (ls /dev/tty.usb*)
-- [ ] **DOC-03**: README.md inclui seção de troubleshooting com os 12 cenários especificados: sensor não responde, porta COM não encontrada, porta ocupada, erro de permissão, valores zerados, inversão A/B, baud rate incorreto, slave ID incorreto, driver USB–RS485 não instalado, diferença entre COM3/COM4, como testar com software WitMotion antes do Python
+- [x] **DOC-01**: README.md com instruções de instalação (pip install -r requirements.txt) para Windows, Linux e macOS
+- [x] **DOC-02**: README.md inclui como identificar porta serial no Windows (Gerenciador de Dispositivos), Linux (ls /dev/ttyUSB*) e macOS (ls /dev/tty.usb*)
+- [x] **DOC-03**: README.md inclui seção de troubleshooting com os 12 cenários especificados: sensor não responde, porta COM não encontrada, porta ocupada, erro de permissão, valores zerados, inversão A/B, baud rate incorreto, slave ID incorreto, driver USB–RS485 não instalado, diferença entre COM3/COM4, como testar com software WitMotion antes do Python
 - [x] **DOC-04**: requirements.txt com versões pinadas (pymodbus==3.13.0, pyserial, PyYAML, tzdata, backports.zoneinfo)
 
 ## v2 Requirements
@@ -122,9 +122,9 @@
 | UTIL-01 | Phase 1 | Pending |
 | UTIL-02 | Phase 1 | Pending |
 | UTIL-03 | Phase 1 | Pending |
-| DOC-01 | Phase 4 | Pending |
-| DOC-02 | Phase 4 | Pending |
-| DOC-03 | Phase 4 | Pending |
+| DOC-01 | Phase 4 | Complete |
+| DOC-02 | Phase 4 | Complete |
+| DOC-03 | Phase 4 | Complete |
 | DOC-04 | Phase 1 | Pending |
 
 **Coverage:**
