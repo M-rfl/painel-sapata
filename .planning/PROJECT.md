@@ -10,6 +10,17 @@ Aplicação Python para aquisição contínua de dados do acelerômetro industri
 
 O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não funcionar, nada mais importa.
 
+## Current Milestone: v1.1 Real-Time Visualization
+
+**Goal:** Add a live matplotlib graph window (`--gui` flag) showing all sensor channels in real time while CSV logging continues unchanged.
+
+**Target features:**
+- `python main.py --gui` opens a live Matplotlib animation window
+- 5 subplots: acceleration (X/Y/Z), velocity (X/Y/Z), displacement (X/Y/Z), frequency (X/Y/Z), temperature
+- 30-second scrolling history (300 points at 10 Hz)
+- Acquisition runs in background thread; Matplotlib on main thread via thread-safe deque
+- CSV logging runs simultaneously — visualization is a pure view layer
+
 ## Requirements
 
 ### Validated (v1.0)
@@ -41,7 +52,15 @@ O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não f
 - ✓ README.md completo: instalação Windows/Linux/macOS, identificação de porta serial nos 3 OS, 12 cenários de troubleshooting — v1.0
 - ✓ requirements.txt com versões pinadas (pymodbus==3.13.0) — v1.0
 
-### Active (next milestone)
+### Active (v1.1)
+
+- [ ] `src/visualizer.py` — PlotManager class with FuncAnimation, 5 subplots, thread-safe deque buffer
+- [ ] `main.py` — `--gui` argparse flag, background acquisition thread, graceful Ctrl+C shutdown with GUI open
+- [ ] 30-second rolling window (deque maxlen=300 at 10 Hz) per channel
+- [ ] All 13 live channels displayed: ax/ay/az (g), vib X/Y/Z (mm/s), disp X/Y/Z (µm), freq X/Y/Z (Hz), temp (°C)
+- [ ] CSV logging unchanged when --gui is used
+
+### Deferred from v1.0
 
 - [ ] Validar escala de velocidade de vibração em campo com equipamento de referência (SCALE_VEL = 1/100 confirmar mm/s)
 - [ ] angle_x/y/z sempre None (registradores 0x3D-0x3F RESERVED) — investigar se firmware futuro disponibilizará estes registradores
@@ -85,6 +104,7 @@ O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não f
 - **Python Version**: 3.8+ para máxima compatibilidade com Windows corporativo
 - **Platform**: Windows priority (COM ports), Linux/macOS secondary
 - **Extensibility**: Arquitetura modular para adicionar exportadores (MQTT, InfluxDB, REST) sem reescrever sensor.py
+- **GUI Threading**: Matplotlib deve rodar na main thread (Windows Tk backend constraint) — acquisition em background thread
 - **Simplicity**: Executável com `python main.py` sem configuração adicional além do config.yaml
 
 ## Key Decisions
@@ -105,4 +125,4 @@ O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não f
 | KeyboardInterrupt no nível mais externo | Session summary sempre executa antes do finally | ✓ Good — zero dados perdidos em Ctrl+C |
 
 ---
-*Last updated: 2026-05-21 after v1.0 MVP milestone*
+*Last updated: 2026-05-21 — Milestone v1.1 Real-Time Visualization started*
