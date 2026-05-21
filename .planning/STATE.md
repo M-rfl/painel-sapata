@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-01-PLAN.md — 13 failing test stubs, RED state confirmed
-last_updated: "2026-05-21T14:57:05.205Z"
+stopped_at: Completed 03-02-PLAN.md — CSVLogger, 8 tests green, 50 total
+last_updated: "2026-05-21T14:58:31.263Z"
 last_activity: 2026-05-20 — Plan 01-01 complete (project scaffold + utils.py + 23 tests)
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 7
-  completed_plans: 4
+  completed_plans: 5
   percent: 100
 ---
 
@@ -53,6 +53,7 @@ Progress: [██████████] 100%
 | Phase 01-foundation P02 | 3 | 2 tasks | 5 files |
 | Phase 02-sensor-layer P01 | 3 min | 2 tasks | 2 files |
 | Phase 03-acquisition-loop P01 | 2 min | 2 tasks | 2 files |
+| Phase 03-acquisition-loop P02 | 8 min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,9 @@ Recent decisions affecting current work:
 - [Phase 02-sensor-layer]: sensor_id read via getattr(config, 'sensor_id', 'wtvb01') — AppConfig unchanged, no Phase 1 re-testing needed
 - [Phase 03-acquisition-loop]: test_failed_read_not_written renamed to test_rows_written_counter — simpler to test CSVLogger counter attribute directly without depending on main.py in csv_logger test file
 - [Phase 03-acquisition-loop]: patch target strings use 'main.WitMotionSensor', 'main.CSVLogger', etc. so patches apply in main's namespace when main.py is created in Plan 03
+- [Phase 03-02]: None fields explicitly converted to empty string via _cell() helper (STORE-06 compliance)
+- [Phase 03-02]: sensor_id last in CSV (column 18) using explicit named access; not dataclasses.astuple() which gives wrong column order
+- [Phase 03-02]: open(newline='') mandatory on Windows: prevents CRCRLF double-line-ending corruption in CSV
 
 ### Pending Todos
 
@@ -88,6 +92,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-21T14:57:05.199Z
-Stopped at: Completed 03-01-PLAN.md — 13 failing test stubs, RED state confirmed
+Last session: 2026-05-21T14:58:31.258Z
+Stopped at: Completed 03-02-PLAN.md — CSVLogger, 8 tests green, 50 total
 Resume file: None

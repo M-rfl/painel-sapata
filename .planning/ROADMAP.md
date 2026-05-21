@@ -86,5 +86,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-05-20 |
 | 2. Sensor Layer | 0/2 | Not started | - |
-| 3. Acquisition Loop | 0/3 | Not started | - |
+| 3. Acquisition Loop | 2/3 | In Progress|  |
 | 4. Documentation & Hardening | 0/TBD | Not started | - |
