@@ -35,17 +35,18 @@ _REG_START = 0x34    # First Modbus holding register in burst (address 52)
 _REG_COUNT = 19      # Reads 0x34 through 0x46 inclusive
 _MAX_CONSECUTIVE_ERRORS = 5  # Log ERROR after this many consecutive read failures
 
-# Scale factors — apply to_signed16() BEFORE each multiplication
-# [HIGH confidence] ACQ-02: confirmed from REQUIREMENTS.md
-SCALE_ACC   = 1.0 / 32768 * 16   # signed_16 / 32768 * 16 -> g
-
-# [UNVERIFIED] All below require confirmation from WTVB01-485 protocol PDF
-# Set to None so those SensorReading fields remain None until datasheet is obtained.
-SCALE_VEL   = None    # TODO: confirm from datasheet -> mm/s
-SCALE_ANGLE = None    # TODO: confirm from datasheet -> degrees
-SCALE_TEMP  = None    # TODO: confirm from datasheet -> °C (WitMotion convention: /100)
-SCALE_DISP  = None    # TODO: confirm from datasheet -> µm
-SCALE_FREQ  = None    # TODO: confirm from datasheet -> Hz
+# Scale factors — confirmed from official WTVB01-485 Data Sheet & User Manual V251216
+# and cross-verified against the official vb02_python_sdk device_model.py.
+#
+# IMPORTANT: velocity, displacement, and frequency are unsigned magnitudes — do NOT
+# apply to_signed16() to those channels. Only acceleration and temperature are signed.
+SCALE_ACC  = 1.0 / 32768 * 16   # to_signed16(raw) / 32768 * 16 → g   (manual §6.4.5)
+SCALE_VEL  = 1.0 / 100          # raw / 100 → mm/s, unsigned           (SDK confirmed)
+SCALE_TEMP = 1.0 / 100          # to_signed16(raw) / 100 → °C, signed  (manual §6.4.8)
+SCALE_DISP = 1.0                 # raw → µm directly, unsigned          (manual §6.4.9)
+SCALE_FREQ = 1.0 / 10           # raw / 10 → Hz, unsigned              (manual §6.4.10)
+# Registers 0x3D-0x3F are RESERVED in the WTVB01-485 (manual §6.4.7).
+# angle_x / angle_y / angle_z are always None for this sensor.
 
 
 # ---------------------------------------------------------------------------
@@ -123,10 +124,10 @@ class WitMotionSensor:
     def read_all_data(self) -> Optional[SensorReading]:
         """Read 19 holding registers in a single burst and return a SensorReading.
 
-        Reads registers 0x34–0x46 in one Modbus call (ACQ-01). Converts raw
-        unsigned 16-bit values to physical units using to_signed16() before every
-        multiplication (ACQ-08). Scale constants for non-acceleration channels are
-        currently None (awaiting datasheet); those SensorReading fields will be None.
+        Reads registers 0x34–0x46 in one Modbus call (ACQ-01). Scale factors are
+        confirmed from the official WTVB01-485 manual V251216. Acceleration and
+        temperature use to_signed16(); velocity, displacement, and frequency are
+        unsigned. Registers 0x3D-0x3F are reserved — angle_x/y/z are always None.
 
         Returns:
             SensorReading on success, None on any communication error.
@@ -181,17 +182,21 @@ class WitMotionSensor:
     # ------------------------------------------------------------------
 
     def _parse_registers(self, regs: list) -> SensorReading:
-        """Convert 19 raw unsigned register values to a SensorReading with physical units.
+        """Convert 19 raw register values to a SensorReading with physical units.
 
-        to_signed16() is applied to EVERY register before multiplication (ACQ-08).
-        Non-acceleration scale constants are None until the WTVB01-485 datasheet
-        is obtained; the corresponding fields are set to None.
+        Conversion rules (from official manual V251216 + vb02_python_sdk):
+        - Acceleration (signed):   to_signed16(raw) * SCALE_ACC
+        - Velocity (unsigned):     raw * SCALE_VEL       — DO NOT to_signed16()
+        - Angle (0x3D-0x3F):       None — registers are RESERVED (manual §6.4.7)
+        - Temperature (signed):    to_signed16(raw) * SCALE_TEMP
+        - Displacement (unsigned): raw * SCALE_DISP      — DO NOT to_signed16()
+        - Frequency (unsigned):    raw * SCALE_FREQ      — DO NOT to_signed16()
 
         Register index layout (0-based from address 0x34):
         # [0-2]   0x34-0x36  Acceleration X/Y/Z     -> ax_g, ay_g, az_g
         # [3-5]   0x37-0x39  Angular velocity        -> SKIPPED (not in SensorReading)
         # [6-8]   0x3A-0x3C  Vibration velocity      -> vx_mm_s, vy_mm_s, vz_mm_s
-        # [9-11]  0x3D-0x3F  Angle X/Y/Z            -> angle_x, angle_y, angle_z
+        # [9-11]  0x3D-0x3F  RESERVED                -> angle_x, angle_y, angle_z = None
         # [12]    0x40        Temperature             -> temperature_c
         # [13-15] 0x41-0x43  Displacement X/Y/Z      -> dx_um, dy_um, dz_um
         # [16-18] 0x44-0x46  Frequency X/Y/Z         -> freq_x_hz, freq_y_hz, freq_z_hz
@@ -200,31 +205,31 @@ class WitMotionSensor:
             timestamp=get_timestamp_br(),
             sensor_id=getattr(self._config, "sensor_id", "wtvb01"),
 
-            # Acceleration — HIGH confidence (REQUIREMENTS.md ACQ-02)
+            # Acceleration — signed16 (ACQ-02, manual §6.4.5)
             ax_g=to_signed16(regs[0]) * SCALE_ACC,   # 0x34
             ay_g=to_signed16(regs[1]) * SCALE_ACC,   # 0x35
             az_g=to_signed16(regs[2]) * SCALE_ACC,   # 0x36
 
-            # Vibration velocity — UNVERIFIED scale (ACQ-03)
-            vx_mm_s=to_signed16(regs[6])  * SCALE_VEL   if SCALE_VEL   else None,  # 0x3A
-            vy_mm_s=to_signed16(regs[7])  * SCALE_VEL   if SCALE_VEL   else None,  # 0x3B
-            vz_mm_s=to_signed16(regs[8])  * SCALE_VEL   if SCALE_VEL   else None,  # 0x3C
+            # Vibration velocity — unsigned magnitude, /100 → mm/s (ACQ-03, manual §6.4.6)
+            vx_mm_s=regs[6]  * SCALE_VEL,   # 0x3A
+            vy_mm_s=regs[7]  * SCALE_VEL,   # 0x3B
+            vz_mm_s=regs[8]  * SCALE_VEL,   # 0x3C
 
-            # Angle — UNVERIFIED scale (ACQ-04)
-            angle_x=to_signed16(regs[9])  * SCALE_ANGLE if SCALE_ANGLE else None,  # 0x3D
-            angle_y=to_signed16(regs[10]) * SCALE_ANGLE if SCALE_ANGLE else None,  # 0x3E
-            angle_z=to_signed16(regs[11]) * SCALE_ANGLE if SCALE_ANGLE else None,  # 0x3F
+            # Registers 0x3D-0x3F are RESERVED in WTVB01-485 (manual §6.4.7)
+            angle_x=None,   # 0x3D — reserved
+            angle_y=None,   # 0x3E — reserved
+            angle_z=None,   # 0x3F — reserved
 
-            # Temperature — UNVERIFIED scale (ACQ-05; WitMotion convention: /100)
-            temperature_c=to_signed16(regs[12]) * SCALE_TEMP if SCALE_TEMP else None,  # 0x40
+            # Temperature — signed16 /100 → °C (ACQ-05, manual §6.4.8)
+            temperature_c=to_signed16(regs[12]) * SCALE_TEMP,   # 0x40
 
-            # Displacement — UNVERIFIED scale (ACQ-06)
-            dx_um=to_signed16(regs[13]) * SCALE_DISP  if SCALE_DISP  else None,  # 0x41
-            dy_um=to_signed16(regs[14]) * SCALE_DISP  if SCALE_DISP  else None,  # 0x42
-            dz_um=to_signed16(regs[15]) * SCALE_DISP  if SCALE_DISP  else None,  # 0x43
+            # Displacement — unsigned, raw value IS µm (ACQ-06, manual §6.4.9)
+            dx_um=regs[13] * SCALE_DISP,   # 0x41
+            dy_um=regs[14] * SCALE_DISP,   # 0x42
+            dz_um=regs[15] * SCALE_DISP,   # 0x43
 
-            # Frequency — UNVERIFIED scale (ACQ-07)
-            freq_x_hz=to_signed16(regs[16]) * SCALE_FREQ if SCALE_FREQ else None,  # 0x44
-            freq_y_hz=to_signed16(regs[17]) * SCALE_FREQ if SCALE_FREQ else None,  # 0x45
-            freq_z_hz=to_signed16(regs[18]) * SCALE_FREQ if SCALE_FREQ else None,  # 0x46
+            # Frequency — unsigned, /10 → Hz (ACQ-07, manual §6.4.10)
+            freq_x_hz=regs[16] * SCALE_FREQ,   # 0x44
+            freq_y_hz=regs[17] * SCALE_FREQ,   # 0x45
+            freq_z_hz=regs[18] * SCALE_FREQ,   # 0x46
         )
