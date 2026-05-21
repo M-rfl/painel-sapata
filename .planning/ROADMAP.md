@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation** - Project skeleton, config loader, timezone utility, list_serial_ports — no hardware needed (completed 2026-05-20)
 - [ ] **Phase 2: Sensor Layer** - WitMotionSensor class with Modbus RTU connection, burst register read, all channel conversions
 - [x] **Phase 3: Acquisition Loop** - main.py wiring everything together: CSV logger, terminal display, graceful shutdown (completed 2026-05-21)
-- [ ] **Phase 4: Documentation & Hardening** - Complete README.md with troubleshooting, pinned requirements.txt, code review
+- [x] **Phase 4: Documentation & Hardening** - Complete README.md with troubleshooting, pinned requirements.txt, code review (completed 2026-05-21)
 
 ## Phase Details
 
@@ -91,4 +91,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Foundation | 2/2 | Complete   | 2026-05-20 |
 | 2. Sensor Layer | 0/2 | Not started | - |
 | 3. Acquisition Loop | 3/3 | Complete   | 2026-05-21 |
-| 4. Documentation & Hardening | 1/2 | In Progress|  |
+| 4. Documentation & Hardening | 2/2 | Complete   | 2026-05-21 |

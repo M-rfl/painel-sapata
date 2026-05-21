@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-01-PLAN.md — 9 RED tests for DOC-01/02/03 in tests/test_docs.py
-last_updated: "2026-05-21T20:29:23.983Z"
+stopped_at: Completed 04-02-PLAN.md — README.md written + sensor.py _REG_COUNT hardened; 64/64 tests GREEN
+last_updated: "2026-05-21T20:33:55.073Z"
 last_activity: 2026-05-20 — Plan 01-01 complete (project scaffold + utils.py + 23 tests)
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 9
-  completed_plans: 7
+  completed_plans: 8
   percent: 100
 ---
 
@@ -56,6 +56,7 @@ Progress: [██████████] 100%
 | Phase 03-acquisition-loop P02 | 8 min | 1 tasks | 1 files |
 | Phase 03-acquisition-loop P03 | 25 min | 2 tasks | 1 files |
 | Phase 04-documentation-hardening P01 | 5 | 1 tasks | 1 files |
+| Phase 04-documentation-hardening P02 | 2 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,9 @@ Recent decisions affecting current work:
 - [Phase 04-01]: test_readme_exists asserts directly (no skip) — must FAIL visibly, not SKIP, so README absence is unmissable
 - [Phase 04-01]: _read_readme() helper uses pytest.skip() for content tests 2-5 — avoids cascade failures that hide the real RED signal
 - [Phase 04-01]: Tests 7-9 PASS in RED phase — pre-existing codebase compliance is correct TDD behaviour, not an error
+- [Phase 04-02]: _REG_COUNT expressed as 0x46 - 0x34 + 1 to make register range self-documenting
+- [Phase 04-02]: slave_id documented as decimal 80 (not hex 0x50) with explicit YAML note in README
+- [Phase 04-02]: angle_x/y/z documented as always empty (RESERVED registers 0x3D-0x3F) — expected behaviour
 
 ### Pending Todos
 
@@ -102,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-21T20:29:23.976Z
-Stopped at: Completed 04-01-PLAN.md — 9 RED tests for DOC-01/02/03 in tests/test_docs.py
+Last session: 2026-05-21T20:33:55.067Z
+Stopped at: Completed 04-02-PLAN.md — README.md written + sensor.py _REG_COUNT hardened; 64/64 tests GREEN
 Resume file: None
