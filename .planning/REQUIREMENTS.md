@@ -7,22 +7,22 @@
 
 ### Connection (CONN)
 
-- [ ] **CONN-01**: Sistema conecta ao sensor WitMotion WTVB01-485 via Modbus RTU na porta serial configurada (COM* no Windows, /dev/ttyUSB* no Linux, /dev/tty.usbserial* no macOS)
+- [x] **CONN-01**: Sistema conecta ao sensor WitMotion WTVB01-485 via Modbus RTU na porta serial configurada (COM* no Windows, /dev/ttyUSB* no Linux, /dev/tty.usbserial* no macOS)
 - [ ] **CONN-02**: Sistema desconecta graciosamente ao pressionar Ctrl+C, fechando a conexão Modbus e o arquivo CSV corretamente
-- [ ] **CONN-03**: Em falhas de comunicação transientes, sistema registra o erro, exibe aviso no terminal e continua tentando — não encerra o processo
+- [x] **CONN-03**: Em falhas de comunicação transientes, sistema registra o erro, exibe aviso no terminal e continua tentando — não encerra o processo
 - [x] **CONN-04**: Script list_serial_ports.py lista todas as portas seriais disponíveis com nome do dispositivo (ex: "COM3 - USB-SERIAL CH340")
 
 ### Data Acquisition (ACQ)
 
-- [ ] **ACQ-01**: Sistema lê todos os 19 registradores Modbus (0x34 a 0x46) em uma única chamada burst por ciclo de polling
-- [ ] **ACQ-02**: Converte aceleração X/Y/Z (registradores 0x34–0x36): `signed_16 / 32768 * 16` → unidade g
-- [ ] **ACQ-03**: Lê velocidade de vibração X/Y/Z (registradores 0x3A–0x3C) → unidade mm/s
-- [ ] **ACQ-04**: Lê ângulo de vibração X/Y/Z (registradores 0x3D–0x3F)
-- [ ] **ACQ-05**: Lê temperatura (registrador 0x40) → unidade °C
-- [ ] **ACQ-06**: Lê deslocamento de vibração X/Y/Z (registradores 0x41–0x43) → unidade µm
-- [ ] **ACQ-07**: Lê frequência de vibração X/Y/Z (registradores 0x44–0x46) → unidade Hz
-- [ ] **ACQ-08**: Converte corretamente valores signed 16-bit (valores negativos não devem aparecer como ~32g)
-- [ ] **ACQ-09**: Classe WitMotionSensor expõe método read_all_data() retornando dataclass SensorReading com todas as variáveis em unidades físicas
+- [x] **ACQ-01**: Sistema lê todos os 19 registradores Modbus (0x34 a 0x46) em uma única chamada burst por ciclo de polling
+- [x] **ACQ-02**: Converte aceleração X/Y/Z (registradores 0x34–0x36): `signed_16 / 32768 * 16` → unidade g
+- [x] **ACQ-03**: Lê velocidade de vibração X/Y/Z (registradores 0x3A–0x3C) → unidade mm/s
+- [x] **ACQ-04**: Lê ângulo de vibração X/Y/Z (registradores 0x3D–0x3F)
+- [x] **ACQ-05**: Lê temperatura (registrador 0x40) → unidade °C
+- [x] **ACQ-06**: Lê deslocamento de vibração X/Y/Z (registradores 0x41–0x43) → unidade µm
+- [x] **ACQ-07**: Lê frequência de vibração X/Y/Z (registradores 0x44–0x46) → unidade Hz
+- [x] **ACQ-08**: Converte corretamente valores signed 16-bit (valores negativos não devem aparecer como ~32g)
+- [x] **ACQ-09**: Classe WitMotionSensor expõe método read_all_data() retornando dataclass SensorReading com todas as variáveis em unidades físicas
 
 ### Data Storage (STORE)
 
@@ -94,19 +94,19 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CONN-01 | Phase 2 | Pending |
+| CONN-01 | Phase 2 | Complete |
 | CONN-02 | Phase 3 | Pending |
-| CONN-03 | Phase 2 | Pending |
+| CONN-03 | Phase 2 | Complete |
 | CONN-04 | Phase 1 | Complete |
-| ACQ-01 | Phase 2 | Pending |
-| ACQ-02 | Phase 2 | Pending |
-| ACQ-03 | Phase 2 | Pending |
-| ACQ-04 | Phase 2 | Pending |
-| ACQ-05 | Phase 2 | Pending |
-| ACQ-06 | Phase 2 | Pending |
-| ACQ-07 | Phase 2 | Pending |
-| ACQ-08 | Phase 2 | Pending |
-| ACQ-09 | Phase 2 | Pending |
+| ACQ-01 | Phase 2 | Complete |
+| ACQ-02 | Phase 2 | Complete |
+| ACQ-03 | Phase 2 | Complete |
+| ACQ-04 | Phase 2 | Complete |
+| ACQ-05 | Phase 2 | Complete |
+| ACQ-06 | Phase 2 | Complete |
+| ACQ-07 | Phase 2 | Complete |
+| ACQ-08 | Phase 2 | Complete |
+| ACQ-09 | Phase 2 | Complete |
 | STORE-01 | Phase 3 | Pending |
 | STORE-02 | Phase 3 | Pending |
 | STORE-03 | Phase 1 | Pending |

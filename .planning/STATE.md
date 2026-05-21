@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-02-PLAN.md — config_loader.py, config.yaml, list_serial_ports.py, 31 tests green
-last_updated: "2026-05-20T11:52:38.815Z"
+stopped_at: Completed 02-01-PLAN.md — WitMotionSensor, 11 tests green, 42 total
+last_updated: "2026-05-21T13:06:35.350Z"
 last_activity: 2026-05-20 — Plan 01-01 complete (project scaffold + utils.py + 23 tests)
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 4
+  completed_plans: 3
   percent: 100
 ---
 
@@ -51,6 +51,7 @@ Progress: [██████████] 100%
 
 *Updated after each plan completion*
 | Phase 01-foundation P02 | 3 | 2 tasks | 5 files |
+| Phase 02-sensor-layer P01 | 3 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,9 @@ Recent decisions affecting current work:
 - [Phase 01-02]: AppConfig field names match DEFAULTS keys exactly so AppConfig(**merged) works without remapping
 - [Phase 01-02]: load_config(path) accepts Path arg for testability — no hardcoded cwd, tests use tmp_path
 - [Phase 01-02]: list_serial_ports.py has no src/ imports — safe to run before all dependencies are installed
+- [Phase 02-sensor-layer]: Use device_id= (pymodbus 3.13.0 API) — not slave= (removed 3.10) or unit= (removed 3.5)
+- [Phase 02-sensor-layer]: Non-acceleration SCALE_* constants set to None pending WTVB01-485 datasheet; fields remain None rather than wrong values
+- [Phase 02-sensor-layer]: sensor_id read via getattr(config, 'sensor_id', 'wtvb01') — AppConfig unchanged, no Phase 1 re-testing needed
 
 ### Pending Todos
 
@@ -81,6 +85,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-20T11:47:41.298Z
-Stopped at: Completed 01-02-PLAN.md — config_loader.py, config.yaml, list_serial_ports.py, 31 tests green
+Last session: 2026-05-21T13:06:35.345Z
+Stopped at: Completed 02-01-PLAN.md — WitMotionSensor, 11 tests green, 42 total
 Resume file: None
