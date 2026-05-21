@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: milestone
-status: executing
-stopped_at: Completed 04-02-PLAN.md — README.md written + sensor.py _REG_COUNT hardened; 64/64 tests GREEN
-last_updated: "2026-05-21T20:37:39.103Z"
-last_activity: 2026-05-20 — Plan 01-01 complete (project scaffold + utils.py + 23 tests)
+milestone_name: MVP
+status: shipped
+stopped_at: v1.0 MVP milestone archived 2026-05-21 — 64/64 tests GREEN, git tag v1.0
+last_updated: "2026-05-21T22:30:00.000Z"
+last_activity: 2026-05-21 — v1.0 MVP shipped — 4 phases, 8 plans, 2064 LOC Python
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 9
   completed_plans: 8
   percent: 100
@@ -18,17 +18,16 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-19)
+See: .planning/PROJECT.md (updated 2026-05-21 after v1.0)
 
 **Core value:** O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não funcionar, nada mais importa.
-**Current focus:** Phase 1 — Foundation
+**Current focus:** Planning next milestone — run `/gsd:new-milestone` to start v1.1
 
 ## Current Position
 
-Phase: 1 of 4 (Foundation)
-Plan: 1 of TBD in current phase
-Status: In progress
-Last activity: 2026-05-20 — Plan 01-01 complete (project scaffold + utils.py + 23 tests)
+Phase: v1.0 SHIPPED
+Status: Milestone complete — archived to .planning/milestones/
+Last activity: 2026-05-21 — v1.0 MVP shipped — 4 phases, 8 plans, 64 tests GREEN, hardware verified COM10
 
 Progress: [██████████] 100%
 
@@ -97,15 +96,15 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+None — v1.0 milestone shipped. Start v1.1 with `/gsd:new-milestone`.
 
-### Blockers/Concerns
+### Blockers/Concerns (carried to v1.1)
 
-- [Phase 2]: Scale factors for non-acceleration channels (velocity, angle, displacement, frequency) are UNKNOWN — must obtain WitMotion WTVB01-485 datasheet before finalising register conversions in sensor.py
-- [Phase 2]: Verify `from pymodbus.framer import FramerType` import path in pymodbus 3.13.0 on first hardware session
+- Validate SCALE_VEL = 1/100 (mm/s) in field with reference instrument — scale confirmed from SDK but not yet measured against known vibration
+- test_main.py uses `mock_csv.file_path` but main.py reads `csv_logger.path` — DISP-03 CSV path not asserted by automated test
 
 ## Session Continuity
 
-Last session: 2026-05-21T20:33:55.067Z
-Stopped at: Completed 04-02-PLAN.md — README.md written + sensor.py _REG_COUNT hardened; 64/64 tests GREEN
+Last session: 2026-05-21T22:30:00.000Z
+Stopped at: v1.0 MVP milestone archived — git tag v1.0 created
 Resume file: None
