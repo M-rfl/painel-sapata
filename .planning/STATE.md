@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-02-PLAN.md — CSVLogger, 8 tests green, 50 total
-last_updated: "2026-05-21T14:58:31.263Z"
+stopped_at: Completed 03-03-PLAN.md — main.py acquisition loop, 55 tests green, hardware-verified COM10
+last_updated: "2026-05-21T18:22:07.739Z"
 last_activity: 2026-05-20 — Plan 01-01 complete (project scaffold + utils.py + 23 tests)
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 6
   percent: 100
 ---
 
@@ -54,6 +54,7 @@ Progress: [██████████] 100%
 | Phase 02-sensor-layer P01 | 3 min | 2 tasks | 2 files |
 | Phase 03-acquisition-loop P01 | 2 min | 2 tasks | 2 files |
 | Phase 03-acquisition-loop P02 | 8 min | 1 tasks | 1 files |
+| Phase 03-acquisition-loop P03 | 25 min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,11 @@ Recent decisions affecting current work:
 - [Phase 03-02]: sensor_id last in CSV (column 18) using explicit named access; not dataclasses.astuple() which gives wrong column order
 - [Phase 03-02]: open(newline='') mandatory on Windows: prevents CRCRLF double-line-ending corruption in CSV
 
+  - [Phase 03-03]: KeyboardInterrupt at outermost try level (outside while loop) — session summary always executes before finally
+  - [Phase 03-03]: sys.exit(1) for failed connect only — no resources open at that point, bypassing finally is safe
+  - [Phase 03-03]: time.monotonic() for elapsed duration — immune to NTP/DST clock adjustments
+  - [Phase 03-03]: Import-level patch targets: 'from src.sensor import WitMotionSensor' keeps patch target as 'main.WitMotionSensor'
+
 ### Pending Todos
 
 None yet.
@@ -92,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-21T14:58:31.258Z
-Stopped at: Completed 03-02-PLAN.md — CSVLogger, 8 tests green, 50 total
+Last session: 2026-05-21T15:30:00.000Z
+Stopped at: Completed 03-03-PLAN.md — main.py acquisition loop, 55 tests green, hardware-verified COM10
 Resume file: None

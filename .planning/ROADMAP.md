@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Project skeleton, config loader, timezone utility, list_serial_ports — no hardware needed (completed 2026-05-20)
 - [ ] **Phase 2: Sensor Layer** - WitMotionSensor class with Modbus RTU connection, burst register read, all channel conversions
-- [ ] **Phase 3: Acquisition Loop** - main.py wiring everything together: CSV logger, terminal display, graceful shutdown
+- [x] **Phase 3: Acquisition Loop** - main.py wiring everything together: CSV logger, terminal display, graceful shutdown (completed 2026-05-21)
 - [ ] **Phase 4: Documentation & Hardening** - Complete README.md with troubleshooting, pinned requirements.txt, code review
 
 ## Phase Details
@@ -62,9 +62,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Wave 0: test stubs tests/test_csv_logger.py (8 tests RED) + tests/test_main.py (5 tests RED)
-- [ ] 03-02-PLAN.md — CSVLogger implementation: src/csv_logger.py (STORE-01..06 GREEN)
-- [ ] 03-03-PLAN.md — main.py acquisition loop (CONN-02, DISP-01..03 GREEN) + hardware checkpoint
+- [x] 03-01-PLAN.md — Wave 0: test stubs tests/test_csv_logger.py (8 tests RED) + tests/test_main.py (5 tests RED)
+- [x] 03-02-PLAN.md — CSVLogger implementation: src/csv_logger.py (STORE-01..06 GREEN)
+- [x] 03-03-PLAN.md — main.py acquisition loop (CONN-02, DISP-01..03 GREEN) + hardware checkpoint
 
 ### Phase 4: Documentation & Hardening
 **Goal**: A Windows-naive user can follow the README from zero — CH340 driver install through first successful CSV — and all 12 troubleshooting scenarios are addressed. The codebase is reviewed for robustness against the documented pitfalls.
@@ -86,5 +86,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-05-20 |
 | 2. Sensor Layer | 0/2 | Not started | - |
-| 3. Acquisition Loop | 2/3 | In Progress|  |
+| 3. Acquisition Loop | 3/3 | Complete   | 2026-05-21 |
 | 4. Documentation & Hardening | 0/TBD | Not started | - |
