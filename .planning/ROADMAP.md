@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md — Project scaffold, requirements.txt, src/utils.py (to_signed16, get_timestamp_br, setup_logging, SensorReading), test suite
-- [ ] 01-02-PLAN.md — src/config_loader.py (AppConfig, validation), config.yaml, list_serial_ports.py, test suite
+- [x] 01-02-PLAN.md — src/config_loader.py (AppConfig, validation), config.yaml, list_serial_ports.py, test suite
 
 ### Phase 2: Sensor Layer
 **Goal**: The WitMotionSensor class connects to the physical sensor, reads all 19 registers in a single burst call, converts them to correct physical units, and handles transient errors gracefully — verified against live hardware.
@@ -43,8 +43,12 @@ Plans:
   1. `sensor.read_all_data()` returns a `SensorReading` dataclass with all 17 physical fields populated after a single Modbus burst read (0x34, count=19) — confirmed by log showing one RTU transaction per sample
   2. Accelerometer reads ~0.0 g on X/Y and ~1.0 g on Z with the sensor resting flat — signed 16-bit conversion is correct (no ~32 g anomaly)
   3. A simulated timeout or CRC error triggers a logged warning and a retry; the process does not exit; after N consecutive failures the loop pauses and logs a consecutive-error count
-  4. All pymodbus calls use the 3.x API exclusively: `framer=FramerType.RTU`, `slave=80` — no `method=`, no `unit=` keyword arguments appear anywhere in sensor.py
-**Plans**: TBD
+  4. All pymodbus calls use the 3.x API exclusively: `framer=FramerType.RTU`, `device_id=80` — no `method=`, no `unit=`, no `slave=` keyword arguments appear anywhere in sensor.py
+**Plans**: 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — TDD: tests/test_sensor.py (11 mock-based tests, RED then GREEN) + src/sensor.py (WitMotionSensor class, full implementation)
+- [ ] 02-02-PLAN.md — Hardware checkpoint: live gravity verification (az_g ~1.0 g at rest)
 
 ### Phase 3: Acquisition Loop
 **Goal**: Running `python main.py` starts continuous logging: every sample is written to a timestamped CSV file with all columns and an explicit UTC offset, displayed on the terminal, and the file survives a hard Ctrl+C without losing the last written rows.
@@ -76,6 +80,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-05-20 |
-| 2. Sensor Layer | 0/TBD | Not started | - |
+| 2. Sensor Layer | 0/2 | Not started | - |
 | 3. Acquisition Loop | 0/TBD | Not started | - |
 | 4. Documentation & Hardening | 0/TBD | Not started | - |
