@@ -36,7 +36,11 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
   3. Each subplot Y-axis label includes the measurement name and physical unit (e.g., "Acceleration (g)", "Temperature (°C)")
   4. After 30 seconds of mock data, the X-axis window scrolls — old points drop off as new ones arrive, never exceeding 300 points per channel
   5. The animation visibly updates at least once per second (FuncAnimation interval ≤ 1000 ms)
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Wave 0 test scaffold: tests/test_visualizer.py (10 RED tests) + matplotlib in requirements.txt
+- [ ] 05-02-PLAN.md — PlotManager implementation: src/visualizer.py makes all 10 tests GREEN + standalone mock mode
 
 ### Phase 6: main.py Integration
 **Goal**: `python main.py --gui` runs the full acquisition loop with live visualization; the existing `python main.py` path is unchanged
@@ -57,5 +61,5 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 | 2. Sensor Layer | v1.0 | 1/2 | Complete (HW checkpoint deferred) | 2026-05-21 |
 | 3. Acquisition Loop | v1.0 | 3/3 | Complete | 2026-05-21 |
 | 4. Documentation & Hardening | v1.0 | 2/2 | Complete | 2026-05-21 |
-| 5. Visualizer Module | v1.1 | 0/? | Not started | - |
+| 5. Visualizer Module | v1.1 | 0/2 | Planning complete | - |
 | 6. main.py Integration | v1.1 | 0/? | Not started | - |
