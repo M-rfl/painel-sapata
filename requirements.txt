@@ -4,6 +4,7 @@ pyserial>=3.5             # serial port enumeration and RTU transport
 PyYAML>=6.0               # config.yaml loading — use yaml.safe_load() always
 tzdata>=2024.1            # MANDATORY on Windows: ZoneInfo needs IANA database
 backports.zoneinfo>=0.2.1; python_version<"3.9"  # zoneinfo backport for Python 3.8
+matplotlib>=3.10          # real-time plotting for visualizer module (numpy pulled in transitively)
 
 # Development / test
 pytest>=7.0
