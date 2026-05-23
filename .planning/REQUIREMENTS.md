@@ -7,7 +7,7 @@
 
 ### VIZ — Visualization
 
-- [ ] **VIZ-01**: User can launch a live graph window alongside normal acquisition using `python main.py --gui`
+- [x] **VIZ-01**: User can launch a live graph window alongside normal acquisition using `python main.py --gui`
 - [x] **VIZ-02**: Visualization window shows 5 subplots: Acceleration (g), Velocity (mm/s), Displacement (µm), Frequency (Hz), Temperature (°C)
 - [x] **VIZ-03**: Each subplot shows X, Y, Z channel lines with a legend (Temperature subplot: 1 line only)
 - [x] **VIZ-04**: Each subplot displays the last 30 seconds of data as a scrolling window (300 points at 10 Hz)
@@ -46,7 +46,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| VIZ-01 | Phase 5 | Pending |
+| VIZ-01 | Phase 5 | Complete |
 | VIZ-02 | Phase 5 | Complete |
 | VIZ-03 | Phase 5 | Complete |
 | VIZ-04 | Phase 5 | Complete |
