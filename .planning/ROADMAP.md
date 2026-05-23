@@ -61,5 +61,5 @@ Plans:
 | 2. Sensor Layer | v1.0 | 1/2 | Complete (HW checkpoint deferred) | 2026-05-21 |
 | 3. Acquisition Loop | v1.0 | 3/3 | Complete | 2026-05-21 |
 | 4. Documentation & Hardening | v1.0 | 2/2 | Complete | 2026-05-21 |
-| 5. Visualizer Module | v1.1 | 0/2 | Planning complete | - |
+| 5. Visualizer Module | 1/2 | In Progress|  | - |
 | 6. main.py Integration | v1.1 | 0/? | Not started | - |

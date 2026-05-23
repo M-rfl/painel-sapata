@@ -8,11 +8,11 @@
 ### VIZ — Visualization
 
 - [ ] **VIZ-01**: User can launch a live graph window alongside normal acquisition using `python main.py --gui`
-- [ ] **VIZ-02**: Visualization window shows 5 subplots: Acceleration (g), Velocity (mm/s), Displacement (µm), Frequency (Hz), Temperature (°C)
-- [ ] **VIZ-03**: Each subplot shows X, Y, Z channel lines with a legend (Temperature subplot: 1 line only)
-- [ ] **VIZ-04**: Each subplot displays the last 30 seconds of data as a scrolling window (300 points at 10 Hz)
-- [ ] **VIZ-05**: Graph animation updates at ≥ 1 Hz so the user sees measurements changing live
-- [ ] **VIZ-06**: Each subplot Y-axis is labeled with measurement name and physical unit; X-axis shows elapsed time in seconds
+- [x] **VIZ-02**: Visualization window shows 5 subplots: Acceleration (g), Velocity (mm/s), Displacement (µm), Frequency (Hz), Temperature (°C)
+- [x] **VIZ-03**: Each subplot shows X, Y, Z channel lines with a legend (Temperature subplot: 1 line only)
+- [x] **VIZ-04**: Each subplot displays the last 30 seconds of data as a scrolling window (300 points at 10 Hz)
+- [x] **VIZ-05**: Graph animation updates at ≥ 1 Hz so the user sees measurements changing live
+- [x] **VIZ-06**: Each subplot Y-axis is labeled with measurement name and physical unit; X-axis shows elapsed time in seconds
 
 ### INTG — Integration
 
@@ -47,11 +47,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | VIZ-01 | Phase 5 | Pending |
-| VIZ-02 | Phase 5 | Pending |
-| VIZ-03 | Phase 5 | Pending |
-| VIZ-04 | Phase 5 | Pending |
-| VIZ-05 | Phase 5 | Pending |
-| VIZ-06 | Phase 5 | Pending |
+| VIZ-02 | Phase 5 | Complete |
+| VIZ-03 | Phase 5 | Complete |
+| VIZ-04 | Phase 5 | Complete |
+| VIZ-05 | Phase 5 | Complete |
+| VIZ-06 | Phase 5 | Complete |
 | INTG-01 | Phase 6 | Pending |
 | INTG-02 | Phase 6 | Pending |
 | INTG-03 | Phase 6 | Pending |
