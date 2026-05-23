@@ -1,5 +1,10 @@
 """Live sensor data visualizer — 5-subplot animated display for WTVB01."""
 
+import sys
+import os
+# Ensure project root is on sys.path so `src.utils` resolves when run directly
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import matplotlib
 matplotlib.use("TkAgg")  # Windows: Tk bundled with Python; must precede pyplot import
 
