@@ -17,9 +17,9 @@
 ### INTG — Integration
 
 - [x] **INTG-01**: Running `python main.py` without `--gui` behaves identically to v1.0 (zero regression)
-- [ ] **INTG-02**: CSV logging writes every reading to file when `--gui` is active (no data loss)
-- [ ] **INTG-03**: Sensor acquisition runs in a background thread when `--gui` is active; matplotlib animation runs on main thread
-- [ ] **INTG-04**: Closing the graph window triggers graceful shutdown with terminal session summary (equivalent to Ctrl+C)
+- [x] **INTG-02**: CSV logging writes every reading to file when `--gui` is active (no data loss)
+- [x] **INTG-03**: Sensor acquisition runs in a background thread when `--gui` is active; matplotlib animation runs on main thread
+- [x] **INTG-04**: Closing the graph window triggers graceful shutdown with terminal session summary (equivalent to Ctrl+C)
 
 ## v1.2+ Requirements (Deferred)
 
@@ -53,9 +53,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | VIZ-05 | Phase 5 | Complete |
 | VIZ-06 | Phase 5 | Complete |
 | INTG-01 | Phase 6 | Complete |
-| INTG-02 | Phase 6 | Pending |
-| INTG-03 | Phase 6 | Pending |
-| INTG-04 | Phase 6 | Pending |
+| INTG-02 | Phase 6 | Complete |
+| INTG-03 | Phase 6 | Complete |
+| INTG-04 | Phase 6 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 10 total

@@ -22,7 +22,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 ### v1.1 Real-Time Visualization
 
 - [x] **Phase 5: Visualizer Module** — PlotManager class with 5 subplots, deque buffers, FuncAnimation; testable standalone with mock data (completed 2026-05-23)
-- [ ] **Phase 6: main.py Integration** — `--gui` argparse flag, background acquisition thread, graceful shutdown when GUI window closes
+- [x] **Phase 6: main.py Integration** — `--gui` argparse flag, background acquisition thread, graceful shutdown when GUI window closes (completed 2026-05-24)
 
 ## Phase Details
 
@@ -66,4 +66,4 @@ Plans:
 | 3. Acquisition Loop | v1.0 | 3/3 | Complete | 2026-05-21 |
 | 4. Documentation & Hardening | v1.0 | 2/2 | Complete | 2026-05-21 |
 | 5. Visualizer Module | v1.1 | 2/2 | Complete | 2026-05-23 |
-| 6. main.py Integration | 1/2 | In Progress|  | - |
+| 6. main.py Integration | 2/2 | Complete   | 2026-05-24 | - |

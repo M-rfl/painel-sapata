@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Real-Time Visualization
 status: Roadmap ready — awaiting plan-phase
-stopped_at: "Phase 06 Plan 01 complete — Wave 0 test scaffold: 5 RED GUI stubs + sys.argv regression guard"
-last_updated: "2026-05-24T00:10:40.683Z"
+stopped_at: Phase 06 Plan 02 complete — main.py --gui integration, 79 tests GREEN
+last_updated: "2026-05-24T00:16:31.048Z"
 last_activity: 2026-05-21 — v1.1 roadmap created
 progress:
   total_phases: 2
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -57,6 +57,8 @@ v1.1 architectural decisions:
 - [Phase 05-visualizer-module]: FuncAnimation stored as self._ani (not local) to prevent GC during animation; blit=False + cache_frame_data=False for correct axis behavior
 - [Phase 06-main-py-integration]: mock_csv.path used in test_main_gui.py (correct attribute) vs mock_csv.file_path kept in test_main.py (pre-existing, not changed)
 - [Phase 06-main-py-integration]: sys.argv regression guard: patch sys.argv as first item in with-block to prevent argparse SystemExit(2) when Plan 02 adds --gui flag
+- [Phase 06-main-py-integration]: Shutdown order in _run_gui_mode: stop_event.set then join then _print_summary then sensor.close then csv_logger.close
+- [Phase 06-main-py-integration]: patch src.visualizer.PlotManager (not main.PlotManager) because PlotManager is never bound in main namespace due to deferred import
 
 ### Pending Todos
 
@@ -70,7 +72,7 @@ v1.1 architectural decisions:
 
 ## Session Continuity
 
-Last session: 2026-05-24T00:10:40.677Z
-Stopped at: Phase 06 Plan 01 complete — Wave 0 test scaffold: 5 RED GUI stubs + sys.argv regression guard
+Last session: 2026-05-24T00:16:31.040Z
+Stopped at: Phase 06 Plan 02 complete — main.py --gui integration, 79 tests GREEN
 Resume file: None
 Next action: `/gsd:plan-phase 5`
