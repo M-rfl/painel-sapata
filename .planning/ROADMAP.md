@@ -51,7 +51,11 @@ Plans:
   2. `python main.py --gui` opens the visualization window while simultaneously writing every reading to CSV at 10 Hz
   3. Closing the matplotlib window (clicking X) triggers a clean shutdown and prints the session summary to the terminal — equivalent to pressing Ctrl+C
   4. Sensor acquisition runs in a background thread and matplotlib animation runs on the main thread; no GUI freeze occurs during normal operation
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Wave 0 test scaffold: tests/test_main_gui.py (5 RED stubs) + sys.argv patch on existing test_main.py tests
+- [ ] 06-02-PLAN.md — main.py integration: argparse, _run_headless_mode, _acquire, _run_gui_mode — all 10 integration tests GREEN
 
 ## Progress
 
@@ -61,5 +65,5 @@ Plans:
 | 2. Sensor Layer | v1.0 | 1/2 | Complete (HW checkpoint deferred) | 2026-05-21 |
 | 3. Acquisition Loop | v1.0 | 3/3 | Complete | 2026-05-21 |
 | 4. Documentation & Hardening | v1.0 | 2/2 | Complete | 2026-05-21 |
-| 5. Visualizer Module | 2/2 | Complete   | 2026-05-23 | - |
-| 6. main.py Integration | v1.1 | 0/? | Not started | - |
+| 5. Visualizer Module | v1.1 | 2/2 | Complete | 2026-05-23 |
+| 6. main.py Integration | v1.1 | 0/2 | Not started | - |
