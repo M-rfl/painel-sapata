@@ -1,5 +1,5 @@
 # tests/test_main_gui.py
-"""Wave 0 stub tests for main.py GUI mode (--gui flag integration).
+"""Integration tests for main.py GUI mode (--gui flag).
 
 Requirement coverage:
   test_no_flag_calls_headless          -> INTG-01 (no --gui flag stays headless)
@@ -7,9 +7,6 @@ Requirement coverage:
   test_gui_update_data_called          -> INTG-03 (--gui mode calls PlotManager.update_data)
   test_gui_close_triggers_shutdown     -> INTG-04 (window close triggers session summary)
   test_gui_resources_closed            -> INTG-04 (window close closes sensor + csv_logger)
-
-These stubs are RED by design (Wave 0 TDD scaffold).
-Plan 02 will implement the main.py changes that make these tests GREEN.
 """
 from __future__ import annotations
 
@@ -68,11 +65,24 @@ def _make_config() -> MagicMock:
 # ---------------------------------------------------------------------------
 
 def test_no_flag_calls_headless(capsys):
-    """When sys.argv has no --gui, main() calls sensor.read_all_data() and closes resources.
+    """When sys.argv has no --gui, main() calls sensor.read_all_data() and closes resources."""
+    mock_sensor = MagicMock()
+    mock_sensor.connect.return_value = True
+    mock_sensor.read_all_data.side_effect = [_make_reading(), KeyboardInterrupt()]
+    mock_csv = MagicMock()
+    mock_csv.path = "data/wtvb01_test.csv"
 
-    Wave 0 stub — raises NotImplementedError until Plan 02 implements GUI mode.
-    """
-    raise NotImplementedError("Wave 0 stub — implement in Plan 02")
+    with (
+        patch("sys.argv", ["main.py"]),
+        patch("main.load_config", return_value=_make_config()),
+        patch("main.setup_logging"),
+        patch("main.WitMotionSensor", return_value=mock_sensor),
+        patch("main.CSVLogger", return_value=mock_csv),
+    ):
+        main()
+
+    mock_sensor.close.assert_called_once()
+    mock_csv.close.assert_called_once()
 
 
 # ---------------------------------------------------------------------------
@@ -80,11 +90,40 @@ def test_no_flag_calls_headless(capsys):
 # ---------------------------------------------------------------------------
 
 def test_gui_mode_csv_written():
-    """When sys.argv has --gui, csv_logger.write_row() is called at least once.
+    """When sys.argv has --gui, csv_logger.write_row() is called at least once."""
+    mock_pm = MagicMock()
+    mock_pm._fig = MagicMock()
+    close_callbacks = []
+    mock_pm._fig.canvas.mpl_connect.side_effect = (
+        lambda event, cb: close_callbacks.append(cb) or None
+    )
 
-    Wave 0 stub — raises NotImplementedError until Plan 02 implements GUI mode.
-    """
-    raise NotImplementedError("Wave 0 stub — implement in Plan 02")
+    def _mock_start():
+        time.sleep(0.05)  # give acquisition thread one cycle
+        if close_callbacks:
+            close_callbacks[0](None)  # fire _on_close(event)
+
+    mock_pm.start.side_effect = _mock_start
+
+    mock_sensor = MagicMock()
+    mock_sensor.connect.return_value = True
+    mock_sensor.read_all_data.return_value = _make_reading()  # infinite readings
+    mock_csv = MagicMock()
+    mock_csv.path = "data/wtvb01_test.csv"
+
+    with (
+        patch("sys.argv", ["main.py", "--gui"]),
+        patch("main.load_config", return_value=_make_config()),
+        patch("main.setup_logging"),
+        patch("main.WitMotionSensor", return_value=mock_sensor),
+        patch("main.CSVLogger", return_value=mock_csv),
+        patch("src.visualizer.PlotManager", return_value=mock_pm),
+    ):
+        main()
+
+    assert mock_csv.write_row.call_count >= 1, (
+        f"Expected write_row called at least once, got {mock_csv.write_row.call_count}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -92,11 +131,40 @@ def test_gui_mode_csv_written():
 # ---------------------------------------------------------------------------
 
 def test_gui_update_data_called():
-    """When sys.argv has --gui, pm.update_data() is called at least once from acquisition thread.
+    """When sys.argv has --gui, pm.update_data() is called at least once from acquisition thread."""
+    mock_pm = MagicMock()
+    mock_pm._fig = MagicMock()
+    close_callbacks = []
+    mock_pm._fig.canvas.mpl_connect.side_effect = (
+        lambda event, cb: close_callbacks.append(cb) or None
+    )
 
-    Wave 0 stub — raises NotImplementedError until Plan 02 implements GUI mode.
-    """
-    raise NotImplementedError("Wave 0 stub — implement in Plan 02")
+    def _mock_start():
+        time.sleep(0.05)  # give acquisition thread one cycle
+        if close_callbacks:
+            close_callbacks[0](None)  # fire _on_close(event)
+
+    mock_pm.start.side_effect = _mock_start
+
+    mock_sensor = MagicMock()
+    mock_sensor.connect.return_value = True
+    mock_sensor.read_all_data.return_value = _make_reading()  # infinite readings
+    mock_csv = MagicMock()
+    mock_csv.path = "data/wtvb01_test.csv"
+
+    with (
+        patch("sys.argv", ["main.py", "--gui"]),
+        patch("main.load_config", return_value=_make_config()),
+        patch("main.setup_logging"),
+        patch("main.WitMotionSensor", return_value=mock_sensor),
+        patch("main.CSVLogger", return_value=mock_csv),
+        patch("src.visualizer.PlotManager", return_value=mock_pm),
+    ):
+        main()
+
+    assert mock_pm.update_data.call_count >= 1, (
+        f"Expected update_data called at least once, got {mock_pm.update_data.call_count}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -104,11 +172,41 @@ def test_gui_update_data_called():
 # ---------------------------------------------------------------------------
 
 def test_gui_close_triggers_shutdown(capsys):
-    """Simulating window close causes pm.start() to return and stdout contains 'Samples'.
+    """Simulating window close causes pm.start() to return; stdout contains 'Samples'."""
+    mock_pm = MagicMock()
+    mock_pm._fig = MagicMock()
+    close_callbacks = []
+    mock_pm._fig.canvas.mpl_connect.side_effect = (
+        lambda event, cb: close_callbacks.append(cb) or None
+    )
 
-    Wave 0 stub — raises NotImplementedError until Plan 02 implements GUI mode.
-    """
-    raise NotImplementedError("Wave 0 stub — implement in Plan 02")
+    def _mock_start():
+        time.sleep(0.05)  # give acquisition thread one cycle
+        if close_callbacks:
+            close_callbacks[0](None)  # fire _on_close(event)
+
+    mock_pm.start.side_effect = _mock_start
+
+    mock_sensor = MagicMock()
+    mock_sensor.connect.return_value = True
+    mock_sensor.read_all_data.return_value = _make_reading()  # infinite readings
+    mock_csv = MagicMock()
+    mock_csv.path = "data/wtvb01_test.csv"
+
+    with (
+        patch("sys.argv", ["main.py", "--gui"]),
+        patch("main.load_config", return_value=_make_config()),
+        patch("main.setup_logging"),
+        patch("main.WitMotionSensor", return_value=mock_sensor),
+        patch("main.CSVLogger", return_value=mock_csv),
+        patch("src.visualizer.PlotManager", return_value=mock_pm),
+    ):
+        main()
+
+    captured = capsys.readouterr()
+    assert "Samples" in captured.out, (
+        f"Expected 'Samples' in stdout after GUI shutdown, got:\n{captured.out}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -116,8 +214,36 @@ def test_gui_close_triggers_shutdown(capsys):
 # ---------------------------------------------------------------------------
 
 def test_gui_resources_closed():
-    """After GUI shutdown (window close), sensor.close() and csv_logger.close() called once each.
+    """After GUI shutdown (window close), sensor.close() and csv_logger.close() called once each."""
+    mock_pm = MagicMock()
+    mock_pm._fig = MagicMock()
+    close_callbacks = []
+    mock_pm._fig.canvas.mpl_connect.side_effect = (
+        lambda event, cb: close_callbacks.append(cb) or None
+    )
 
-    Wave 0 stub — raises NotImplementedError until Plan 02 implements GUI mode.
-    """
-    raise NotImplementedError("Wave 0 stub — implement in Plan 02")
+    def _mock_start():
+        time.sleep(0.05)  # give acquisition thread one cycle
+        if close_callbacks:
+            close_callbacks[0](None)  # fire _on_close(event)
+
+    mock_pm.start.side_effect = _mock_start
+
+    mock_sensor = MagicMock()
+    mock_sensor.connect.return_value = True
+    mock_sensor.read_all_data.return_value = _make_reading()  # infinite readings
+    mock_csv = MagicMock()
+    mock_csv.path = "data/wtvb01_test.csv"
+
+    with (
+        patch("sys.argv", ["main.py", "--gui"]),
+        patch("main.load_config", return_value=_make_config()),
+        patch("main.setup_logging"),
+        patch("main.WitMotionSensor", return_value=mock_sensor),
+        patch("main.CSVLogger", return_value=mock_csv),
+        patch("src.visualizer.PlotManager", return_value=mock_pm),
+    ):
+        main()
+
+    mock_sensor.close.assert_called_once()
+    mock_csv.close.assert_called_once()
