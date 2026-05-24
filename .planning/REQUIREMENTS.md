@@ -10,8 +10,8 @@
 
 - [x] **GPS-01**: System reads latitude, longitude, and speed from Windows Location API via `src/gps_reader.py`
 - [x] **GPS-02**: `GPSReader.get_location()` returns `(lat, lon, speed_mps)` or `(None, None, None)` when no GPS fix
-- [ ] **GPS-03**: GPS polling is non-blocking — does not delay the 10 Hz sensor acquisition loop (runs in background thread)
-- [ ] **GPS-04**: Terminal shows GPS status at startup: "GPS: fix acquired" or "GPS: no fix — CSV columns will be empty"
+- [x] **GPS-03**: GPS polling is non-blocking — does not delay the 10 Hz sensor acquisition loop (runs in background thread)
+- [x] **GPS-04**: Terminal shows GPS status at startup: "GPS: fix acquired" or "GPS: no fix — CSV columns will be empty"
 
 ### Data Model
 
@@ -61,8 +61,8 @@ Updated during roadmap creation.
 |-------------|-------|--------|
 | GPS-01 | Phase 7 | Complete (07-01) |
 | GPS-02 | Phase 7 | Complete (07-01) |
-| GPS-03 | Phase 7 | Pending |
-| GPS-04 | Phase 7 | Pending |
+| GPS-03 | Phase 7 | Complete |
+| GPS-04 | Phase 7 | Complete |
 | GPS-05 | Phase 7 | Complete |
 | GPS-06 | Phase 8 | Pending |
 | GPS-07 | Phase 8 | Pending |
