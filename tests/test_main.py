@@ -77,6 +77,7 @@ def test_graceful_shutdown_closes_resources(capsys: pytest.CaptureFixture) -> No
     mock_csv.file_path = "data/wtvb01_20260521_100000.csv"
 
     with (
+        patch("sys.argv", ["main.py"]),
         patch("main.load_config", return_value=_make_config()),
         patch("main.setup_logging"),
         patch("main.WitMotionSensor", return_value=mock_sensor),
@@ -106,6 +107,7 @@ def test_session_summary_on_ctrl_c(capsys: pytest.CaptureFixture) -> None:
     mock_csv.rows_written = 1
 
     with (
+        patch("sys.argv", ["main.py"]),
         patch("main.load_config", return_value=_make_config()),
         patch("main.setup_logging"),
         patch("main.WitMotionSensor", return_value=mock_sensor),
@@ -141,6 +143,7 @@ def test_terminal_display_per_sample(capsys: pytest.CaptureFixture) -> None:
     mock_csv.rows_written = 1
 
     with (
+        patch("sys.argv", ["main.py"]),
         patch("main.load_config", return_value=_make_config()),
         patch("main.setup_logging"),
         patch("main.WitMotionSensor", return_value=mock_sensor),
@@ -173,6 +176,7 @@ def test_connection_status_messages(capsys: pytest.CaptureFixture) -> None:
     mock_csv = MagicMock()
 
     with (
+        patch("sys.argv", ["main.py"]),
         patch("main.load_config", return_value=_make_config()),
         patch("main.setup_logging"),
         patch("main.WitMotionSensor", return_value=mock_sensor),
@@ -210,6 +214,7 @@ def test_connection_error_message_on_read_fail(capsys: pytest.CaptureFixture) ->
     mock_csv.rows_written = 0
 
     with (
+        patch("sys.argv", ["main.py"]),
         patch("main.load_config", return_value=_make_config()),
         patch("main.setup_logging"),
         patch("main.WitMotionSensor", return_value=mock_sensor),
