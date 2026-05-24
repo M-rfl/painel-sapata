@@ -66,4 +66,4 @@ Plans:
 | 3. Acquisition Loop | v1.0 | 3/3 | Complete | 2026-05-21 |
 | 4. Documentation & Hardening | v1.0 | 2/2 | Complete | 2026-05-21 |
 | 5. Visualizer Module | v1.1 | 2/2 | Complete | 2026-05-23 |
-| 6. main.py Integration | v1.1 | 0/2 | Not started | - |
+| 6. main.py Integration | 1/2 | In Progress|  | - |
