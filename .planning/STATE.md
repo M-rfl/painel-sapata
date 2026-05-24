@@ -1,55 +1,47 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Real-Time Visualization
-status: Complete — shipped 2026-05-24
-stopped_at: v1.1 milestone complete — 79 tests GREEN, all artifacts archived
-last_updated: "2026-05-24T02:30:00.000Z"
-last_activity: 2026-05-24 — v1.1 milestone completed and archived
+milestone: v1.2
+milestone_name: GPS Data Integration
+status: Defining requirements
+stopped_at: Milestone v1.2 started — defining requirements
+last_updated: "2026-05-24T00:00:00.000Z"
+last_activity: 2026-05-24 — Milestone v1.2 started
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-24 after v1.1 milestone)
+See: .planning/PROJECT.md (updated 2026-05-24 after v1.2 start)
 
 **Core value:** O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não funcionar, nada mais importa.
-**Current focus:** Planning next milestone
+**Current focus:** Defining requirements for GPS Data Integration
 
 ## Current Position
 
-Phase: v1.1 complete
-Status: Milestone shipped — start `/gsd:new-milestone` for v1.2
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
 
-Progress: [██████████] 100%
-
-```
-Phase 5: Visualizer Module    [██████████] Complete (2026-05-23)
-Phase 6: main.py Integration  [██████████] Complete (2026-05-24)
-```
+Progress: [░░░░░░░░░░] 0%
 
 ## Accumulated Context
 
-### Decisions (v1.1 — archived)
+### Carried forward from v1.1
 
-All v1.1 architectural decisions are logged in PROJECT.md Key Decisions table.
+- `test_main.py` uses `mock_csv.file_path` but `main.py` reads `csv_logger.path` (4 locations) — test correctness fix deferred to v1.3
+- Validate SCALE_VEL = 1/100 (mm/s) in field with reference instrument — deferred to v1.3
+- `05-VALIDATION.md` and `06-VALIDATION.md` show `nyquist_compliant: false` — planning artifacts only
 
-### Open Items Carried Forward
+### v1.2 GPS Decisions Made
 
-- `test_main.py` uses `mock_csv.file_path` but `main.py` reads `csv_logger.path` (4 locations) — test correctness fix for next milestone
-- Validate SCALE_VEL = 1/100 (mm/s) in field with reference instrument — scale confirmed from SDK but not yet measured against known vibration
-- `05-VALIDATION.md` and `06-VALIDATION.md` show `nyquist_compliant: false` — run `/gsd:validate-phase 5` and `/gsd:validate-phase 6` if needed
-
-## Session Continuity
-
-Last session: 2026-05-24
-Stopped at: v1.1 milestone archived
-Resume file: None
-Next action: `/gsd:new-milestone`
+- GPS source: Windows Location API (WinRT) — no extra serial port needed
+- Fields: gps_lat, gps_lon, gps_speed_mps
+- No-fix behavior: empty fields (same pattern as angle RESERVED registers)
+- Activation: always-on (GPS columns always in CSV header)

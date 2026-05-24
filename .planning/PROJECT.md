@@ -49,14 +49,28 @@ O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não f
 - ✓ All 13 live channels displayed: ax/ay/az (g), vib X/Y/Z (mm/s), disp X/Y/Z (µm), freq X/Y/Z (Hz), temp (°C) — v1.1
 - ✓ CSV logging unchanged when --gui is used — v1.1
 
-### Active (v1.2+)
+## Current Milestone: v1.2 GPS Data Integration
+
+**Goal:** Enrich every CSV row with the computer's live GPS position (lat, lon, speed) using the Windows Location API — empty fields when no fix.
+
+**Target features:**
+- GPS reader module using Windows Location API (WinRT)
+- `gps_lat`, `gps_lon`, `gps_speed_mps` columns appended to every CSV row
+- Empty fields when no fix available (consistent with angle RESERVED pattern)
+- Always-on: GPS columns always present in CSV header regardless of fix status
+
+### Active (v1.2)
+
+- [ ] GPS-01: Sistema lê latitude/longitude/speed do Windows Location API a cada ciclo de aquisição
+- [ ] GPS-02: Colunas `gps_lat`, `gps_lon`, `gps_speed_mps` adicionadas ao CSV em cada linha
+- [ ] GPS-03: Quando sem fix GPS, colunas ficam em branco (mesmo padrão dos registradores RESERVED)
+- [ ] GPS-04: CSV header sempre inclui as 3 colunas GPS independente do status de fix
+
+### Deferred (v1.3+)
 
 - [ ] Validar escala de velocidade de vibração em campo com equipamento de referência (SCALE_VEL = 1/100 confirmar mm/s)
 - [ ] Corrigir test_main.py: `mock_csv.file_path` → `mock_csv.path` (4 locations) — teste correctness fix
 - [ ] angle_x/y/z sempre None (registradores 0x3D-0x3F RESERVED) — investigar se firmware futuro disponibilizará
-
-### Deferred (v1.2+)
-
 - [ ] VIZ-07: Configurable time window via `config.yaml` (`plot_window_seconds`)
 - [ ] VIZ-08: Selective channel display (show/hide individual subplots)
 - [ ] VIZ-09: Peak detection annotations on acceleration subplot
@@ -129,4 +143,4 @@ O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não f
 | Shutdown order: stop→join→summary→sensor.close→csv.close (v1.1) | join before close prevents write-to-closed-file race | ✓ Good — no data loss on close |
 
 ---
-*Last updated: 2026-05-24 after v1.1 milestone*
+*Last updated: 2026-05-24 after v1.2 milestone start*
