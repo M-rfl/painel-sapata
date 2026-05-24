@@ -1,7 +1,10 @@
 # src/gps_reader.py
 """GPSReader: Windows Location API wrapper for WTVB01 Notebook Logger.
 
-Provides non-blocking access to GPS position via get_location().
+Provides non-blocking access to GPS position via a poll/cache pattern:
+  - poll()        — fetches from Windows Location API (called by background thread at ~1 Hz)
+  - get_location() — returns last cached value instantly (called by 10 Hz acquisition loop)
+
 All exceptions are caught internally — callers always receive a tuple.
 
 Status values:
@@ -10,7 +13,7 @@ Status values:
   "no_fix"      — API available but no position fix yet
   "ok"          — fix acquired, coordinates valid
 
-Requirements: GPS-01, GPS-02, GPS-08, GPS-09
+Requirements: GPS-01, GPS-02, GPS-03, GPS-08, GPS-09
 """
 from __future__ import annotations
 
@@ -29,16 +32,17 @@ except ImportError:
 
 
 class GPSReader:
-    """Read GPS position from Windows Location API.
+    """Read GPS position from Windows Location API using a poll/cache pattern.
 
-    Thread-safe: get_location() is synchronous and can be called from
-    any thread. Uses asyncio.run() per call — acceptable for 1 Hz GPS
-    poll rate; no event loop contention with the sensor acquisition thread.
+    Thread-safe: get_location() returns a cached tuple without any I/O and
+    can be called from any thread at 10 Hz with zero blocking.
+    poll() does the real async fetch and is called by a background thread at ~1 Hz.
 
     Usage::
 
         reader = GPSReader()
-        lat, lon, speed = reader.get_location()  # (float, float, float) or (None, None, None)
+        reader.poll()                             # initial fetch (establishes status)
+        lat, lon, speed = reader.get_location()   # instant cache read
         print(reader.status)                      # "ok", "no_fix", "denied", "unavailable"
     """
 
@@ -47,37 +51,40 @@ class GPSReader:
             self.status: str = "unavailable"
         else:
             self.status = "no_fix"
+        self._cache: tuple[float | None, float | None, float | None] = (None, None, None)
 
     def get_location(self) -> tuple[float | None, float | None, float | None]:
-        """Return current GPS fix as (lat, lon, speed_mps) or (None, None, None).
-
-        Never raises. Sets self.status as a side effect:
-          - "ok"          on successful fix with valid coordinates
-          - "no_fix"      on API available but no fix, or hardware absent
-          - "denied"      when Windows location permission is denied
-          - "unavailable" when winsdk import failed (set at construction, unchanged here)
+        """Return last cached GPS fix. Never raises. Background thread keeps cache fresh.
 
         Returns:
             Tuple of (latitude, longitude, speed_mps) as floats, or
-            (None, None, None) on any failure or unavailability.
+            (None, None, None) when unavailable, no fix, or permission denied.
+        """
+        return self._cache
+
+    def poll(self) -> None:
+        """Fetch from Windows Location API and update cache.
+
+        Called by background thread at ~1 Hz. Sets self.status and self._cache.
+        Never raises — all exceptions are caught and result in no_fix status.
         """
         if not _WINSDK_AVAILABLE:
-            return (None, None, None)
-
+            return
         try:
             lat, lon, speed = asyncio.run(self._fetch())
             if lat is None or lon is None:
                 self.status = "no_fix"
-                return (None, None, None)
-            self.status = "ok"
-            return (lat, lon, speed)
+                self._cache = (None, None, None)
+            else:
+                self.status = "ok"
+                self._cache = (lat, lon, speed)
         except PermissionError:
             self.status = "denied"
-            return (None, None, None)
+            self._cache = (None, None, None)
         except Exception as exc:
-            logger.debug("GPS fetch failed: %s", exc)
+            logger.debug("GPS poll failed: %s", exc)
             self.status = "no_fix"
-            return (None, None, None)
+            self._cache = (None, None, None)
 
     async def _fetch(self) -> tuple[float | None, float | None, float]:
         """Async helper that calls the Windows Location API.

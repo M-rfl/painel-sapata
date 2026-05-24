@@ -72,12 +72,18 @@ def test_no_flag_calls_headless(capsys):
     mock_csv = MagicMock()
     mock_csv.path = "data/wtvb01_test.csv"
 
+    mock_gps = MagicMock()
+    mock_gps.status = "no_fix"
+    mock_gps.get_location.return_value = (None, None, None)
+    mock_gps.poll.return_value = None
+
     with (
         patch("sys.argv", ["main.py"]),
         patch("main.load_config", return_value=_make_config()),
         patch("main.setup_logging"),
         patch("main.WitMotionSensor", return_value=mock_sensor),
         patch("main.CSVLogger", return_value=mock_csv),
+        patch("main.GPSReader", return_value=mock_gps),
     ):
         main()
 
@@ -111,6 +117,11 @@ def test_gui_mode_csv_written():
     mock_csv = MagicMock()
     mock_csv.path = "data/wtvb01_test.csv"
 
+    mock_gps = MagicMock()
+    mock_gps.status = "no_fix"
+    mock_gps.get_location.return_value = (None, None, None)
+    mock_gps.poll.return_value = None
+
     with (
         patch("sys.argv", ["main.py", "--gui"]),
         patch("main.load_config", return_value=_make_config()),
@@ -118,6 +129,7 @@ def test_gui_mode_csv_written():
         patch("main.WitMotionSensor", return_value=mock_sensor),
         patch("main.CSVLogger", return_value=mock_csv),
         patch("src.visualizer.PlotManager", return_value=mock_pm),
+        patch("main.GPSReader", return_value=mock_gps),
     ):
         main()
 
@@ -152,6 +164,11 @@ def test_gui_update_data_called():
     mock_csv = MagicMock()
     mock_csv.path = "data/wtvb01_test.csv"
 
+    mock_gps = MagicMock()
+    mock_gps.status = "no_fix"
+    mock_gps.get_location.return_value = (None, None, None)
+    mock_gps.poll.return_value = None
+
     with (
         patch("sys.argv", ["main.py", "--gui"]),
         patch("main.load_config", return_value=_make_config()),
@@ -159,6 +176,7 @@ def test_gui_update_data_called():
         patch("main.WitMotionSensor", return_value=mock_sensor),
         patch("main.CSVLogger", return_value=mock_csv),
         patch("src.visualizer.PlotManager", return_value=mock_pm),
+        patch("main.GPSReader", return_value=mock_gps),
     ):
         main()
 
@@ -193,6 +211,11 @@ def test_gui_close_triggers_shutdown(capsys):
     mock_csv = MagicMock()
     mock_csv.path = "data/wtvb01_test.csv"
 
+    mock_gps = MagicMock()
+    mock_gps.status = "no_fix"
+    mock_gps.get_location.return_value = (None, None, None)
+    mock_gps.poll.return_value = None
+
     with (
         patch("sys.argv", ["main.py", "--gui"]),
         patch("main.load_config", return_value=_make_config()),
@@ -200,6 +223,7 @@ def test_gui_close_triggers_shutdown(capsys):
         patch("main.WitMotionSensor", return_value=mock_sensor),
         patch("main.CSVLogger", return_value=mock_csv),
         patch("src.visualizer.PlotManager", return_value=mock_pm),
+        patch("main.GPSReader", return_value=mock_gps),
     ):
         main()
 
@@ -235,6 +259,11 @@ def test_gui_resources_closed():
     mock_csv = MagicMock()
     mock_csv.path = "data/wtvb01_test.csv"
 
+    mock_gps = MagicMock()
+    mock_gps.status = "no_fix"
+    mock_gps.get_location.return_value = (None, None, None)
+    mock_gps.poll.return_value = None
+
     with (
         patch("sys.argv", ["main.py", "--gui"]),
         patch("main.load_config", return_value=_make_config()),
@@ -242,6 +271,7 @@ def test_gui_resources_closed():
         patch("main.WitMotionSensor", return_value=mock_sensor),
         patch("main.CSVLogger", return_value=mock_csv),
         patch("src.visualizer.PlotManager", return_value=mock_pm),
+        patch("main.GPSReader", return_value=mock_gps),
     ):
         main()
 

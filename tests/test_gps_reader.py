@@ -1,11 +1,10 @@
 # tests/test_gps_reader.py
 """Unit tests for GPSReader — Windows Location API wrapper.
 
-TDD RED phase: all tests written before src/gps_reader.py exists.
 Tests cover: normal fix, no-fix exception, missing winsdk, permission denied,
-status property, and speed=None edge case.
+status property, speed=None edge case, and poll/cache split.
 
-Requirements: GPS-01, GPS-02, GPS-08, GPS-09
+Requirements: GPS-01, GPS-02, GPS-03, GPS-08, GPS-09
 """
 from __future__ import annotations
 
@@ -48,11 +47,11 @@ def _make_fake_position(lat: float, lon: float, speed: float | None) -> MagicMoc
 
 
 # ---------------------------------------------------------------------------
-# Test 1: get_location() returns tuple on successful fix
+# Test 1: poll() updates cache on successful fix
 # ---------------------------------------------------------------------------
 
 def test_get_location_returns_tuple_on_fix() -> None:
-    """get_location() returns (lat, lon, speed_mps) when GPS fix is available."""
+    """poll() fetches GPS and updates cache; get_location() returns (lat, lon, speed_mps)."""
     fake_winsdk = _make_fake_winsdk_module()
     fake_pos = _make_fake_position(lat=1.23, lon=4.56, speed=2.78)
 
@@ -80,17 +79,18 @@ def test_get_location_returns_tuple_on_fix() -> None:
         from src.gps_reader import GPSReader
 
         reader = GPSReader()
+        reader.poll()
         result = reader.get_location()
 
     assert result == pytest.approx((1.23, 4.56, 2.78))
 
 
 # ---------------------------------------------------------------------------
-# Test 2: get_location() returns (None, None, None) on no-fix exception
+# Test 2: poll() sets no_fix when _fetch raises generic exception
 # ---------------------------------------------------------------------------
 
 def test_get_location_returns_none_tuple_on_no_fix() -> None:
-    """get_location() returns (None, None, None) when GPS raises — no exception propagated."""
+    """poll() returns silently on exception; get_location() returns (None, None, None)."""
     fake_winsdk = _make_fake_winsdk_module()
 
     mock_locator = MagicMock()
@@ -118,6 +118,7 @@ def test_get_location_returns_none_tuple_on_no_fix() -> None:
         from src.gps_reader import GPSReader
 
         reader = GPSReader()
+        reader.poll()
         result = reader.get_location()
 
     assert result == (None, None, None)
@@ -156,7 +157,7 @@ def test_get_location_returns_none_when_winsdk_unavailable() -> None:
 # ---------------------------------------------------------------------------
 
 def test_permission_denied_sets_status() -> None:
-    """When Windows denies location permission, get_location() returns (None, None, None) and status == 'denied'."""
+    """When Windows denies location permission, poll() sets status == 'denied' and cache to (None,None,None)."""
     fake_winsdk = _make_fake_winsdk_module()
 
     mock_locator = MagicMock()
@@ -184,6 +185,7 @@ def test_permission_denied_sets_status() -> None:
         from src.gps_reader import GPSReader
 
         reader = GPSReader()
+        reader.poll()
         result = reader.get_location()
 
     assert result == (None, None, None)
@@ -191,11 +193,11 @@ def test_permission_denied_sets_status() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Test 5: status == "ok" after successful fix
+# Test 5: status == "ok" after successful poll
 # ---------------------------------------------------------------------------
 
 def test_status_is_ok_on_successful_fix() -> None:
-    """After a successful get_location() call, status == 'ok'."""
+    """After a successful poll() call, status == 'ok'."""
     fake_winsdk = _make_fake_winsdk_module()
     fake_pos = _make_fake_position(lat=-23.5505, lon=-46.6333, speed=0.5)
 
@@ -222,7 +224,7 @@ def test_status_is_ok_on_successful_fix() -> None:
         from src.gps_reader import GPSReader
 
         reader = GPSReader()
-        reader.get_location()
+        reader.poll()
 
     assert reader.status == "ok"
 
@@ -285,6 +287,7 @@ def test_speed_none_is_treated_as_zero() -> None:
         from src.gps_reader import GPSReader
 
         reader = GPSReader()
+        reader.poll()
         lat, lon, speed = reader.get_location()
 
     assert lat == pytest.approx(10.0)
@@ -297,7 +300,7 @@ def test_speed_none_is_treated_as_zero() -> None:
 # ---------------------------------------------------------------------------
 
 def test_none_coordinates_return_none_tuple() -> None:
-    """When lat or lon is None despite a 'fix', get_location() returns (None, None, None)."""
+    """When lat or lon is None despite a 'fix', poll() sets no_fix; get_location() returns (None, None, None)."""
     fake_winsdk = _make_fake_winsdk_module()
     fake_pos = _make_fake_position(lat=None, lon=None, speed=0.0)  # no actual coords
 
@@ -324,6 +327,54 @@ def test_none_coordinates_return_none_tuple() -> None:
         from src.gps_reader import GPSReader
 
         reader = GPSReader()
+        reader.poll()
         result = reader.get_location()
 
     assert result == (None, None, None)
+
+
+# ---------------------------------------------------------------------------
+# Test 9: get_location() returns cache without calling _fetch
+# ---------------------------------------------------------------------------
+
+def test_get_location_returns_cache() -> None:
+    """get_location() returns self._cache immediately — poll() updates it, _fetch is not called by get_location."""
+    fake_winsdk = _make_fake_winsdk_module()
+    fake_pos = _make_fake_position(lat=5.0, lon=6.0, speed=1.0)
+
+    mock_locator = MagicMock()
+    mock_locator.get_geoposition_async = AsyncMock(return_value=fake_pos)
+    fake_winsdk.windows.devices.geolocation.Geolocator = MagicMock(
+        return_value=mock_locator
+    )
+
+    with patch.dict(
+        sys.modules,
+        {
+            "winsdk": fake_winsdk,
+            "winsdk.windows": fake_winsdk.windows,
+            "winsdk.windows.devices": fake_winsdk.windows.devices,
+            "winsdk.windows.devices.geolocation": fake_winsdk.windows.devices.geolocation,
+        },
+    ):
+        if "src.gps_reader" in sys.modules:
+            del sys.modules["src.gps_reader"]
+        if "gps_reader" in sys.modules:
+            del sys.modules["gps_reader"]
+
+        from src.gps_reader import GPSReader
+
+        reader = GPSReader()
+
+        # Before poll: cache is (None, None, None)
+        assert reader.get_location() == (None, None, None)
+
+        # After poll: cache is updated
+        reader.poll()
+        result = reader.get_location()
+
+    assert result == pytest.approx((5.0, 6.0, 1.0))
+
+    # get_location() should NOT have triggered additional _fetch calls beyond poll()
+    # (poll called once → get_geoposition_async called exactly once)
+    assert mock_locator.get_geoposition_async.call_count == 1

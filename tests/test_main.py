@@ -1,5 +1,5 @@
 # tests/test_main.py
-"""Failing unit tests for main.py — RED state until Plan 03 creates main.py.
+"""Unit tests for main.py acquisition loop.
 
 Requirement mapping:
   test_graceful_shutdown_closes_resources    -> CONN-02 (close resources on exit)
@@ -7,6 +7,8 @@ Requirement mapping:
   test_terminal_display_per_sample           -> DISP-01 (terminal display per sample)
   test_connection_status_messages            -> DISP-02 (connection failure message)
   test_connection_error_message_on_read_fail -> DISP-02 (runtime read-fail message)
+  test_gps_no_fix_message_at_startup         -> GPS-04 (GPS status line at startup)
+  test_gps_permission_denied_message_at_startup -> GPS-09 (actionable permission-denied message)
 """
 from __future__ import annotations
 
@@ -76,12 +78,18 @@ def test_graceful_shutdown_closes_resources(capsys: pytest.CaptureFixture) -> No
     mock_csv = MagicMock()
     mock_csv.file_path = "data/wtvb01_20260521_100000.csv"
 
+    mock_gps = MagicMock()
+    mock_gps.status = "no_fix"
+    mock_gps.get_location.return_value = (None, None, None)
+    mock_gps.poll.return_value = None
+
     with (
         patch("sys.argv", ["main.py"]),
         patch("main.load_config", return_value=_make_config()),
         patch("main.setup_logging"),
         patch("main.WitMotionSensor", return_value=mock_sensor),
         patch("main.CSVLogger", return_value=mock_csv),
+        patch("main.GPSReader", return_value=mock_gps),
     ):
         main()
 
@@ -106,12 +114,18 @@ def test_session_summary_on_ctrl_c(capsys: pytest.CaptureFixture) -> None:
     mock_csv.file_path = "data/wtvb01_20260521_100000.csv"
     mock_csv.rows_written = 1
 
+    mock_gps = MagicMock()
+    mock_gps.status = "no_fix"
+    mock_gps.get_location.return_value = (None, None, None)
+    mock_gps.poll.return_value = None
+
     with (
         patch("sys.argv", ["main.py"]),
         patch("main.load_config", return_value=_make_config()),
         patch("main.setup_logging"),
         patch("main.WitMotionSensor", return_value=mock_sensor),
         patch("main.CSVLogger", return_value=mock_csv),
+        patch("main.GPSReader", return_value=mock_gps),
     ):
         main()
 
@@ -142,12 +156,18 @@ def test_terminal_display_per_sample(capsys: pytest.CaptureFixture) -> None:
     mock_csv.file_path = "data/wtvb01_20260521_100000.csv"
     mock_csv.rows_written = 1
 
+    mock_gps = MagicMock()
+    mock_gps.status = "no_fix"
+    mock_gps.get_location.return_value = (None, None, None)
+    mock_gps.poll.return_value = None
+
     with (
         patch("sys.argv", ["main.py"]),
         patch("main.load_config", return_value=_make_config()),
         patch("main.setup_logging"),
         patch("main.WitMotionSensor", return_value=mock_sensor),
         patch("main.CSVLogger", return_value=mock_csv),
+        patch("main.GPSReader", return_value=mock_gps),
     ):
         main()
 
@@ -175,12 +195,18 @@ def test_connection_status_messages(capsys: pytest.CaptureFixture) -> None:
 
     mock_csv = MagicMock()
 
+    mock_gps = MagicMock()
+    mock_gps.status = "no_fix"
+    mock_gps.get_location.return_value = (None, None, None)
+    mock_gps.poll.return_value = None
+
     with (
         patch("sys.argv", ["main.py"]),
         patch("main.load_config", return_value=_make_config()),
         patch("main.setup_logging"),
         patch("main.WitMotionSensor", return_value=mock_sensor),
         patch("main.CSVLogger", return_value=mock_csv),
+        patch("main.GPSReader", return_value=mock_gps),
     ):
         try:
             main()
@@ -213,12 +239,18 @@ def test_connection_error_message_on_read_fail(capsys: pytest.CaptureFixture) ->
     mock_csv.file_path = "data/wtvb01_20260521_100000.csv"
     mock_csv.rows_written = 0
 
+    mock_gps = MagicMock()
+    mock_gps.status = "no_fix"
+    mock_gps.get_location.return_value = (None, None, None)
+    mock_gps.poll.return_value = None
+
     with (
         patch("sys.argv", ["main.py"]),
         patch("main.load_config", return_value=_make_config()),
         patch("main.setup_logging"),
         patch("main.WitMotionSensor", return_value=mock_sensor),
         patch("main.CSVLogger", return_value=mock_csv),
+        patch("main.GPSReader", return_value=mock_gps),
     ):
         main()
 
@@ -228,4 +260,85 @@ def test_connection_error_message_on_read_fail(capsys: pytest.CaptureFixture) ->
     # A warning or error string must appear when read returns None
     assert any(word in output.lower() for word in ("warn", "error", "fail", "none", "read")), (
         f"Expected warning message in output when read_all_data() returns None, got:\n{output}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# GPS-04: GPS status line at startup (no fix)
+# ---------------------------------------------------------------------------
+
+def test_gps_no_fix_message_at_startup(capsys: pytest.CaptureFixture) -> None:
+    """When GPS has no fix, startup prints 'GPS: no fix — CSV columns will be empty'.
+
+    Requirement: GPS-04
+    """
+    mock_sensor = MagicMock()
+    mock_sensor.connect.return_value = True
+    mock_sensor.read_all_data.side_effect = [KeyboardInterrupt()]
+
+    mock_csv = MagicMock()
+    mock_csv.path = "data/wtvb01_test.csv"
+
+    mock_gps = MagicMock()
+    mock_gps.status = "no_fix"
+    mock_gps.get_location.return_value = (None, None, None)
+    mock_gps.poll.return_value = None
+
+    with (
+        patch("sys.argv", ["main.py"]),
+        patch("main.load_config", return_value=_make_config()),
+        patch("main.setup_logging"),
+        patch("main.WitMotionSensor", return_value=mock_sensor),
+        patch("main.CSVLogger", return_value=mock_csv),
+        patch("main.GPSReader", return_value=mock_gps),
+    ):
+        try:
+            main()
+        except SystemExit:
+            pass
+
+    captured = capsys.readouterr()
+    assert "GPS: no fix" in captured.out, (
+        f"Expected 'GPS: no fix' in stdout, got:\n{captured.out}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# GPS-09: GPS permission denied message at startup
+# ---------------------------------------------------------------------------
+
+def test_gps_permission_denied_message_at_startup(capsys: pytest.CaptureFixture) -> None:
+    """When GPS permission denied, startup prints the exact actionable message.
+
+    Requirement: GPS-09
+    """
+    mock_sensor = MagicMock()
+    mock_sensor.connect.return_value = True
+    mock_sensor.read_all_data.side_effect = [KeyboardInterrupt()]
+
+    mock_csv = MagicMock()
+    mock_csv.path = "data/wtvb01_test.csv"
+
+    mock_gps = MagicMock()
+    mock_gps.status = "denied"
+    mock_gps.get_location.return_value = (None, None, None)
+    mock_gps.poll.return_value = None
+
+    with (
+        patch("sys.argv", ["main.py"]),
+        patch("main.load_config", return_value=_make_config()),
+        patch("main.setup_logging"),
+        patch("main.WitMotionSensor", return_value=mock_sensor),
+        patch("main.CSVLogger", return_value=mock_csv),
+        patch("main.GPSReader", return_value=mock_gps),
+    ):
+        try:
+            main()
+        except SystemExit:
+            pass
+
+    captured = capsys.readouterr()
+    expected = "GPS: location access denied — enable in Windows Settings"
+    assert expected in captured.out, (
+        f"Expected actionable GPS denial message in stdout, got:\n{captured.out}"
     )
