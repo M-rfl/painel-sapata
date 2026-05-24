@@ -6,12 +6,12 @@ Contains:
 - get_timestamp_br(): ISO 8601 timestamp with America/Sao_Paulo timezone
 - setup_logging(): dual-handler logging (file + console)
 - deep_merge(): recursive dict merge for config defaults
-- SensorReading: dataclass with all 17 sensor channel fields
+- SensorReading: dataclass with 18 sensor channel fields + 3 GPS fields
 """
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -183,7 +183,8 @@ class SensorReading:
         angle_x, angle_y, angle_z,
         temperature_c,
         dx_um, dy_um, dz_um,
-        freq_x_hz, freq_y_hz, freq_z_hz
+        freq_x_hz, freq_y_hz, freq_z_hz,
+        gps_lat, gps_lon, gps_speed_mps
     """
     timestamp: str           # ISO 8601 with -03:00 offset, from get_timestamp_br()
     sensor_id: str           # configured in config.yaml; "wtvb01" by default
@@ -215,3 +216,9 @@ class SensorReading:
     freq_x_hz: Optional[float]
     freq_y_hz: Optional[float]
     freq_z_hz: Optional[float]
+
+    # GPS position — populated by GPSReader background thread (GPS-05)
+    # Default None: field logger runs without GPS; existing callsites unaffected.
+    gps_lat: Optional[float] = field(default=None)
+    gps_lon: Optional[float] = field(default=None)
+    gps_speed_mps: Optional[float] = field(default=None)
