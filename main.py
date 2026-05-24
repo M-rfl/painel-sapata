@@ -3,21 +3,34 @@
 Wires config_loader, WitMotionSensor, and CSVLogger into a continuous
 polling loop with graceful Ctrl+C shutdown and session summary.
 
+Supports two modes:
+  python main.py           — headless (v1.0 behavior, unchanged)
+  python main.py --gui     — real-time matplotlib visualizer
+
 Requirements satisfied:
   CONN-02: sensor.close() + csv_logger.close() always called in finally block
   DISP-01: one formatted line printed per successful sample
   DISP-02: error/warning messages on connect failure and read failure
   DISP-03: session summary (samples, CSV path, elapsed) on Ctrl+C
+  INTG-01: no --gui flag stays headless (zero regression from v1.0)
+  INTG-02: --gui mode writes CSV rows via acquisition thread
+  INTG-03: --gui mode calls PlotManager.update_data from acquisition thread
+  INTG-04: window close triggers session summary and resource cleanup
 """
 from __future__ import annotations
 
+import argparse
 import sys
 import time
+import threading
 
 from src.sensor import WitMotionSensor
 from src.csv_logger import CSVLogger
 from src.config_loader import load_config
 from src.utils import setup_logging
+
+# PlotManager NOT imported here — deferred to _run_gui_mode() to prevent
+# Tk backend activation on headless / test environments.
 
 
 # ---------------------------------------------------------------------------
@@ -36,12 +49,155 @@ def _format_reading(reading) -> str:
     return f"{reading.timestamp}  ax={ax:+.3f}g  ay={ay:+.3f}g  az={az:+.3f}g{temp}"
 
 
+def _print_summary(samples_written: int, csv_path, start_time: float) -> None:
+    """Print session summary identical to v1.0 format.
+
+    Args:
+        samples_written: Number of rows written to CSV.
+        csv_path: Path string to the CSV file.
+        start_time: monotonic start time (from time.monotonic()).
+    """
+    elapsed = time.monotonic() - start_time       # DISP-03
+    mins, secs = divmod(elapsed, 60)
+    dur = f"{int(mins)}m{secs:.1f}s" if mins >= 1 else f"{elapsed:.1f}s"
+    print()
+    print("--- Session Summary ---")
+    print(f"  Samples written : {samples_written}")
+    print(f"  CSV file        : {csv_path}")
+    print(f"  Elapsed         : {dur}")
+
+
 # ---------------------------------------------------------------------------
-# Main acquisition loop
+# GUI acquisition background thread
+# ---------------------------------------------------------------------------
+
+def _acquire(sensor, csv_logger, config, pm, stop_event, samples_ref) -> None:
+    """Background thread: poll sensor and push data to PlotManager until stopped.
+
+    Uses stop_event.wait() instead of time.sleep() so it responds immediately
+    to stop signals from the close_event handler.
+
+    Args:
+        sensor: Connected WitMotionSensor instance.
+        csv_logger: Open CSVLogger instance.
+        config: AppConfig with sample_interval_seconds.
+        pm: PlotManager instance (thread-safe update_data via GIL).
+        stop_event: threading.Event — loop exits when set.
+        samples_ref: Mutable list [int] used as counter (avoids nonlocal).
+    """
+    while not stop_event.is_set():
+        reading = sensor.read_all_data()
+        if reading is not None:
+            csv_logger.write_row(reading)
+            pm.update_data(reading)
+            samples_ref[0] += 1
+            print(_format_reading(reading))       # DISP-01
+        else:
+            print("[WARN] Read failed - retrying...")  # DISP-02
+        stop_event.wait(timeout=config.sample_interval_seconds)
+
+
+# ---------------------------------------------------------------------------
+# Mode implementations
+# ---------------------------------------------------------------------------
+
+def _run_headless_mode(sensor, csv_logger, config, start_time: float) -> None:
+    """Run the v1.0 acquisition loop — zero semantic changes from original main().
+
+    Blocks until KeyboardInterrupt (Ctrl+C), then prints session summary
+    and returns so the caller's finally block can close resources.
+
+    Args:
+        sensor: Connected WitMotionSensor instance.
+        csv_logger: Open CSVLogger instance.
+        config: AppConfig with sample_interval_seconds.
+        start_time: monotonic start time (from time.monotonic()).
+    """
+    samples_written = 0
+    try:
+        while True:
+            reading = sensor.read_all_data()
+            if reading is not None:
+                csv_logger.write_row(reading)
+                samples_written += 1
+                print(_format_reading(reading))       # DISP-01
+            else:
+                print("[WARN] Read failed - retrying...")  # DISP-02
+            time.sleep(config.sample_interval_seconds)
+    except KeyboardInterrupt:
+        _print_summary(samples_written, csv_logger.path, start_time)
+    finally:
+        sensor.close()       # CONN-02: always runs
+        csv_logger.close()   # CONN-02: always runs
+
+
+def _run_gui_mode(sensor, csv_logger, config, start_time: float) -> None:
+    """Run acquisition with real-time matplotlib visualizer.
+
+    Architecture:
+      - Acquisition runs in a daemon background thread (_acquire).
+      - plt.show() blocks on the main thread inside pm.start().
+      - close_event fires _on_close which sets stop_event, unblocking the thread.
+
+    PlotManager is imported here (not at module level) to prevent Tk activation
+    in headless and test environments.
+
+    Args:
+        sensor: Connected WitMotionSensor instance.
+        csv_logger: Open CSVLogger instance.
+        config: AppConfig with sample_interval_seconds.
+        start_time: monotonic start time (from time.monotonic()).
+    """
+    from src.visualizer import PlotManager  # deferred import — no Tk at module level
+
+    stop_event = threading.Event()
+    samples_ref = [0]  # mutable counter — avoids nonlocal across thread boundary
+
+    pm = PlotManager()
+
+    def _on_close(event):  # noqa: ANN001
+        """Called by matplotlib when the figure window is closed."""
+        stop_event.set()
+
+    # Register close handler BEFORE starting threads (avoids race on instant close)
+    pm._fig.canvas.mpl_connect("close_event", _on_close)
+
+    acq_thread = threading.Thread(
+        target=_acquire,
+        args=(sensor, csv_logger, config, pm, stop_event, samples_ref),
+        daemon=True,
+        name="acq-thread",
+    )
+    acq_thread.start()
+
+    try:
+        pm.start()  # blocks main thread until window closes (plt.show() inside)
+    except KeyboardInterrupt:
+        pass  # Ctrl+C while GUI is open — treat same as window close
+    finally:
+        stop_event.set()                # signal acquisition thread to stop
+        acq_thread.join(timeout=2)      # wait for thread to finish (max 2s)
+        _print_summary(samples_ref[0], csv_logger.path, start_time)
+        sensor.close()                  # CONN-02
+        csv_logger.close()              # CONN-02
+
+
+# ---------------------------------------------------------------------------
+# Entry point
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    """Load config, connect sensor, run polling loop, print summary on exit."""
+    """Parse args, connect sensor, dispatch to headless or GUI mode."""
+    parser = argparse.ArgumentParser(
+        description="WTVB01 Notebook Logger — real-time acquisition"
+    )
+    parser.add_argument(
+        "--gui",
+        action="store_true",
+        help="Open real-time matplotlib visualizer window",
+    )
+    args = parser.parse_args()
+
     config = load_config()
     setup_logging(level=config.log_level)
 
@@ -62,30 +218,11 @@ def main() -> None:
     print(f"[INFO] Connected. Logging at {hz:.1f} Hz. Ctrl+C to stop.")
 
     start_time = time.monotonic()
-    samples_written = 0
 
-    try:
-        while True:
-            reading = sensor.read_all_data()
-            if reading is not None:
-                csv_logger.write_row(reading)
-                samples_written += 1
-                print(_format_reading(reading))       # DISP-01
-            else:
-                print("[WARN] Read failed - retrying...")  # DISP-02
-            time.sleep(config.sample_interval_seconds)
-    except KeyboardInterrupt:
-        elapsed = time.monotonic() - start_time       # DISP-03
-        mins, secs = divmod(elapsed, 60)
-        dur = f"{int(mins)}m{secs:.1f}s" if mins >= 1 else f"{elapsed:.1f}s"
-        print()
-        print("--- Session Summary ---")
-        print(f"  Samples written : {samples_written}")
-        print(f"  CSV file        : {csv_logger.path}")
-        print(f"  Elapsed         : {dur}")
-    finally:
-        sensor.close()       # CONN-02: always runs, even on unexpected exceptions
-        csv_logger.close()   # CONN-02: always runs
+    if args.gui:
+        _run_gui_mode(sensor, csv_logger, config, start_time)
+    else:
+        _run_headless_mode(sensor, csv_logger, config, start_time)
 
 
 if __name__ == "__main__":
