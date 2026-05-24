@@ -160,3 +160,41 @@ def test_sensor_reading_has_all_fields() -> None:
     assert reading.az_g == 1.0
     assert reading.sensor_id == "wtvb01"
     assert reading.temperature_c == 25.0
+
+
+def test_sensor_reading_gps_fields_default_to_none() -> None:
+    """GPS fields must default to None so existing code compiles without changes."""
+    reading = SensorReading(
+        timestamp="2026-05-24T10:00:00.000000-03:00",
+        sensor_id="wtvb01",
+        ax_g=0.0, ay_g=0.0, az_g=1.0,
+        vx_mm_s=0.0, vy_mm_s=0.0, vz_mm_s=0.0,
+        angle_x=None, angle_y=None, angle_z=None,
+        temperature_c=25.0,
+        dx_um=0.0, dy_um=0.0, dz_um=0.0,
+        freq_x_hz=50.0, freq_y_hz=51.0, freq_z_hz=52.0,
+        # No GPS args — all should default to None
+    )
+    assert reading.gps_lat is None
+    assert reading.gps_lon is None
+    assert reading.gps_speed_mps is None
+
+
+def test_sensor_reading_gps_fields_accept_floats() -> None:
+    """GPS fields must accept float values."""
+    reading = SensorReading(
+        timestamp="2026-05-24T10:00:00.000000-03:00",
+        sensor_id="wtvb01",
+        ax_g=0.0, ay_g=0.0, az_g=1.0,
+        vx_mm_s=0.0, vy_mm_s=0.0, vz_mm_s=0.0,
+        angle_x=None, angle_y=None, angle_z=None,
+        temperature_c=25.0,
+        dx_um=0.0, dy_um=0.0, dz_um=0.0,
+        freq_x_hz=50.0, freq_y_hz=51.0, freq_z_hz=52.0,
+        gps_lat=-23.5505,
+        gps_lon=-46.6333,
+        gps_speed_mps=1.5,
+    )
+    assert reading.gps_lat == pytest.approx(-23.5505)
+    assert reading.gps_lon == pytest.approx(-46.6333)
+    assert reading.gps_speed_mps == pytest.approx(1.5)
