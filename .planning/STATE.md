@@ -2,16 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: GPS Data Integration
-status: Roadmap ready — awaiting phase planning
-stopped_at: Roadmap created — Phase 7 not yet planned
-last_updated: "2026-05-24T00:00:00.000Z"
-last_activity: 2026-05-24 — v1.2 roadmap created (Phases 7-8)
+status: "In progress — Phase 7 Plan 02 complete"
+last_updated: "2026-05-24T23:22:00.000Z"
 progress:
   total_phases: 2
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 3
+  completed_plans: 2
+  percent: 67
 ---
 
 # Project State
@@ -25,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v1.2 start)
 
 ## Current Position
 
-Phase: 7 — GPS Reader & Data Model (not yet planned)
-Plan: —
-Status: Roadmap ready — awaiting `/gsd:plan-phase 7`
+Phase: 7 — GPS Reader & Data Model
+Plan: 2/3 complete (07-01, 07-02 done)
+Status: In progress — awaiting 07-03 execution
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██████░░░░] 67%
 
 ## Performance Metrics
 
@@ -39,7 +37,8 @@ Progress: [░░░░░░░░░░] 0%
 | Tests GREEN | 64 | 79 | — |
 | Python LOC added | 2,064 | +707 | — |
 | Phases | 4 | 2 | 2 planned |
-| Plans | 8/9 | 4/4 | 0/TBD |
+| Plans | 8/9 | 4/4 | 1/3 |
+| Tests GREEN | 64 | 81 | 89 |
 
 ## Accumulated Context
 
@@ -51,12 +50,20 @@ Progress: [░░░░░░░░░░] 0%
 
 ### v1.2 GPS Decisions Made
 
+- GPS fields appended as last 3 in SensorReading using field(default=None) for backward compatibility and CSV column ordering (07-02)
+
 - GPS source: Windows Location API (WinRT / winsdk) — no extra serial port needed
 - New fields on SensorReading: `gps_lat`, `gps_lon`, `gps_speed_mps` (all `float | None`)
 - No-fix behavior: empty fields in CSV (same pattern as angle RESERVED registers)
 - Activation: always-on — GPS columns always present in CSV header regardless of fix status
 - Non-blocking: GPSReader runs in a background thread; must not delay 10 Hz sensor acquisition
 - Resilience: app starts normally if GPS hardware absent, API import fails, or permission denied
+
+### 07-01 Decisions (GPSReader)
+
+- asyncio.run() per get_location() call: acceptable at 1 Hz, no shared event loop state with sensor thread
+- _WINSDK_AVAILABLE module-level flag: import attempted once at module load, fast hot path
+- speed=None normalized to 0.0: Windows returns None for speed when fix exists but speed unknown
 
 ### Key Constraints for v1.2
 
@@ -67,7 +74,7 @@ Progress: [░░░░░░░░░░] 0%
 
 ## Session Continuity
 
-Next action: `/gsd:plan-phase 7`
+Next action: Execute 07-03-PLAN.md (GPS wiring into acquisition loop)
 
 Phase 7 scope: `src/gps_reader.py` (GPSReader class), `SensorReading` dataclass update in `utils.py`, background thread wiring in `main.py`, terminal status messages, full resilience (no-hardware, permission-denied).
 

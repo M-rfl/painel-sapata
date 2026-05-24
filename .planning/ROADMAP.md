@@ -51,7 +51,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
   5. `SensorReading` in `utils.py` carries `gps_lat`, `gps_lon`, `gps_speed_mps` fields typed `float | None`, and GPS polling does not measurably delay the 10 Hz sensor read cycle
 **Plans**: 3 plans
 Plans:
-- [ ] 07-01-PLAN.md — GPSReader class: Windows Location API, resilience, TDD (GPS-01, GPS-02, GPS-08, GPS-09)
+- [x] 07-01-PLAN.md — GPSReader class: Windows Location API, resilience, TDD (GPS-01, GPS-02, GPS-08, GPS-09)
 - [ ] 07-02-PLAN.md — SensorReading dataclass: add gps_lat, gps_lon, gps_speed_mps fields (GPS-05)
 - [ ] 07-03-PLAN.md — main.py wiring: background GPS thread, startup status messages, GPS field population (GPS-03, GPS-04)
 
@@ -75,5 +75,5 @@ Plans:
 | 4. Documentation & Hardening | v1.0 | 2/2 | Complete | 2026-05-21 |
 | 5. Visualizer Module | v1.1 | 2/2 | Complete | 2026-05-23 |
 | 6. main.py Integration | v1.1 | 2/2 | Complete | 2026-05-24 |
-| 7. GPS Reader & Data Model | v1.2 | 0/TBD | Not started | - |
+| 7. GPS Reader & Data Model | 2/3 | In Progress|  | - |
 | 8. CSV Integration | v1.2 | 0/TBD | Not started | - |

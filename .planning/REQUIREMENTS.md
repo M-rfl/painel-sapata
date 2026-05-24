@@ -15,7 +15,7 @@
 
 ### Data Model
 
-- [ ] **GPS-05**: `SensorReading` dataclass (in `utils.py`) gains `gps_lat`, `gps_lon`, `gps_speed_mps` fields (`float | None`)
+- [x] **GPS-05**: `SensorReading` dataclass (in `utils.py`) gains `gps_lat`, `gps_lon`, `gps_speed_mps` fields (`float | None`)
 
 ### CSV Integration
 
@@ -63,7 +63,7 @@ Updated during roadmap creation.
 | GPS-02 | Phase 7 | Pending |
 | GPS-03 | Phase 7 | Pending |
 | GPS-04 | Phase 7 | Pending |
-| GPS-05 | Phase 7 | Pending |
+| GPS-05 | Phase 7 | Complete |
 | GPS-06 | Phase 8 | Pending |
 | GPS-07 | Phase 8 | Pending |
 | GPS-08 | Phase 7 | Pending |
