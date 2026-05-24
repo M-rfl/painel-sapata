@@ -75,5 +75,5 @@ Plans:
 | 4. Documentation & Hardening | v1.0 | 2/2 | Complete | 2026-05-21 |
 | 5. Visualizer Module | v1.1 | 2/2 | Complete | 2026-05-23 |
 | 6. main.py Integration | v1.1 | 2/2 | Complete | 2026-05-24 |
-| 7. GPS Reader & Data Model | 2/3 | In Progress|  | - |
+| 7. GPS Reader & Data Model | v1.2 | 1/3 | In Progress | - |
 | 8. CSV Integration | v1.2 | 0/TBD | Not started | - |

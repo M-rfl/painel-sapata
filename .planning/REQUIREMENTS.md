@@ -8,8 +8,8 @@
 
 ### GPS Reader
 
-- [ ] **GPS-01**: System reads latitude, longitude, and speed from Windows Location API via `src/gps_reader.py`
-- [ ] **GPS-02**: `GPSReader.get_location()` returns `(lat, lon, speed_mps)` or `(None, None, None)` when no GPS fix
+- [x] **GPS-01**: System reads latitude, longitude, and speed from Windows Location API via `src/gps_reader.py`
+- [x] **GPS-02**: `GPSReader.get_location()` returns `(lat, lon, speed_mps)` or `(None, None, None)` when no GPS fix
 - [ ] **GPS-03**: GPS polling is non-blocking — does not delay the 10 Hz sensor acquisition loop (runs in background thread)
 - [ ] **GPS-04**: Terminal shows GPS status at startup: "GPS: fix acquired" or "GPS: no fix — CSV columns will be empty"
 
@@ -24,8 +24,8 @@
 
 ### Resilience
 
-- [ ] **GPS-08**: If Windows Location API is unavailable (no GPS hardware, API import error) — app starts normally, GPS columns remain empty, no crash or exception propagated
-- [ ] **GPS-09**: If Windows location permission is denied, terminal shows actionable message: "GPS: location access denied — enable in Windows Settings › Privacy › Location"
+- [x] **GPS-08**: If Windows Location API is unavailable (no GPS hardware, API import error) — app starts normally, GPS columns remain empty, no crash or exception propagated
+- [x] **GPS-09**: If Windows location permission is denied, terminal shows actionable message: "GPS: location access denied — enable in Windows Settings › Privacy › Location"
 
 ## v2 Requirements (Deferred)
 
@@ -59,15 +59,15 @@ Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GPS-01 | Phase 7 | Pending |
-| GPS-02 | Phase 7 | Pending |
+| GPS-01 | Phase 7 | Complete (07-01) |
+| GPS-02 | Phase 7 | Complete (07-01) |
 | GPS-03 | Phase 7 | Pending |
 | GPS-04 | Phase 7 | Pending |
 | GPS-05 | Phase 7 | Complete |
 | GPS-06 | Phase 8 | Pending |
 | GPS-07 | Phase 8 | Pending |
-| GPS-08 | Phase 7 | Pending |
-| GPS-09 | Phase 7 | Pending |
+| GPS-08 | Phase 7 | Complete (07-01) |
+| GPS-09 | Phase 7 | Complete (07-01) |
 
 **Coverage:**
 - v1.2 requirements: 9 total
