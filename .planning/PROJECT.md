@@ -2,24 +2,13 @@
 
 ## What This Is
 
-Aplicação Python para aquisição contínua de dados do acelerômetro industrial WitMotion WTVB01-485 via Modbus RTU/RS-485, conectado a um notebook por conversor USB–RS485. Lê aceleração, velocidade de vibração, deslocamento, frequência, ângulo e temperatura em tempo real, exibe no terminal e salva em CSV com timestamp fuso America/Sao_Paulo. Projetada para uso em Windows, com compatibilidade Linux/macOS.
+Aplicação Python para aquisição contínua de dados do acelerômetro industrial WitMotion WTVB01-485 via Modbus RTU/RS-485, conectado a um notebook por conversor USB–RS485. Lê aceleração, velocidade de vibração, deslocamento, frequência e temperatura em tempo real, exibe no terminal e salva em CSV com timestamp fuso America/Sao_Paulo. `--gui` abre janela matplotlib com 5 subplots animados. Projetada para uso em Windows, com compatibilidade Linux/macOS.
 
-**Status: v1.0 MVP shipped 2026-05-21.** Core acquisition loop is fully functional — `python main.py` connects, reads at 10 Hz, writes timestamped CSV, and exits cleanly on Ctrl+C.
+**Status: v1.1 Real-Time Visualization shipped 2026-05-24.** Acquisition loop + live visualization both functional — `python main.py` for headless CSV logging; `python main.py --gui` for simultaneous CSV + live animated graph.
 
 ## Core Value
 
 O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não funcionar, nada mais importa.
-
-## Current Milestone: v1.1 Real-Time Visualization
-
-**Goal:** Add a live matplotlib graph window (`--gui` flag) showing all sensor channels in real time while CSV logging continues unchanged.
-
-**Target features:**
-- `python main.py --gui` opens a live Matplotlib animation window
-- 5 subplots: acceleration (X/Y/Z), velocity (X/Y/Z), displacement (X/Y/Z), frequency (X/Y/Z), temperature
-- 30-second scrolling history (300 points at 10 Hz)
-- Acquisition runs in background thread; Matplotlib on main thread via thread-safe deque
-- CSV logging runs simultaneously — visualization is a pure view layer
 
 ## Requirements
 
@@ -52,34 +41,44 @@ O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não f
 - ✓ README.md completo: instalação Windows/Linux/macOS, identificação de porta serial nos 3 OS, 12 cenários de troubleshooting — v1.0
 - ✓ requirements.txt com versões pinadas (pymodbus==3.13.0) — v1.0
 
-### Active (v1.1)
+### Validated (v1.1)
 
-- [ ] `src/visualizer.py` — PlotManager class with FuncAnimation, 5 subplots, thread-safe deque buffer
-- [ ] `main.py` — `--gui` argparse flag, background acquisition thread, graceful Ctrl+C shutdown with GUI open
-- [ ] 30-second rolling window (deque maxlen=300 at 10 Hz) per channel
-- [ ] All 13 live channels displayed: ax/ay/az (g), vib X/Y/Z (mm/s), disp X/Y/Z (µm), freq X/Y/Z (Hz), temp (°C)
-- [ ] CSV logging unchanged when --gui is used
+- ✓ `src/visualizer.py` — PlotManager class with FuncAnimation, 5 subplots, thread-safe deque buffer — v1.1
+- ✓ `main.py` — `--gui` argparse flag, background acquisition thread, graceful shutdown with GUI open — v1.1
+- ✓ 30-second rolling window (deque maxlen=300 at 10 Hz) per channel — v1.1
+- ✓ All 13 live channels displayed: ax/ay/az (g), vib X/Y/Z (mm/s), disp X/Y/Z (µm), freq X/Y/Z (Hz), temp (°C) — v1.1
+- ✓ CSV logging unchanged when --gui is used — v1.1
 
-### Deferred from v1.0
+### Active (v1.2+)
 
 - [ ] Validar escala de velocidade de vibração em campo com equipamento de referência (SCALE_VEL = 1/100 confirmar mm/s)
-- [ ] angle_x/y/z sempre None (registradores 0x3D-0x3F RESERVED) — investigar se firmware futuro disponibilizará estes registradores
-- [ ] Verificação automatizada do CSV path no session summary (corrigir test_main.py: mock_csv.file_path → mock_csv.path)
+- [ ] Corrigir test_main.py: `mock_csv.file_path` → `mock_csv.path` (4 locations) — teste correctness fix
+- [ ] angle_x/y/z sempre None (registradores 0x3D-0x3F RESERVED) — investigar se firmware futuro disponibilizará
+
+### Deferred (v1.2+)
+
+- [ ] VIZ-07: Configurable time window via `config.yaml` (`plot_window_seconds`)
+- [ ] VIZ-08: Selective channel display (show/hide individual subplots)
+- [ ] VIZ-09: Peak detection annotations on acceleration subplot
+- [ ] VIZ-10: Dark mode / light mode toggle
 
 ### Out of Scope
 
 - Dashboard em tempo real — planejado para horizonte de meses
 - Banco de dados (InfluxDB, SQLite) — pós-coleta no CSV é suficiente agora
 - Suporte a múltiplos sensores simultâneos — apenas 1 sensor por execução nesta versão
-- Interface gráfica (GUI/TUI) — terminal suficiente para teste de bancada
 - Análise de sinal (FFT, filtros) — fora do escopo do logger
 - Auto-detecção de porta serial — config.yaml explícito é mais confiável em campo
+- Pause/resume button in graph — complexity without clear benefit
+- Zoom/pan in live plot — conflicts with FuncAnimation scroll mode
+- Graph-only mode (no CSV) — CSV is core value, always logged
 
 ## Context
 
-**Shipped v1.0:** 2,064 LOC Python | 64 tests GREEN | 3 dias de desenvolvimento
+**Shipped v1.0:** 2,064 LOC Python | 64 tests GREEN | 3 dias
+**Shipped v1.1:** +707 LOC Python | 79 tests GREEN | 1 dia
 
-**Tech Stack:** Python 3.8+ · pymodbus==3.13.0 · pyserial · PyYAML · tzdata · pathlib · csv stdlib
+**Tech Stack:** Python 3.8+ · pymodbus==3.13.0 · pyserial · PyYAML · tzdata · matplotlib>=3.10 · pathlib · csv stdlib
 
 **Hardware:** WTVB01-485, Modbus RTU, slave ID 80 (0x50), 9600 baud, 8N1. USB-RS485 adapter (CH340/CP210x). Alimentação 5-36Vcc (recomendado 12Vcc).
 
@@ -93,14 +92,13 @@ O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não f
 
 **Validação de campo:** Verificado em COM10 com sensor plano — az_g ≈ 1.0 g, ax_g/ay_g ≈ 0.0 g, 10 Hz estáveis.
 
-**Tech debt pendente:**
+**Known tech debt:**
 - `test_main.py` usa `mock_csv.file_path` mas `main.py` lê `csv_logger.path` — DISP-03 CSV path não assertado no teste automatizado
-- Comentários em `utils.py` dizem "scale TBD" para campos de velocidade/deslocamento/frequência — desatualizados após confirmação do manual
-- `02-02-PLAN.md` (hardware checkpoint de Phase 2) nunca executado — verificação de campo realizada no Phase 3
+- `05-VALIDATION.md` e `06-VALIDATION.md` mostram `nyquist_compliant: false` — planning artifacts não atualizados
 
 ## Constraints
 
-- **Tech Stack**: Python + pymodbus + pyserial + pathlib + PyYAML — sem bibliotecas extras
+- **Tech Stack**: Python + pymodbus + pyserial + pathlib + PyYAML + matplotlib — sem bibliotecas extras além disto
 - **Python Version**: 3.8+ para máxima compatibilidade com Windows corporativo
 - **Platform**: Windows priority (COM ports), Linux/macOS secondary
 - **Extensibility**: Arquitetura modular para adicionar exportadores (MQTT, InfluxDB, REST) sem reescrever sensor.py
@@ -123,6 +121,12 @@ O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não f
 | `open(newline='')` no CSV | Windows: previne CRCRLF double-ending | ✓ Good — CSV legível em Excel |
 | `getattr(config, 'sensor_id', 'wtvb01')` | AppConfig não tem sensor_id — fallback evita churn no Phase 1 | ✓ Good — extensível sem reescrever |
 | KeyboardInterrupt no nível mais externo | Session summary sempre executa antes do finally | ✓ Good — zero dados perdidos em Ctrl+C |
+| Matplotlib main thread / acquisition background thread | Windows TkAgg constraint: plt.show() must block main thread | ✓ Good — no GUI freeze observed |
+| deque(maxlen=300) per channel (v1.1) | 30s × 10 Hz rolling buffer — thread-safe under CPython GIL | ✓ Good — correct buffer behavior confirmed |
+| Deferred import of PlotManager inside _run_gui_mode (v1.1) | Prevents TkAgg backend activation on headless/test import of main.py | ✓ Good — 79 tests pass headlessly |
+| patch('src.visualizer.PlotManager') not 'main.PlotManager' (v1.1) | PlotManager never bound in main namespace due to deferred import | ✓ Good — mock target is correct |
+| stop_event.wait(timeout=...) instead of time.sleep() in _acquire (v1.1) | Responds to stop signal immediately; no 100ms lag on shutdown | ✓ Good — clean shutdown confirmed |
+| Shutdown order: stop→join→summary→sensor.close→csv.close (v1.1) | join before close prevents write-to-closed-file race | ✓ Good — no data loss on close |
 
 ---
-*Last updated: 2026-05-21 — Milestone v1.1 Real-Time Visualization started*
+*Last updated: 2026-05-24 after v1.1 milestone*

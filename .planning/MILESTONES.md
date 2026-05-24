@@ -1,5 +1,30 @@
 # Milestones
 
+## v1.1 Real-Time Visualization (Shipped: 2026-05-24)
+
+**Phases completed:** 2 phases, 4 plans | **Python LOC added:** ~707 insertions / 25 deletions
+**Timeline:** 2026-05-23 → 2026-05-24 (1 day) | **Tests:** 64 → 79 (+15 new tests GREEN)
+
+**Delivered:** Live matplotlib visualization window (`python main.py --gui`) — 5 labeled subplots animating all 13 sensor channels at 1 Hz with 30-second rolling buffer, running alongside continuous CSV logging via background acquisition thread.
+
+**Key accomplishments:**
+- `tests/test_visualizer.py` Wave 0 scaffold: 10 RED tests for VIZ-02 through VIZ-06 using Agg backend (CI-safe headless pattern); `matplotlib>=3.10` added to requirements.txt
+- `src/visualizer.py`: PlotManager class (139 lines) with 5-subplot FuncAnimation, 13 per-channel `deque(maxlen=300)` rolling buffers, `update_data()` for thread-safe data push, `_animate()` callback, and standalone mock mode — all 10 TDD tests GREEN
+- `tests/test_main_gui.py` Wave 0 scaffold: 5 RED stub tests covering INTG-01 through INTG-04; `tests/test_main.py` patched with `sys.argv` guard in all 5 tests to prevent argparse breakage
+- `main.py` refactored with argparse `--gui` flag: `_run_headless_mode` (exact v1.0 loop), `_run_gui_mode` (deferred PlotManager import, daemon acquisition thread, `stop_event.wait()`, close-event shutdown), `_print_summary` — 79/79 tests GREEN, zero regressions
+
+**Known gaps accepted at ship:**
+- `05-VALIDATION.md` and `06-VALIDATION.md` frontmatter not updated to `nyquist_compliant: true` (planning artifacts)
+- VIZ-01 live Tk window rendering needs human confirmation (structural verification complete; animation requires live display)
+- `mock_csv.file_path` vs `.path` mismatch in `tests/test_main.py` (4 locations) — tests pass via MagicMock; runtime unaffected
+
+**Archive:**
+- Roadmap: `.planning/milestones/v1.1-ROADMAP.md`
+- Requirements: `.planning/milestones/v1.1-REQUIREMENTS.md`
+- Audit: `.planning/milestones/v1.1-MILESTONE-AUDIT.md`
+
+---
+
 ## v1.0 MVP (Shipped: 2026-05-21)
 
 **Phases completed:** 4 phases | **Plans executed:** 8 of 9 | **Python LOC:** 2,064

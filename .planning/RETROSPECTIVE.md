@@ -56,14 +56,63 @@
 
 ---
 
+## Milestone: v1.1 Real-Time Visualization
+
+**Shipped:** 2026-05-24
+**Phases:** 2 | **Plans:** 4 (all executed)
+
+### What Was Built
+
+- `tests/test_visualizer.py` — 10-test Wave 0 scaffold with Agg backend; matplotlib>=3.10 added to requirements.txt
+- `src/visualizer.py` — PlotManager class (139 lines): 5-subplot FuncAnimation, 13 per-channel deque(maxlen=300), update_data(), _animate(), standalone mock mode
+- `tests/test_main_gui.py` — 5 Wave 0 stub tests covering INTG-01 through INTG-04; sys.argv patch added to test_main.py
+- `main.py` refactored — argparse `--gui`, `_run_headless_mode` (exact v1.0 loop), `_run_gui_mode` (deferred import, daemon thread, stop_event), `_print_summary`
+- `tests/` — grew from 64 to 79 tests, all GREEN
+
+### What Worked
+
+- **TDD Wave 0 + deferred import pattern**: Writing test_visualizer.py with `matplotlib.use("Agg")` before any implementation meant the PlotManager could be designed with a clean headless test surface from the start. Phase 5 never had a flaky Tk window open during tests.
+- **Phase 5 as standalone module**: Designing PlotManager to be fully testable with mock data (standalone `python src/visualizer.py`) before touching main.py meant Phase 6 had a proven interface to wire against. No integration surprises.
+- **deque + CPython GIL thread safety**: Using `deque(maxlen=300)` with CPython's GIL was the correct call for this use case — no explicit locking needed, correct rolling buffer semantics, zero test instability.
+- **stop_event instead of time.sleep()**: Using `threading.Event.wait(timeout=...)` in `_acquire()` meant shutdown latency is bounded at one sample interval (0.1s), not up to 100ms of a sleeping thread that doesn't notice the stop signal.
+- **Shutdown order (join before close)**: Establishing the invariant "join the acquisition thread before closing CSV" eliminated the write-to-closed-file race at design time, not during debugging.
+- **1-day milestone**: Phase 5 + Phase 6, 4 plans, 79 tests — completed in a single day. The Foundation work in v1.0 (SensorReading in utils.py, clean module boundaries) paid dividends here.
+
+### What Was Inefficient
+
+- **VALIDATION.md frontmatter not updated**: Same pattern as v1.0 — both `05-VALIDATION.md` and `06-VALIDATION.md` show `nyquist_compliant: false` after phase completion. The planning artifact was never updated to reflect the actual state.
+- **`mock_csv.file_path` not fixed in test_main.py**: The attribute mismatch (`file_path` vs `.path`) was a known issue from v1.0 that was deferred again. It should have been fixed in Phase 6 Plan 01 when test_main.py was already being modified for the sys.argv patch.
+- **VIZ-01 scope split between Phase 5 and Phase 6**: The requirement "launch a live graph window using `python main.py --gui`" was mapped to Phase 5 in REQUIREMENTS.md but the `--gui` flag itself was Phase 6. This created a PARTIAL status in Phase 5's VERIFICATION that needed explanation in the audit. Better requirement scoping would have split VIZ-01 into "PlotManager widget" (Phase 5) and "main.py --gui integration" (Phase 6).
+
+### Patterns Established
+
+- **Agg-first test pattern**: `import matplotlib; matplotlib.use("Agg")` as the very first statement in any test file that imports visualizer components — before any src.visualizer import. This prevents TkAgg activation in headless environments and CI.
+- **Deferred import for GUI-only dependencies**: `from src.visualizer import PlotManager` inside the function body of `_run_gui_mode()`, not at module level. Prevents Tk backend activation when `main.py` is imported by tests.
+- **samples_ref = [0] mutable list counter**: Cross-thread counter without `nonlocal` and without a Lock — thread-safe in CPython for simple int increment via GIL.
+- **TDD across phases**: Phase N scaffold (RED) → Phase N+1 implementation (GREEN). Phase 5 Plan 01 wrote RED tests for the PlotManager that Phase 5 Plan 02 made GREEN. Phase 6 Plan 01 wrote RED stubs for GUI integration that Phase 6 Plan 02 made GREEN. Consistent and effective.
+
+### Key Lessons
+
+1. **Fix known test correctness issues before modifying those files**: When test_main.py was being modified in Phase 6 Plan 01 (sys.argv patch), the `file_path` → `.path` fix was already known. Co-locating the fix with the modification would have closed the tech debt at zero extra cost.
+2. **Map requirements to the phase that delivers the observable behavior**: VIZ-01 ("launch via `python main.py --gui`") should have been mapped to Phase 6, with a new VIZ-01a for the PlotManager widget in Phase 5. Requirement-to-phase mapping should reflect the phase's observable output, not the component it builds.
+3. **Update VALIDATION.md at phase completion, not later**: Same lesson as v1.0 — the VALIDATION.md frontmatter should be updated atomically with the phase-complete commit. Running `/gsd:validate-phase N` retroactively is extra work.
+
+### Cost Observations
+
+- Model mix: sonnet (primary — all phases)
+- Sessions: ~3 sessions across 1 day
+- Notable: v1.1 was 4 plans in 1 day vs v1.0's 8 plans in 3 days. The Foundation investment (SensorReading, clean module boundaries, established test patterns) compounded here — Phase 5 and 6 had zero architectural surprises.
+
+---
+
 ## Cross-Milestone Trends
 
-| Metric | v1.0 MVP |
-|--------|----------|
-| Phases | 4 |
-| Plans executed | 8/9 |
-| Python LOC | 2,064 |
-| Tests | 64 |
-| Timeline (days) | 3 |
-| Git commits | 46 |
-| Hardware verified | Yes (COM10) |
+| Metric | v1.0 MVP | v1.1 Real-Time Visualization |
+|--------|----------|------------------------------|
+| Phases | 4 | 2 |
+| Plans executed | 8/9 | 4/4 |
+| Python LOC (added) | 2,064 | ~707 |
+| Tests (cumulative) | 64 | 79 (+15) |
+| Timeline (days) | 3 | 1 |
+| Hardware verified | Yes (COM10) | Pending (--gui with real sensor) |
+| Known debt at ship | 3 items | 3 items |
