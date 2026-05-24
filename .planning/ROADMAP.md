@@ -49,7 +49,11 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
   3. On a machine with no GPS hardware or with the Windows Location API import failing, the app starts and logs normally — no crash, no traceback visible to the user
   4. When Windows location permission is denied, the terminal shows the exact actionable message: "GPS: location access denied — enable in Windows Settings › Privacy › Location"
   5. `SensorReading` in `utils.py` carries `gps_lat`, `gps_lon`, `gps_speed_mps` fields typed `float | None`, and GPS polling does not measurably delay the 10 Hz sensor read cycle
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 07-01-PLAN.md — GPSReader class: Windows Location API, resilience, TDD (GPS-01, GPS-02, GPS-08, GPS-09)
+- [ ] 07-02-PLAN.md — SensorReading dataclass: add gps_lat, gps_lon, gps_speed_mps fields (GPS-05)
+- [ ] 07-03-PLAN.md — main.py wiring: background GPS thread, startup status messages, GPS field population (GPS-03, GPS-04)
 
 ### Phase 8: CSV Integration
 **Goal**: Every CSV file produced by the logger contains three GPS columns in its header and populates them each row with the current fix values or empty strings when no fix
