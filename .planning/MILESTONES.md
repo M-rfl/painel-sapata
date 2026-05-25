@@ -1,5 +1,24 @@
 # Milestones
 
+## v1.2 GPS Data Integration (Shipped: 2026-05-25)
+
+**Phases completed:** 2 phases, 4 plans | **Python LOC added:** ~1,661 net (+1,728 / −67)
+**Timeline:** 2026-05-24 → 2026-05-25 (1 day) | **Tests:** 79 → 95 (+16 new tests GREEN)
+
+**Delivered:** Every CSV row now includes live GPS position (`gps_lat`, `gps_lon`, `gps_speed_mps`) from the Windows Location API — empty fields when no fix. GPS runs as a 1 Hz background thread, never blocking the 10 Hz sensor acquisition loop. App starts normally with no GPS hardware or denied permission.
+
+**Key accomplishments:**
+- `src/gps_reader.py` — GPSReader class: Windows Location API via `winsdk`, async `_fetch()`, module-level import guard for resilience, 4-state `status` property (`ok / no_fix / denied / unavailable`), poll/cache split for non-blocking 10 Hz compatibility; 8 unit tests GREEN
+- `src/utils.py` — `SensorReading` extended with `gps_lat`, `gps_lon`, `gps_speed_mps` (`Optional[float]`, `field(default=None)`) — backward-compatible with all 79 existing tests
+- `src/main.py` — GPSReader wired as daemon background thread at 1 Hz; startup status line ("GPS: fix acquired" / "GPS: no fix — CSV columns will be empty" / "location access denied") printed before acquisition loop
+- `src/csv_logger.py` — CSV extended from 18 to 21 columns; `_cell()` helper reused for GPS `None → ""` serialization; all 95 tests GREEN with no regressions
+
+**Archive:**
+- Roadmap: `.planning/milestones/v1.2-ROADMAP.md`
+- Requirements: `.planning/milestones/v1.2-REQUIREMENTS.md`
+
+---
+
 ## v1.1 Real-Time Visualization (Shipped: 2026-05-24)
 
 **Phases completed:** 2 phases, 4 plans | **Python LOC added:** ~707 insertions / 25 deletions

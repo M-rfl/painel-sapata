@@ -4,7 +4,7 @@
 
 Aplicação Python para aquisição contínua de dados do acelerômetro industrial WitMotion WTVB01-485 via Modbus RTU/RS-485, conectado a um notebook por conversor USB–RS485. Lê aceleração, velocidade de vibração, deslocamento, frequência e temperatura em tempo real, exibe no terminal e salva em CSV com timestamp fuso America/Sao_Paulo. `--gui` abre janela matplotlib com 5 subplots animados. Projetada para uso em Windows, com compatibilidade Linux/macOS.
 
-**Status: v1.1 Real-Time Visualization shipped 2026-05-24.** Acquisition loop + live visualization both functional — `python main.py` for headless CSV logging; `python main.py --gui` for simultaneous CSV + live animated graph.
+**Status: v1.2 GPS Data Integration shipped 2026-05-25.** Acquisition loop + live visualization + GPS enrichment all functional — `python main.py` for headless CSV logging with GPS columns; `python main.py --gui` for simultaneous CSV + live animated graph. GPS runs as a 1 Hz background thread with graceful degradation when no hardware or permission.
 
 ## Core Value
 
@@ -49,22 +49,17 @@ O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não f
 - ✓ All 13 live channels displayed: ax/ay/az (g), vib X/Y/Z (mm/s), disp X/Y/Z (µm), freq X/Y/Z (Hz), temp (°C) — v1.1
 - ✓ CSV logging unchanged when --gui is used — v1.1
 
-## Current Milestone: v1.2 GPS Data Integration
+### Validated (v1.2)
 
-**Goal:** Enrich every CSV row with the computer's live GPS position (lat, lon, speed) using the Windows Location API — empty fields when no fix.
-
-**Target features:**
-- GPS reader module using Windows Location API (WinRT)
-- `gps_lat`, `gps_lon`, `gps_speed_mps` columns appended to every CSV row
-- Empty fields when no fix available (consistent with angle RESERVED pattern)
-- Always-on: GPS columns always present in CSV header regardless of fix status
-
-### Active (v1.2)
-
-- [ ] GPS-01: Sistema lê latitude/longitude/speed do Windows Location API a cada ciclo de aquisição
-- [ ] GPS-02: Colunas `gps_lat`, `gps_lon`, `gps_speed_mps` adicionadas ao CSV em cada linha
-- [ ] GPS-03: Quando sem fix GPS, colunas ficam em branco (mesmo padrão dos registradores RESERVED)
-- [ ] GPS-04: CSV header sempre inclui as 3 colunas GPS independente do status de fix
+- ✓ `src/gps_reader.py` — GPSReader class reading lat/lon/speed from Windows Location API via `winsdk` — v1.2
+- ✓ `GPSReader.get_location()` returns `(lat, lon, speed_mps)` or `(None, None, None)` when no GPS fix — v1.2
+- ✓ GPS polling non-blocking — 1 Hz background daemon thread, never delays 10 Hz sensor loop — v1.2
+- ✓ Terminal GPS status line at startup: "GPS: fix acquired" / "GPS: no fix — CSV columns will be empty" — v1.2
+- ✓ `SensorReading` extended with `gps_lat`, `gps_lon`, `gps_speed_mps` (`Optional[float]`, backward-compatible) — v1.2
+- ✓ CSV always has 21 columns; `gps_lat`, `gps_lon`, `gps_speed_mps` as the last 3 — v1.2
+- ✓ GPS `None` serialized as `""` in CSV (same `_cell()` pattern as angle RESERVED registers) — v1.2
+- ✓ App starts normally with no GPS hardware, import failure, or denied permission — no crash — v1.2
+- ✓ Permission-denied message: "GPS: location access denied — enable in Windows Settings › Privacy › Location" — v1.2
 
 ### Deferred (v1.3+)
 
@@ -91,8 +86,9 @@ O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não f
 
 **Shipped v1.0:** 2,064 LOC Python | 64 tests GREEN | 3 dias
 **Shipped v1.1:** +707 LOC Python | 79 tests GREEN | 1 dia
+**Shipped v1.2:** +1,661 LOC net | 95 tests GREEN | 1 dia
 
-**Tech Stack:** Python 3.8+ · pymodbus==3.13.0 · pyserial · PyYAML · tzdata · matplotlib>=3.10 · pathlib · csv stdlib
+**Tech Stack:** Python 3.8+ · pymodbus==3.13.0 · pyserial · PyYAML · tzdata · matplotlib>=3.10 · winsdk (Windows Location API) · pathlib · csv stdlib
 
 **Hardware:** WTVB01-485, Modbus RTU, slave ID 80 (0x50), 9600 baud, 8N1. USB-RS485 adapter (CH340/CP210x). Alimentação 5-36Vcc (recomendado 12Vcc).
 
@@ -141,6 +137,12 @@ O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não f
 | patch('src.visualizer.PlotManager') not 'main.PlotManager' (v1.1) | PlotManager never bound in main namespace due to deferred import | ✓ Good — mock target is correct |
 | stop_event.wait(timeout=...) instead of time.sleep() in _acquire (v1.1) | Responds to stop signal immediately; no 100ms lag on shutdown | ✓ Good — clean shutdown confirmed |
 | Shutdown order: stop→join→summary→sensor.close→csv.close (v1.1) | join before close prevents write-to-closed-file race | ✓ Good — no data loss on close |
+| `winsdk` conditional import with `_WINSDK_AVAILABLE` flag (v1.2) | Resilience: module-level guard so app starts even if `winsdk` absent or import fails | ✓ Good — no crash on machines without GPS |
+| asyncio.run() per poll() call (v1.2) | Acceptable at 1 Hz; avoids shared event loop with sensor thread | ✓ Good — no interference with acquisition loop |
+| poll/cache split in GPSReader (v1.2) | `get_location()` returns cached value instantly; `poll()` does I/O — ensures 10 Hz loop never blocks on GPS | ✓ Good — acquisition timing unaffected |
+| speed=None normalized to 0.0 (v1.2) | Windows returns None for speed when fix exists but speed is unavailable; caller gets a float, never None | ✓ Good — consistent with documented behavior |
+| GPS columns appended as last 3 (after sensor_id) in CSV (v1.2) | Consistent with SensorReading field order; STORE-02 invariant (sensor_id last) relaxed to sensor_id before GPS fields | ✓ Good — no existing column index changed |
+| gps_lat/lon/speed_mps use `field(default=None)` in SensorReading (v1.2) | All 79 existing tests construct SensorReading without GPS kwargs — backward-compatible zero-change | ✓ Good — 95/95 tests GREEN with no changes to older tests |
 
 ---
-*Last updated: 2026-05-24 after v1.2 milestone start*
+*Last updated: 2026-05-25 after v1.2 GPS Data Integration milestone*

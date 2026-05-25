@@ -105,14 +105,62 @@
 
 ---
 
+## Milestone: v1.2 GPS Data Integration
+
+**Shipped:** 2026-05-25
+**Phases:** 2 | **Plans:** 4 (all executed)
+
+### What Was Built
+
+- `src/gps_reader.py` — GPSReader class (103 lines): Windows Location API via `winsdk`, `asyncio.run()` per poll, module-level import guard, poll/cache split, 4-state `status` property, 8 unit tests GREEN
+- `src/utils.py` — SensorReading extended with `gps_lat`, `gps_lon`, `gps_speed_mps` (`Optional[float]`, `field(default=None)`) — zero changes to 79 existing tests
+- `src/main.py` — GPSReader wired as 1 Hz daemon thread; startup GPS status line; GPS fields populated in both headless and GUI acquisition paths; 3 new unit tests
+- `src/csv_logger.py` — CSV extended from 18 to 21 columns; `_cell()` helper reused for GPS None → "" serialization; 3 new TDD tests
+- `tests/` — grew from 79 to 95 tests, all GREEN; 16 new GPS tests across 4 plans
+
+### What Worked
+
+- **poll/cache split design**: Separating `poll()` (does Windows API I/O) from `get_location()` (returns cached value instantly) was the right call upfront. The 10 Hz acquisition loop never waits on GPS — it reads the cache, which is always available. This was designed in Phase 7-01 and validated cleanly in Phase 7-03 wiring.
+- **`field(default=None)` for backward compatibility**: Adding GPS fields to SensorReading with `field(default=None)` meant all 79 existing tests continued to construct SensorReading without GPS kwargs — zero test modifications needed in unrelated test files. Clean non-breaking extension.
+- **Reusing `_cell()` helper**: CSVLogger already had `_cell(value)` returning `value if value is not None else ""` for angle RESERVED registers. Reusing it for GPS None → "" required zero new logic and zero new tests of the helper itself. The pattern was proven and consistent.
+- **winsdk conditional import**: The module-level `_WINSDK_AVAILABLE = False` flag + try/import pattern means the app degrades gracefully on machines without `winsdk` installed — no crash, GPS columns remain empty. This was planned upfront as GPS-08 and worked exactly as intended.
+- **1-day milestone again**: v1.2 followed v1.1's 1-day pattern despite being a non-trivial platform integration (Windows Location API). The clean module boundaries established in v1.0 made it straightforward to add GPSReader as a new module without touching existing ones.
+
+### What Was Inefficient
+
+- **07-03 checkpoint was a human-verify gate**: Phase 7 Plan 03 included a checkpoint requiring human approval after the GPS wiring was complete. In practice, the automated test coverage was sufficient — the checkpoint added a manual step without discovering anything new. For future platform integrations, consider whether the checkpoint adds verification value or is just a formality.
+- **asyncio.run() per poll call**: Acceptable at 1 Hz, but if the GPS poll rate were ever increased, the per-call `asyncio.run()` overhead would become a bottleneck. A persistent event loop would be the correct refactor then. Noted as a known limitation but deferred.
+- **No end-to-end integration test**: All tests are unit-level. There is no test that creates a GPSReader mock, runs the acquisition loop, writes a CSV, and verifies the GPS columns appear in the file. The verification was done at the unit level and confirmed by code inspection. A true E2E test would have been higher confidence but was deferred.
+
+### Patterns Established
+
+- **Module-level conditional import guard**: `try: import winsdk; _AVAILABLE = True except ImportError: _AVAILABLE = False` as the pattern for platform-specific optional dependencies. Fast hot path (import attempted once), zero runtime penalty when unavailable.
+- **poll/cache split for blocking APIs**: When a blocking I/O operation must coexist with a tight timing loop, separate `poll()` (does the I/O, updates cache) from `get()` (returns cache instantly). The caller on the hot path always uses `get()`.
+- **GPS columns at end of CSV schema**: New optional columns go at the end of the CSV schema (after existing ones) — backward-compatible for any consumers that read by index. Column indices 0–17 are unchanged from v1.0.
+
+### Key Lessons
+
+1. **Platform API + asyncio + threading requires a clear mental model upfront**: The `asyncio.run()` / background-thread / 10 Hz loop interaction needed to be designed explicitly before writing code. The plan's interface contracts section (what GPSReader provides, what each phase requires) made this tractable.
+2. **Design resilience as a first-class requirement**: GPS-08 (no crash when GPS unavailable) and GPS-09 (permission-denied message) were explicit requirements, not afterthoughts. Both were covered by unit tests. Building the conditional import guard on Day 1 meant the resilience was structural, not a try/except patch added at the end.
+3. **Checkpoint gates should require human action that tests can't automate**: Phase 7-03's human-verify checkpoint could have been skipped if the only verification was "does the test pass?" Future checkpoint gates should be reserved for things like "verify the GPS status line actually appears on the real terminal" — things that genuinely require a human.
+
+### Cost Observations
+
+- Model mix: sonnet (primary — all phases)
+- Sessions: ~2 sessions across 1 day
+- Notable: 14 commits for a +1,661 LOC milestone. The plan structure (4 plans, clear interfaces) kept the work focused — each plan modified 1–2 files and had a clear done condition.
+
+---
+
 ## Cross-Milestone Trends
 
-| Metric | v1.0 MVP | v1.1 Real-Time Visualization |
-|--------|----------|------------------------------|
-| Phases | 4 | 2 |
-| Plans executed | 8/9 | 4/4 |
-| Python LOC (added) | 2,064 | ~707 |
-| Tests (cumulative) | 64 | 79 (+15) |
-| Timeline (days) | 3 | 1 |
-| Hardware verified | Yes (COM10) | Pending (--gui with real sensor) |
-| Known debt at ship | 3 items | 3 items |
+| Metric | v1.0 MVP | v1.1 Real-Time Viz | v1.2 GPS Integration |
+|--------|----------|--------------------|----------------------|
+| Phases | 4 | 2 | 2 |
+| Plans executed | 8/9 | 4/4 | 4/4 |
+| Python LOC (added net) | 2,064 | ~707 | ~1,661 |
+| Tests (cumulative) | 64 | 79 (+15) | 95 (+16) |
+| Timeline (days) | 3 | 1 | 1 |
+| Hardware verified | Yes (COM10) | Pending (--gui) | Pending (real GPS fix) |
+| Known debt at ship | 3 items | 3 items | 2 items |
+| New external deps | pymodbus, pyserial, PyYAML, tzdata, matplotlib | — | winsdk |
