@@ -35,7 +35,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 **Milestone Goal:** Enrich every CSV row with live GPS position (lat, lon, speed) from the Windows Location API, with graceful degradation when no fix or no hardware is present.
 
 - [x] **Phase 7: GPS Reader & Data Model** — `src/gps_reader.py` with Windows Location API, non-blocking background polling, resilience to missing hardware/denied permission, terminal status, and `SensorReading` dataclass extension (completed 2026-05-24)
-- [ ] **Phase 8: CSV Integration** — GPS columns in CSV header and every data row, end-to-end integration with acquisition loop, full test coverage
+- [x] **Phase 8: CSV Integration** — GPS columns in CSV header and every data row, end-to-end integration with acquisition loop, full test coverage (completed 2026-05-25)
 
 ## Phase Details
 
@@ -78,4 +78,4 @@ Plans:
 | 5. Visualizer Module | v1.1 | 2/2 | Complete | 2026-05-23 |
 | 6. main.py Integration | v1.1 | 2/2 | Complete | 2026-05-24 |
 | 7. GPS Reader & Data Model | v1.2 | 3/3 | Complete | 2026-05-24 |
-| 8. CSV Integration | v1.2 | 0/1 | Not started | - |
+| 8. CSV Integration | 1/1 | Complete   | 2026-05-25 | - |

@@ -19,8 +19,8 @@
 
 ### CSV Integration
 
-- [ ] **GPS-06**: CSV header always includes `gps_lat`, `gps_lon`, `gps_speed_mps` as the last 3 columns
-- [ ] **GPS-07**: Each CSV row contains current GPS values; `None` written as empty string (same pattern as angle RESERVED registers)
+- [x] **GPS-06**: CSV header always includes `gps_lat`, `gps_lon`, `gps_speed_mps` as the last 3 columns
+- [x] **GPS-07**: Each CSV row contains current GPS values; `None` written as empty string (same pattern as angle RESERVED registers)
 
 ### Resilience
 
@@ -64,8 +64,8 @@ Updated during roadmap creation.
 | GPS-03 | Phase 7 | Complete |
 | GPS-04 | Phase 7 | Complete |
 | GPS-05 | Phase 7 | Complete |
-| GPS-06 | Phase 8 | Pending |
-| GPS-07 | Phase 8 | Pending |
+| GPS-06 | Phase 8 | Complete |
+| GPS-07 | Phase 8 | Complete |
 | GPS-08 | Phase 7 | Complete (07-01) |
 | GPS-09 | Phase 7 | Complete (07-01) |
 

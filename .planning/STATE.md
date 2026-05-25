@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: GPS Data Integration
-status: verifying
-stopped_at: Completed 07-03-PLAN.md — Phase 7 GPS Reader & Data Model complete
-last_updated: "2026-05-24T23:45:42.428Z"
+status: in_progress
+stopped_at: Completed 08-01-PLAN.md — Phase 8 CSV Integration plan 1 complete
+last_updated: "2026-05-25T03:57:00.000Z"
 progress:
   total_phases: 2
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
-  percent: 94
+  total_plans: 4
+  completed_plans: 4
+  percent: 97
 ---
 
 # Project State
@@ -24,11 +24,11 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v1.2 start)
 
 ## Current Position
 
-Phase: 7 — GPS Reader & Data Model — COMPLETE
-Plan: 3/3 complete (human-verify checkpoint approved 2026-05-24)
-Status: Phase 7 done — all 3 plans completed and verified; 92 tests GREEN
+Phase: 8 — CSV Integration — IN PROGRESS
+Plan: 1/1 complete (08-01 executed 2026-05-25)
+Status: Phase 8 plan 01 done — CSVLogger extended to 21-column GPS-aware CSV; 95 tests GREEN
 
-Progress: [█████████░] 94%
+Progress: [█████████░] 97%
 
 ## Performance Metrics
 
@@ -39,8 +39,9 @@ Progress: [█████████░] 94%
 | Python LOC added | 2,064 | +707 | — |
 | Phases | 4 | 2 | 2 planned |
 | Plans | 8/9 | 4/4 | 3/3 |
-| Tests GREEN | 64 | 81 | 92 (07-03) |
+| Tests GREEN | 64 | 81 | 95 (08-01) |
 | Phase 07 P03 | 25min | 3 tasks | 5 files |
+| Phase 08 P01 | 4min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -73,17 +74,22 @@ Progress: [█████████░] 94%
 - Synchronous startup poll before thread start: one poll() call establishes status before the "GPS: ..." message is printed
 - gps_reader=None default params on _acquire/_run_headless_mode/_run_gui_mode for backward compatibility with tests
 
+### 08-01 Decisions (CSVLogger GPS extension)
+
+- GPS columns appended as columns 19-21 (after sensor_id at 18) — consistent with SensorReading field order and STORE-02 invariant (08-01)
+- test_header_row_columns updated to assert against GPS_CSV_HEADER (21 cols) rather than keeping a stale 18-col local constant — keeps test file self-consistent (08-01)
+
 ### Key Constraints for v1.2
 
 - `winsdk` is the new library required for Windows Location API access
-- All existing 79 tests must remain GREEN after integration — currently 92 GREEN
+- All existing 79 tests must remain GREEN after integration — currently 95 GREEN
 - GPS columns appear as the last 3 columns in the CSV (after the existing 18)
-- None → "" serialization already established in CSVLogger — reuse the same pattern
+- None → "" serialization already established in CSVLogger — reused the same pattern
 
 ## Session Continuity
 
-Stopped at: Completed 07-03-PLAN.md — Phase 7 GPS Reader & Data Model complete
+Stopped at: Completed 08-01-PLAN.md — Phase 8 CSV Integration plan 1 complete
 
-Next action: Phase 8 (csv-logger-gps) — extend CSVLogger to write GPS columns to CSV header and rows
+Next action: v1.2 milestone verification — run end-to-end integration test and confirm GPS data flows from GPSReader through SensorReading to CSV columns 19-21
 
-Phase 8 scope: `src/csv_logger.py` header extension, row serialization for GPS fields, end-to-end integration tests.
+Phase 8 is the final plan of v1.2. All requirements GPS-01 through GPS-07 should now be complete.
