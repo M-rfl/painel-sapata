@@ -122,9 +122,9 @@ def test_output_folder_created(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 def test_header_row_columns(tmp_path: Path) -> None:
-    """First row of CSV matches CSV_HEADER (18 columns, sensor_id last).
+    """First row of CSV matches GPS_CSV_HEADER (21 columns: 18 sensor + 3 GPS).
 
-    Requirement: STORE-02
+    Requirement: STORE-02, GPS-06
     """
     logger = CSVLogger(output_folder=str(tmp_path), prefix="wtvb01")
     logger.write_row(_make_reading())
@@ -135,7 +135,7 @@ def test_header_row_columns(tmp_path: Path) -> None:
         reader = csv.reader(fh)
         header = next(reader)
 
-    assert header == CSV_HEADER, f"Header mismatch:\nGot:      {header}\nExpected: {CSV_HEADER}"
+    assert header == GPS_CSV_HEADER, f"Header mismatch:\nGot:      {header}\nExpected: {GPS_CSV_HEADER}"
 
 
 # ---------------------------------------------------------------------------

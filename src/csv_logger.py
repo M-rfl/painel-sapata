@@ -1,7 +1,7 @@
 # src/csv_logger.py
 """CSVLogger: timestamped CSV append with flush-per-row.
 
-Implements STORE-01 through STORE-06 requirements for the WTVB01 Notebook Logger.
+Implements STORE-01 through STORE-06 and GPS-06/GPS-07 requirements for the WTVB01 Notebook Logger.
 
 Key design decisions:
   - open(newline="") prevents \r\r\n double-CR on Windows (csv writes \r\n; text mode
@@ -25,7 +25,7 @@ except ImportError:
 from src.utils import SensorReading, TZ_SAO_PAULO
 
 # ---------------------------------------------------------------------------
-# STORE-02: 18-column header — sensor_id LAST (differs from SensorReading field order)
+# STORE-02 / GPS-06: 21-column header — sensor_id at 18, GPS columns 19-21
 # ---------------------------------------------------------------------------
 
 CSV_HEADER = [
@@ -36,7 +36,10 @@ CSV_HEADER = [
     "temperature_c",
     "dx_um", "dy_um", "dz_um",
     "freq_x_hz", "freq_y_hz", "freq_z_hz",
-    "sensor_id",   # 18th column — LAST per STORE-02
+    "sensor_id",        # 18th column — STORE-02
+    "gps_lat",          # 19th column — GPS-06
+    "gps_lon",          # 20th column — GPS-06
+    "gps_speed_mps",    # 21st column — GPS-06
 ]
 
 
@@ -83,13 +86,17 @@ class CSVLogger:
     def write_row(self, reading: SensorReading) -> None:
         """Write one SensorReading as a CSV data row.
 
-        None fields (e.g., angle_x/y/z which are RESERVED on WTVB01-485) become
-        empty CSV cells per STORE-06. File is flushed after every row (STORE-04).
+        None fields (e.g., angle_x/y/z which are RESERVED on WTVB01-485, and GPS
+        fields when no fix is available) become empty CSV cells per STORE-06.
+        File is flushed after every row (STORE-04).
+
+        Column order: STORE-02 sensor fields (sensor_id at column 18), then GPS
+        fields at columns 19-21 (GPS-06/GPS-07): gps_lat, gps_lon, gps_speed_mps.
 
         Args:
             reading: Populated SensorReading from WitMotionSensor.read_all_data().
         """
-        # Explicit named-field access in STORE-02 column order (sensor_id LAST).
+        # Explicit named-field access in STORE-02 column order (sensor_id at 18).
         # Do NOT use dataclasses.astuple(reading) — that gives SensorReading field order
         # (sensor_id at index 1) which violates STORE-02.
         def _cell(value: Optional[float]) -> object:
@@ -113,7 +120,10 @@ class CSVLogger:
             _cell(reading.freq_x_hz),
             _cell(reading.freq_y_hz),
             _cell(reading.freq_z_hz),
-            reading.sensor_id,             # STORE-02: sensor_id last (column 18)
+            reading.sensor_id,             # STORE-02: sensor_id (column 18)
+            _cell(reading.gps_lat),        # GPS-07: gps_lat (column 19)
+            _cell(reading.gps_lon),        # GPS-07: gps_lon (column 20)
+            _cell(reading.gps_speed_mps),  # GPS-07: gps_speed_mps (column 21)
         ]
         self._writer.writerow(row)
         self._file.flush()                 # STORE-04: no buffered data lost on Ctrl+C
