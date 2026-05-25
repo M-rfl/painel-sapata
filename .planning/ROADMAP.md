@@ -52,8 +52,8 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 **Plans**: 3 plans
 Plans:
 - [x] 07-01-PLAN.md — GPSReader class: Windows Location API, resilience, TDD (GPS-01, GPS-02, GPS-08, GPS-09)
-- [ ] 07-02-PLAN.md — SensorReading dataclass: add gps_lat, gps_lon, gps_speed_mps fields (GPS-05)
-- [ ] 07-03-PLAN.md — main.py wiring: background GPS thread, startup status messages, GPS field population (GPS-03, GPS-04)
+- [x] 07-02-PLAN.md — SensorReading dataclass: add gps_lat, gps_lon, gps_speed_mps fields (GPS-05)
+- [x] 07-03-PLAN.md — main.py wiring: background GPS thread, startup status messages, GPS field population (GPS-03, GPS-04)
 
 ### Phase 8: CSV Integration
 **Goal**: Every CSV file produced by the logger contains three GPS columns in its header and populates them each row with the current fix values or empty strings when no fix
@@ -62,8 +62,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. A CSV file opened after a session always contains `gps_lat`, `gps_lon`, `gps_speed_mps` as its last three column headers, regardless of whether a GPS fix was ever obtained
   2. Each data row in the CSV contains a numeric value for each GPS column when a fix was available at that acquisition cycle, and an empty string when no fix — matching the existing `None → ""` pattern used for angle RESERVED registers
-  3. The full test suite (existing 79 + new GPS tests) passes with no regressions
-**Plans**: TBD
+  3. The full test suite (existing 92 + new GPS tests) passes with no regressions
+**Plans**: 1 plan
+Plans:
+- [ ] 08-01-PLAN.md — CSVLogger GPS columns: extend CSV_HEADER to 21 columns, extend write_row() to emit GPS fields, TDD (GPS-06, GPS-07)
 
 ## Progress
 
@@ -75,5 +77,5 @@ Plans:
 | 4. Documentation & Hardening | v1.0 | 2/2 | Complete | 2026-05-21 |
 | 5. Visualizer Module | v1.1 | 2/2 | Complete | 2026-05-23 |
 | 6. main.py Integration | v1.1 | 2/2 | Complete | 2026-05-24 |
-| 7. GPS Reader & Data Model | 3/3 | Complete    | 2026-05-24 | - |
-| 8. CSV Integration | v1.2 | 0/TBD | Not started | - |
+| 7. GPS Reader & Data Model | v1.2 | 3/3 | Complete | 2026-05-24 |
+| 8. CSV Integration | v1.2 | 0/1 | Not started | - |
