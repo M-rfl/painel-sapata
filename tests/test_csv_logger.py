@@ -1,5 +1,5 @@
 # tests/test_csv_logger.py
-"""Failing unit tests for CSVLogger — RED state until Plan 02 implements src/csv_logger.py.
+"""Unit tests for CSVLogger.
 
 Requirement mapping:
   test_file_created_with_correct_name   -> STORE-01 (timestamped CSV filename)
@@ -10,6 +10,9 @@ Requirement mapping:
   test_flush_after_each_row             -> STORE-05 (flush after each write_row call)
   test_none_fields_become_empty_string  -> STORE-06 (None -> empty string in CSV)
   test_rows_written_counter             -> STORE-06 (rows_written tracks written rows)
+  test_header_includes_gps_columns      -> GPS-06 (header always contains GPS columns)
+  test_gps_values_written_to_row        -> GPS-07 (row contains GPS values when fix exists)
+  test_gps_none_written_as_empty_string -> GPS-07 (row contains empty strings when no fix)
 """
 from __future__ import annotations
 
@@ -37,6 +40,9 @@ CSV_HEADER = [
     "freq_x_hz", "freq_y_hz", "freq_z_hz",
     "sensor_id",
 ]
+
+# 21-column header including GPS columns (GPS-06)
+GPS_CSV_HEADER = CSV_HEADER + ["gps_lat", "gps_lon", "gps_speed_mps"]
 
 
 # ---------------------------------------------------------------------------
@@ -259,3 +265,112 @@ def test_rows_written_counter(tmp_path: Path) -> None:
     )
 
     logger.close()
+
+
+# ---------------------------------------------------------------------------
+# GPS-06: header always contains GPS columns (columns 18-20)
+# ---------------------------------------------------------------------------
+
+def test_header_includes_gps_columns(tmp_path: Path) -> None:
+    """CSV header row contains gps_lat, gps_lon, gps_speed_mps as columns 18-20.
+
+    Requirement: GPS-06
+    GPS columns must always be present regardless of whether a GPS fix occurred.
+    """
+    logger = CSVLogger(output_folder=str(tmp_path), prefix="wtvb01")
+    logger.write_row(_make_reading())
+    logger.close()
+
+    csv_file = next(tmp_path.glob("*.csv"))
+    with csv_file.open(newline="", encoding="utf-8") as fh:
+        reader = csv.reader(fh)
+        header = next(reader)
+
+    assert header == GPS_CSV_HEADER, (
+        f"Header mismatch:\nGot:      {header}\nExpected: {GPS_CSV_HEADER}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# GPS-07: row contains GPS values when a fix is available
+# ---------------------------------------------------------------------------
+
+def test_gps_values_written_to_row(tmp_path: Path) -> None:
+    """SensorReading with GPS fix writes numeric values at CSV columns 18-20.
+
+    Requirement: GPS-07
+    Column 18: gps_lat, column 19: gps_lon, column 20: gps_speed_mps.
+    """
+    reading = SensorReading(
+        timestamp="2026-05-21T10:00:00.000000-03:00",
+        sensor_id="wtvb01",
+        ax_g=0.1,
+        ay_g=0.2,
+        az_g=9.8,
+        vx_mm_s=1.0,
+        vy_mm_s=2.0,
+        vz_mm_s=3.0,
+        angle_x=None,
+        angle_y=None,
+        angle_z=None,
+        temperature_c=25.0,
+        dx_um=10.0,
+        dy_um=11.0,
+        dz_um=12.0,
+        freq_x_hz=50.0,
+        freq_y_hz=51.0,
+        freq_z_hz=52.0,
+        gps_lat=-23.5505,
+        gps_lon=-46.6333,
+        gps_speed_mps=1.5,
+    )
+    logger = CSVLogger(output_folder=str(tmp_path), prefix="wtvb01")
+    logger.write_row(reading)
+    logger.close()
+
+    csv_file = next(tmp_path.glob("*.csv"))
+    with csv_file.open(newline="", encoding="utf-8") as fh:
+        reader = csv.reader(fh)
+        next(reader)  # skip header
+        data_row = next(reader)
+
+    assert data_row[18] == "-23.5505", (
+        f"Expected gps_lat='-23.5505' at column 18, got '{data_row[18]}'"
+    )
+    assert data_row[19] == "-46.6333", (
+        f"Expected gps_lon='-46.6333' at column 19, got '{data_row[19]}'"
+    )
+    assert data_row[20] == "1.5", (
+        f"Expected gps_speed_mps='1.5' at column 20, got '{data_row[20]}'"
+    )
+
+
+# ---------------------------------------------------------------------------
+# GPS-07: row contains empty strings when no GPS fix
+# ---------------------------------------------------------------------------
+
+def test_gps_none_written_as_empty_string(tmp_path: Path) -> None:
+    """SensorReading with no GPS fix writes empty strings at CSV columns 18-20.
+
+    Requirement: GPS-07
+    Matches the existing None→'' pattern used for RESERVED angle registers.
+    """
+    logger = CSVLogger(output_folder=str(tmp_path), prefix="wtvb01")
+    logger.write_row(_make_reading())  # GPS fields default to None
+    logger.close()
+
+    csv_file = next(tmp_path.glob("*.csv"))
+    with csv_file.open(newline="", encoding="utf-8") as fh:
+        reader = csv.reader(fh)
+        next(reader)  # skip header
+        data_row = next(reader)
+
+    assert data_row[18] == "", (
+        f"Expected empty string for None gps_lat at column 18, got '{data_row[18]}'"
+    )
+    assert data_row[19] == "", (
+        f"Expected empty string for None gps_lon at column 19, got '{data_row[19]}'"
+    )
+    assert data_row[20] == "", (
+        f"Expected empty string for None gps_speed_mps at column 20, got '{data_row[20]}'"
+    )
