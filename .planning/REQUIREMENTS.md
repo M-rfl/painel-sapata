@@ -35,7 +35,7 @@
 - [x] **CORE-02**: Each measurement is classified Normal/Leve/Moderado/Severo/Crítico by current thresholds (lower bound inclusive)
 - [x] **CORE-03**: Eventos, impactos (consecutive events grouped) and pontos de impacto (1 per location) are recomputed live
 - [ ] **CORE-04**: Trecho priority (1 Alta → 4 Monitorar) is recomputed live
-- [ ] **CORE-05**: At default settings a "conforme planilha" badge confirms the trecho-independent KPIs equal the workbook
+- [x] **CORE-05**: At default settings a "conforme planilha" badge confirms the trecho-independent KPIs equal the workbook
 - [x] **CORE-06**: Automated golden-value and Python↔JS parity tests protect the engine
 
 ### Overview
@@ -124,7 +124,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CORE-02 | Phase 10 | Complete |
 | CORE-03 | Phase 10 | Complete |
 | CORE-04 | Phase 10 | Pending |
-| CORE-05 | Phase 10 | Pending |
+| CORE-05 | Phase 10 | Complete |
 | CORE-06 | Phase 10 | Complete |
 | REPO-02 | Phase 11 | Pending |
 | PUB-01 | Phase 11 | Pending |
