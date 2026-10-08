@@ -1,0 +1,25 @@
+{
+  "run_id": "2026-10-02-l4-t102",
+  "oracle": "workbook 'Final - Monitoramento de Sapata coletora - Linha 04.xlsx' sheet 02 + 11 (see .planning/research/WORKBOOK-CRITERIA.md)",
+  "exact": {
+    "rows": 23383,
+    "rows_per_file": {"3. TIG-PXV.csv": 10839, "2. PXV-TIG.csv": 12544},
+    "rows_with_gps": 21363,
+    "rows_without_gps": 2020,
+    "medians_lsb": [94, -38, -2018],
+    "class_counts": [21031, 1611, 512, 173, 56],
+    "eventos": 2352,
+    "impactos": 1749,
+    "impacts_by_class": [0, 1112, 423, 159, 55]
+  },
+  "reference": {
+    "pontos": 101,
+    "points_by_class": [0, 8, 16, 36, 41],
+    "sentido_split_index": 10839,
+    "sentido_records": [10839, 12544],
+    "sentido_eventos": [1262, 1090],
+    "trecho_most_events": {"name": "Vila Olímpica – Central", "eventos": 304},
+    "workbook_trechos": ["Terminal Gentileza – Rodoviária", "Rodoviária – Equador", "Equador – Pereira Reis", "Pereira Reis – Vila Olímpica", "Vila Olímpica – Central", "Central – Cristiano Ottoni/Pequena África", "Cristiano Ottoni/Pequena África – Saara", "Saara – Tiradentes", "Tiradentes – Colombo", "Colombo – Praça XV", "Praça XV – Colombo", "Colombo – Tiradentes", "Tiradentes – Saara", "Saara – Cristiano Ottoni/Pequena África", "Cristiano Ottoni/Pequena África – Central", "Central – Gamboa", "Central – Dentro do Túnel", "Gamboa – Santo Cristo", "Santo Cristo – Cordeiro da Graça", "Cordeiro da Graça – Rodoviária", "Rodoviária – Terminal Gentileza"],
+    "folded_trechos": {"Central – Dentro do Túnel": "Central – Gamboa"}
+  }
+}

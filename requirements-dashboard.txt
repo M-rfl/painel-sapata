@@ -1,0 +1,2 @@
+# Dev-only dependencies for tools/dashboard_converter (validation reads the workbook). Not needed by the logger.
+openpyxl==3.1.5
