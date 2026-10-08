@@ -5,7 +5,7 @@ import {
   expandRuns, fromArrays, decodeRun,
   halfUp, median2, restOffset2, dominant, thresholds2, classify,
   groupImpacts, pointsByLocation,
-  perTrecho, trechoPriority, regionSplit,
+  perTrecho, trechoPriority, regionSplit, conformeCheck, DEFAULT_PARAMS,
 } from '../../site/js/core/index.js';
 import { loadRun1, loadJson, arr, fnv1a } from './helpers.js';
 
@@ -215,4 +215,14 @@ test('regionSplit', () => {
   const cls = Int8Array.from([0, 1, 0, 0, 2, 0]);
   assert.deepEqual(regionSplit(Int32Array.from([0, 0, 0, 1, 1, 1]), 2, cls), { records: [3, 3], eventos: [1, 1] });
   assert.equal(regionSplit(null, 0, cls), null);
+});
+
+test('conformeCheck unavailable, pt-BR formatting, split rules', () => {
+  const base = { classCounts: [1, 2], eventos: 2, impactos: 1749, impactsByClass: [1], regionSplit: null };
+  const th = { thresholds_g: [0.5, 1, 2, 4] };
+  assert.deepEqual(conformeCheck(base, DEFAULT_PARAMS, null), { available: false, ok: null, reasons: [] });
+  assert.deepEqual(conformeCheck(base, DEFAULT_PARAMS, { ...th, impactos: 1750 }).reasons, ['impactos 1.749 ≠ 1.750']);
+  assert.equal(conformeCheck(base, DEFAULT_PARAMS, { ...th, impactos: 1749 }).ok, true);
+  assert.deepEqual(conformeCheck(base, DEFAULT_PARAMS, { ...th, sentido_records: [1, 2] }).reasons, ['divisão por arquivo indisponível']);
+  assert.equal(conformeCheck(base, DEFAULT_PARAMS, th).ok, true);
 });

@@ -5,3 +5,4 @@ export * from './classify.js';
 export * from './events.js';
 export * from './engine.js';
 export * from './aggregate.js';
+export * from './conforme.js';

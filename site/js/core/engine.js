@@ -3,9 +3,18 @@ import { DEFAULT_PARAMS, PRIORITY_NAMES } from './defaults.js';
 import { restOffset2, dominant } from './dynamics.js';
 import { thresholds2, classify } from './classify.js';
 import { groupImpacts, pointsByLocation } from './events.js';
+import { conformeCheck } from './conforme.js';
 import { perTrecho, trechoPriority, regionSplit } from './aggregate.js';
 
-/** Run the full rules pipeline. Does not mutate run or params. */
+/**
+ * Run the full rules pipeline. Does not mutate run or params.
+ * Result fields: params, med2, off2, mediansLsb, th2, ncls, dom2, domAxis, cls (-1 unclassified),
+ * naoClassificadas, classCounts, eventos, impacts [{start,end,peak,cls,nEv}], impactos, impactsByClass,
+ * pointRows, pontos, pointsByClass, perTrecho [{records,eventos,impactos,pontos,maxCls,topCount,peakDom2}],
+ * priority [{trecho,name,level,label,maxCls,topCount,peakDom2}], regionSplit {records,eventos}|null,
+ * conforme {available, ok, reasons}.
+ * Priority and conforme are full-run; filters are applied by callers on top of the result (Phase 11).
+ */
 export function analyze(run, params = DEFAULT_PARAMS) {
   const p = { ...DEFAULT_PARAMS, ...params };
   const { med2, off2 } = restOffset2(run, p.offset);
@@ -44,5 +53,6 @@ export function analyze(run, params = DEFAULT_PARAMS) {
     pointRows, pontos: pointRows.length, pointsByClass,
     perTrecho: perT, priority, regionSplit: split,
   };
+  result.conforme = conformeCheck(result, p, run.reference);
   return result;
 }
