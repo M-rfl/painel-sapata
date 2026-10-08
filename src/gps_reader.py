@@ -8,7 +8,7 @@ Provides non-blocking access to GPS position via a poll/cache pattern:
 All exceptions are caught internally — callers always receive a tuple.
 
 Status values:
-  "unavailable" — winsdk not installed or GPS hardware absent
+  "unavailable" — winrt not installed or GPS hardware absent
   "denied"      — Windows location permission denied by user
   "no_fix"      — API available but no position fix yet
   "ok"          — fix acquired, coordinates valid
@@ -19,16 +19,19 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 
 logger = logging.getLogger(__name__)
 
-# Import guard: winsdk may not be installed (GPS-08)
+# Import guard: winrt packages may not be installed (GPS-08)
 try:
-    import winsdk.windows.devices.geolocation as _wdg
+    import winrt.windows.devices.geolocation as _wdg
     _WINSDK_AVAILABLE = True
 except ImportError:
     _wdg = None  # type: ignore[assignment]
     _WINSDK_AVAILABLE = False
+
+_GPS_FETCH_TIMEOUT = 5.0  # seconds before giving up on a single poll
 
 
 class GPSReader:
@@ -82,22 +85,27 @@ class GPSReader:
             self.status = "denied"
             self._cache = (None, None, None)
         except Exception as exc:
-            logger.debug("GPS poll failed: %s", exc)
+            logger.warning("GPS poll failed: %s", exc)
             self.status = "no_fix"
             self._cache = (None, None, None)
 
-    async def _fetch(self) -> tuple[float | None, float | None, float]:
+    async def _fetch(self) -> tuple[float | None, float | None, float | None]:
         """Async helper that calls the Windows Location API.
 
         Returns:
             (latitude, longitude, speed_mps) — lat/lon may be None if no fix.
+            speed_mps is None when the provider (e.g. Wi-Fi) does not supply it.
 
         Raises:
             PermissionError: when Windows denies location access.
             Exception: on any other API failure (caller catches generically).
         """
         locator = _wdg.Geolocator()
-        pos = await locator.get_geoposition_async()
+        pos = await asyncio.wait_for(locator.get_geoposition_async(), timeout=_GPS_FETCH_TIMEOUT)
         coord = pos.coordinate
-        speed = float(coord.speed) if coord.speed is not None else 0.0
+        raw_speed = coord.speed
+        if raw_speed is None or (isinstance(raw_speed, float) and math.isnan(raw_speed)):
+            speed: float | None = None
+        else:
+            speed = float(raw_speed)
         return coord.latitude, coord.longitude, speed

@@ -5,6 +5,9 @@ PyYAML>=6.0               # config.yaml loading — use yaml.safe_load() always
 tzdata>=2024.1            # MANDATORY on Windows: ZoneInfo needs IANA database
 backports.zoneinfo>=0.2.1; python_version<"3.9"  # zoneinfo backport for Python 3.8
 matplotlib>=3.10          # real-time plotting for visualizer module (numpy pulled in transitively)
+winrt-runtime>=3.2.1; sys_platform == "win32"                       # Windows Runtime async support for GPS
+winrt-Windows.Devices.Geolocation>=3.2.1; sys_platform == "win32"  # Windows Location API (GPS-01)
+winrt-Windows.Foundation>=3.2.1; sys_platform == "win32"           # WinRT IAsyncOperation support
 
 # Development / test
 pytest>=7.0

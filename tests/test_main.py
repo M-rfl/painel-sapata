@@ -268,7 +268,7 @@ def test_connection_error_message_on_read_fail(capsys: pytest.CaptureFixture) ->
 # ---------------------------------------------------------------------------
 
 def test_gps_no_fix_message_at_startup(capsys: pytest.CaptureFixture) -> None:
-    """When GPS has no fix, startup prints 'GPS: no fix — CSV columns will be empty'.
+    """When GPS has no fix, startup prints 'GPS: searching for fix — CSV columns will fill once acquired'.
 
     Requirement: GPS-04
     """
@@ -298,8 +298,8 @@ def test_gps_no_fix_message_at_startup(capsys: pytest.CaptureFixture) -> None:
             pass
 
     captured = capsys.readouterr()
-    assert "GPS: no fix" in captured.out, (
-        f"Expected 'GPS: no fix' in stdout, got:\n{captured.out}"
+    assert "GPS: searching for fix" in captured.out, (
+        f"Expected 'GPS: searching for fix' in stdout, got:\n{captured.out}"
     )
 
 

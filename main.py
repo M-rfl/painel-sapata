@@ -254,12 +254,14 @@ def main() -> None:
         gps_thread.start()
         if gps_reader.status == "denied":
             print("GPS: location access denied — enable in Windows Settings › Privacy › Location")
+        elif gps_reader.status == "unavailable":
+            print("GPS: unavailable — install winrt-Windows.Devices.Geolocation to enable")
         elif gps_reader.status == "ok":
             print("GPS: fix acquired")
         else:
-            print("GPS: no fix — CSV columns will be empty")
+            print("GPS: searching for fix — CSV columns will fill once acquired")
     else:
-        print("GPS: no fix — CSV columns will be empty")
+        print("GPS: unavailable — install winrt-Windows.Devices.Geolocation to enable")
 
     csv_logger = CSVLogger(config.output_folder, config.csv_filename_prefix)
     print(f"[INFO] CSV: {csv_logger.path}")
