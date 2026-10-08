@@ -1,8 +1,9 @@
 // Pure module: no DOM/window; mirrors tools/dashboard_converter/analysis_ref.py.
-import { DEFAULT_PARAMS } from './defaults.js';
+import { DEFAULT_PARAMS, PRIORITY_NAMES } from './defaults.js';
 import { restOffset2, dominant } from './dynamics.js';
 import { thresholds2, classify } from './classify.js';
 import { groupImpacts, pointsByLocation } from './events.js';
+import { perTrecho, trechoPriority, regionSplit } from './aggregate.js';
 
 /** Run the full rules pipeline. Does not mutate run or params. */
 export function analyze(run, params = DEFAULT_PARAMS) {
@@ -31,11 +32,17 @@ export function analyze(run, params = DEFAULT_PARAMS) {
   const pointsByClass = new Array(ncls).fill(0);
   for (const r of pointRows) pointsByClass[cls[r]]++;
 
-  // 10-04: aggregates, priority, conforme
-  return {
+  const perT = perTrecho(run, cls, impacts, pointRows, dom2, ncls);
+  const priority = trechoPriority(perT, run.trechoNames, ncls)
+    .map((x) => ({ ...x, label: PRIORITY_NAMES[x.level] }));
+  const split = regionSplit(run.region, run.nRegions, cls);
+
+  const result = {
     params: p, med2, off2, mediansLsb: med2.map((m) => m / 2), th2, ncls,
     dom2, domAxis, cls, naoClassificadas, classCounts, eventos,
     impacts, impactos: impacts.length, impactsByClass,
     pointRows, pontos: pointRows.length, pointsByClass,
+    perTrecho: perT, priority, regionSplit: split,
   };
+  return result;
 }

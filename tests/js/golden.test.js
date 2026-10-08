@@ -40,3 +40,19 @@ test('analyze does not mutate params', () => {
   analyze(loadRun1(), p);
   assert.deepEqual(p, copy);
 });
+
+test('golden per-trecho, priority and region split', () => {
+  const r = analyze(loadRun1());
+  const sum = (k) => r.perTrecho.reduce((a, t) => a + t[k], 0);
+  assert.equal(sum('records'), 23383);
+  assert.equal(sum('eventos'), 2352);
+  assert.equal(sum('impactos'), 1749);
+  assert.deepEqual(r.perTrecho.map((t) => t.maxCls),
+    [4, 0, 4, 4, 0, 4, 4, 3, 4, 4, 4, 4, 4, 4, 3, 4, 3, 4, 4, 4]);
+  const idx = (l) => r.priority.filter((p) => p.level === l).map((p) => p.trecho).sort((a, b) => a - b);
+  assert.equal(idx(1).length, 15);
+  assert.deepEqual(idx(2), [7, 14, 16]);
+  assert.deepEqual(idx(4), [1, 4]);
+  assert.deepEqual(r.regionSplit.records, [10839, 12544]);
+  assert.deepEqual(r.regionSplit.eventos, [1262, 1090]);
+});

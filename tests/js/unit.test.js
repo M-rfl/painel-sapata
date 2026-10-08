@@ -5,6 +5,7 @@ import {
   expandRuns, fromArrays, decodeRun,
   halfUp, median2, restOffset2, dominant, thresholds2, classify,
   groupImpacts, pointsByLocation,
+  perTrecho, trechoPriority, regionSplit,
 } from '../../site/js/core/index.js';
 import { loadRun1, loadJson, arr, fnv1a } from './helpers.js';
 
@@ -165,4 +166,53 @@ test('pointsByLocation', () => {
   assert.deepEqual(arr(pointsByLocation(dom2, cls, locId, trecho)), [4, 8, 12]);
   const tied = new Int32Array(n).fill(5);
   assert.deepEqual(arr(pointsByLocation(tied, evCls(n, [3, 4]), locId, trecho)), [3]);
+});
+
+// ---------- aggregate ----------
+function synth(trechos, imps) {
+  const n = trechos.length;
+  const run = { n, trecho: Int32Array.from(trechos), trechoNames: ['A', 'B', 'C', 'D', 'E'] };
+  const cls = new Int8Array(n);
+  const dom2 = new Int32Array(n);
+  const impacts = imps.map(([peak, c, d]) => { cls[peak] = c; dom2[peak] = d; return { start: peak, end: peak, peak, cls: c, nEv: 1 }; });
+  return { run, cls, dom2, impacts };
+}
+
+test('perTrecho levels and empty trecho', () => {
+  const s = synth([0, 1, 2, 3, 0], [[0, 4, 9], [1, 3, 8], [2, 2, 7], [3, 1, 6]]);
+  const pt = perTrecho(s.run, s.cls, s.impacts, [], s.dom2, 5);
+  const pr = trechoPriority(pt, s.run.trechoNames, 5);
+  assert.deepEqual(pr.map((x) => x.level), [1, 2, 3, 4, 4]);
+  assert.equal(pt[4].topCount, 0);
+  assert.equal(pt[4].peakDom2, 0);
+  assert.equal(pt[4].records, 0);
+});
+
+test('priority ordering', () => {
+  const pt = [
+    { maxCls: 4, topCount: 1, peakDom2: 5 }, { maxCls: 4, topCount: 2, peakDom2: 1 },
+    { maxCls: 4, topCount: 1, peakDom2: 9 }, { maxCls: 4, topCount: 1, peakDom2: 9 },
+  ];
+  assert.deepEqual(trechoPriority(pt, ['a', 'b', 'c', 'd'], 5).map((x) => x.trecho), [1, 2, 3, 0]);
+});
+
+test('impact counts for trecho of its peak; peakDom2 from all event rows', () => {
+  const run = { n: 3, trecho: Int32Array.from([0, 1, 1]), trechoNames: ['A', 'B'] };
+  const cls = Int8Array.from([4, 4, 1]);
+  const dom2 = Int32Array.from([5, 10, 50]);
+  const pt = perTrecho(run, cls, [{ start: 0, end: 2, peak: 1, cls: 4, nEv: 3 }], [], dom2, 5);
+  assert.equal(pt[0].impactos, 0);
+  assert.equal(pt[1].impactos, 1);
+  assert.equal(pt[1].maxCls, 4);
+  assert.equal(pt[1].peakDom2, 50);
+});
+
+test('custom class count follows index mapping', () => {
+  assert.equal(trechoPriority([{ maxCls: 3, topCount: 1, peakDom2: 1 }], ['A'], 4)[0].level, 1);
+});
+
+test('regionSplit', () => {
+  const cls = Int8Array.from([0, 1, 0, 0, 2, 0]);
+  assert.deepEqual(regionSplit(Int32Array.from([0, 0, 0, 1, 1, 1]), 2, cls), { records: [3, 3], eventos: [1, 1] });
+  assert.equal(regionSplit(null, 0, cls), null);
 });
