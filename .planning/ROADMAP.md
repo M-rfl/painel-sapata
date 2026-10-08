@@ -43,7 +43,8 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 ### 🚧 v1.3 Field Run Dashboard (Phases 9-13)
 
-- [x] **Phase 9: Repo Hygiene & Raw CSV Converter** - `.gitignore` first, then raw logger CSVs become validated, schema-versioned site JSON with trecho/sentido assigned by station geofence (completed 2026-10-08)
+- [x] **Phase 9: Repo Hygiene & Raw CSV Converter** - `.gitignore` first, then raw logger CSVs become validated, schema-versioned site JSON with trecho/sentido assigned by station geofence
+ (completed 2026-10-08)
 - [ ] **Phase 10: Analysis Engine** - Pure JS core recomputes classes, eventos, impactos, pontos and trecho priority, protected by golden and Python↔JS parity tests
 - [ ] **Phase 11: Public Site, Overview & Controls** - Public Portuguese GitHub Pages site with test-gated deploy, KPI overview, and threshold/filter/display controls
 - [ ] **Phase 12: Time Series & Map** - Zoomable synchronized charts and the OSM route/impact/heat map, linked by hover and click
@@ -79,7 +80,14 @@ Plans:
   2. Changing thresholds, offset or grouping gap changes classes, eventos, impactos, pontos and trecho priority (1 Alta → 4 Monitorar) consistently, with lower bounds inclusive
   3. Python↔JS parity tests with seeded random non-default parameters pass, so engine drift is caught automatically
   4. The engine exposes a "conforme planilha" state that is true only when settings are default and the trecho-independent KPIs equal the workbook
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Extend Python oracle: manual offset, ceil thresholds, gap, 2000 ms time-jump split, impact-basis priority, region split, class digest (W1)
+- [ ] 10-02-PLAN.md — Converter emits `source_runs` + `meta.workbook_reference`; regenerate run-1 site JSON (W1)
+- [ ] 10-03-PLAN.md — JS core: decode, offsets/dominant/classes, impactos/pontos, analyze(); unit + golden `node --test` (W1)
+- [ ] 10-04-PLAN.md — JS per-trecho aggregates, trecho priority, "conforme planilha" state (W2)
+- [ ] 10-05-PLAN.md — Python↔JS parity fixture generator, JS replay, pytest freshness guard (W3)
 
 ### Phase 11: Public Site, Overview & Controls
 **Goal**: Anyone can open a public Portuguese dashboard and see live KPIs that react to thresholds, filters and display options
@@ -131,7 +139,7 @@ Plans:
 | 7. GPS Reader & Data Model | v1.2 | 3/3 | Complete | 2026-05-24 |
 | 8. CSV Integration | v1.2 | 1/1 | Complete | 2026-05-25 |
 | 9. Repo Hygiene & Raw CSV Converter | v1.3 | 0/6 | Complete | 2026-10-08 |
-| 10. Analysis Engine | v1.3 | 0/TBD | Not started | - |
+| 10. Analysis Engine | v1.3 | 0/5 | Planned | - |
 | 11. Public Site, Overview & Controls | v1.3 | 0/TBD | Not started | - |
 | 12. Time Series & Map | v1.3 | 0/TBD | Not started | - |
 | 13. Matrix, Ranking & Shareable State | v1.3 | 0/TBD | Not started | - |
