@@ -1,433 +1,112 @@
-# Stack Research: Python Modbus RTU Data Acquisition
+# Technology Stack (v1.3 Field Run Dashboard additions)
 
-**Project:** WTVB01 Notebook Logger
-**Researched:** 2026-05-19
-**Method:** pip index (live PyPI), local Python verification, training knowledge (flagged)
+**Project:** WTVB01 Notebook Logger - Field Run Dashboard
+**Researched:** 2026-10-08
+**Scope:** Only NEW capabilities (converter, static site, Pages deploy). Logger stack unchanged.
 
----
+## Verdict (opinionated)
+
+No build tool, no framework. Plain HTML + vanilla ES modules, with 3 small libraries **vendored** (copied into the repo at pinned versions, not loaded from a CDN): uPlot, Leaflet, leaflet.heat. Data is one columnar JSON file. Converter uses openpyxl (read_only) and the stdlib only. Deploy with a GitHub Actions workflow that publishes the `site/` folder.
+
+Reasoning: one page, one dataset (23k rows), one developer, Python-first repo. Vite + a framework adds node_modules, a lockfile, a CI build step and a second ecosystem for no gain. The "live recompute" logic is a pure function over typed arrays, which does not need a reactive framework. A few `input` event listeners and a debounced `render()` are enough.
 
 ## Recommended Stack
 
-| Library | Version | Purpose | Confidence |
-|---------|---------|---------|-----------|
-| Python | 3.9+ (3.13 ideal, 3.8 min) | Runtime | HIGH |
-| pymodbus | 3.13.0 | Modbus RTU over RS-485 | HIGH (version from live PyPI) |
-| pyserial | 3.5 | Serial port enumeration + underlying transport | HIGH (version from live PyPI) |
-| PyYAML | 6.0.3 | config.yaml loading | HIGH (version from live PyPI) |
-| zoneinfo | stdlib (3.9+) or backports.zoneinfo 0.2.1 | America/Sao_Paulo timestamps | HIGH |
-| tzdata | 2026.2 | IANA timezone database for Windows | HIGH (confirmed working on this machine) |
-| csv | stdlib | CSV output — no install needed | HIGH |
-| logging | stdlib | Structured error/status logging | HIGH |
-| pathlib | stdlib | Cross-platform path handling | HIGH |
+### Site core
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| HTML + CSS + vanilla JS (ES modules, `<script type="module">`) | n/a | UI, state, recompute | Zero build; `site/` is deployed as-is; modules split into `state.js`, `analysis.js`, `charts.js`, `map.js`, `matrix.js`, `i18n-pt.js` |
+| uPlot | 1.6.32 (npm, verified 2026-10) | Per-axis time series (3 stacked charts, medido/dinamico) | ~50 KB, canvas, designed for 100k+ points; 23k x 3 renders in a few ms, drag-zoom built in, `uPlot.sync()` links cursor/zoom across the 3 axis charts; accepts `Float32Array` columns directly |
+| Leaflet | 1.9.4 (latest stable on npm) | Route map, OSM tiles, GPS polyline, impact markers | Standard, tiny, no WebGL/API key. Do NOT jump to the 2.x alpha line |
+| leaflet.heat | 0.2.0 | Geographic heat map | Only ~2 KB canvas plugin; supports per-point weight, `radius`, `blur`, `max`, `gradient`, which map directly to the "metric / radius / intensity" controls. Unmaintained since 2019, but API is stable and works with Leaflet 1.9.4 |
+| OpenStreetMap raster tiles | n/a | Base map | Fine for low-traffic public dashboard; keep the attribution. Optionally CARTO light basemap as alternative for better heat contrast (verify its terms before using) |
 
-**Minimal install command (Python 3.9+):**
-```
-pip install pymodbus==3.13.0 pyserial==3.5 PyYAML==6.0.3 tzdata
-```
+### Trecho x severidade matrix
+No library. Render a CSS-grid or `<table>` with cell background from a color scale function (21 trechos x 4-5 classes = about 100 cells). Click on a cell sets a filter. Accessible, printable, trivial to localize.
 
-**Minimal install command (Python 3.8 only — add backport):**
-```
-pip install pymodbus==3.13.0 pyserial==3.5 PyYAML==6.0.3 tzdata backports.zoneinfo==0.2.1
-```
+### Data format
+| Choice | Detail | Why |
+|--------|--------|-----|
+| Single `site/data/run-<id>.json`, **columnar** (`{"meta":{...}, "cols":{"t":[...],"ax":[...],...}, "trechos":[...], "sentidos":[...]}`) | Numbers rounded in the converter (accel to 4 decimals, lat/lon to 6), categorical columns stored as small int codes plus a lookup list, missing GPS as `null` | Columnar is about 3-4x smaller than array-of-objects and loads directly into `Float32Array` / `Int8Array`. Estimated 1-2 MB raw |
+| No manual gzip / no binary | GitHub Pages serves text assets with gzip on the fly (about 70-80% smaller, so about 300-500 KB over the wire) | Avoids `pako`/`fflate` + decode code. Typed-array binary only worth it above about 500k rows. MEDIUM confidence on Pages compression behavior (widely observed, not formally documented); not critical either way |
+| Time as epoch seconds (float, 0.2 s steps) plus `t0` ISO string with `-03:00` offset in meta | Compact, uPlot's x axis wants seconds | Format dates in pt-BR with `Intl.DateTimeFormat('pt-BR', {timeZone:'America/Sao_Paulo'})`, no date lib |
+| Keep raw per-sample dominant-axis value and per-axis medido columns in the JSON, **not** precomputed severity | Thresholds, rest-level offset, and event grouping are client-side parameters; severity/events/impacts/pontos de impacto are recomputed in JS. Converter may additionally embed the workbook's own results in `meta.reference` so the JS implementation can be unit-checked against them at default params | Required by the "live recompute" spec |
 
----
+### Converter (Python, dev-only)
+| Library | Version | Purpose | When |
+|---------|---------|---------|------|
+| openpyxl | 3.1.5 (latest on PyPI) | Read workbook | `load_workbook(path, read_only=True, data_only=True)`; iterate `ws.iter_rows(values_only=True)` on `02 — DADOS TRATADOS`. read_only streams rows so the 22 MB file does not blow memory. `data_only=True` gives cached formula values (verify no formula cell is uncached/None; Excel must have saved it) |
+| Python stdlib (`json`, `csv`, `argparse`, `pathlib`, `statistics`, `zoneinfo`) | 3.13 | CSV input path, JSON write, CLI | The raw-logger-CSV path needs no extra deps. Look up columns by header text, not index |
+| pytest | already in repo | Converter tests | Fixture = tiny synthetic xlsx built with openpyxl in `tmp_path` |
 
-## Key Library Details
+Put in a separate `requirements-dashboard.txt` (`openpyxl==3.1.5`), NOT in the logger's `requirements.txt`. Layout: `tools/build_dashboard_data.py` (or `src/dashboard/`), with `--input`, `--output`, `--sheet`. Auto-detect `.xlsx` vs `.csv`.
 
-### pymodbus 3.13.0 — CRITICAL
+**Do not use pandas** (3.0.6 current): a 40-column x 23k-row sheet needs no dataframe; pandas drags in numpy and a heavy install on a "corporate Windows" machine, and its `read_excel` loads the full sheet via openpyxl anyway. If someone later wants it, it is a drop-in at the reading step only.
 
-**Why pymodbus:** Most actively maintained Python Modbus library. Full RTU/ASCII/TCP support, synchronous and async clients, context manager support. Upstream project has corporate backing (Riptide IO). minimalmodbus and umodbus cannot match its feature set or maintenance cadence.
+### Deploy
+| Choice | Detail | Why |
+|--------|--------|-----|
+| GitHub Actions workflow publishing `site/` | `.github/workflows/pages.yml` on push to `main`: `actions/checkout`, `actions/configure-pages`, `actions/upload-pages-artifact` (path: `site`), `actions/deploy-pages`; permissions `pages: write`, `id-token: write`; repo Settings > Pages > Source = "GitHub Actions" | No built-output committed to a branch, `site/` can be any name (not forced to `/docs`), a future build step can be added without migration. Pin to current major tags at implementation time (configure-pages v5, upload-pages-artifact v3/v4, deploy-pages v4 as of my knowledge; MEDIUM confidence, check the Marketplace pages when writing the file) |
+| Alternative (acceptable, simplest): `/docs` folder on `main` | Settings > Pages > Deploy from branch > `main` `/docs` | Zero workflow. Fine if the user prefers; rename `site/` to `docs/` |
+| Not `gh-pages` branch | Needs a push-to-branch step or action and creates a second history | No benefit here |
 
-**pymodbus 2.x vs 3.x — BREAKING CHANGES (HIGH confidence, version history verified)**
+Repo needs a GitHub remote (none yet) and must be **public** for Pages on a free plan (user already accepted public data). Add `.gitignore` entries or keep `Results_1st.Run/` (22 MB xlsx) and `WTVB01 documents/` out of the first push unless intended to be public; the site only needs `site/`.
 
-The jump from 2.x to 3.x is a complete API overhaul. Any Stack Overflow answer or blog post pre-2022 describes the wrong API. The distinctions below are load-bearing for implementation.
+## Alternatives Considered
 
-**1. Import path changed:**
-```python
-# 2.x (WRONG for 3.x)
-from pymodbus.client.sync import ModbusSerialClient
+| Category | Recommended | Alternative | Why Not |
+|----------|-------------|-------------|---------|
+| Build | None (vanilla ES modules) | Vite + React/Svelte/Vue | Node toolchain + CI build for a single page; recompute logic is pure functions, no component tree needed |
+| Chart | uPlot 1.6.32 | ECharts 6.1.0 | Excellent (dataZoom, large mode, heatmap series could replace the matrix) but about 1 MB min (tree-shaken needs a build) and heavier rendering; would otherwise be my choice if Vite were accepted |
+| Chart | uPlot | Plotly (`plotly.js-dist-min` 4.1.2) | About 4+ MB bundle, slow on 70k points in SVG/WebGL modes, overkill |
+| Chart | uPlot | Chart.js 4.5.1 + decimation plugin | Needs `chartjs-plugin-zoom` + a date adapter, decimation requires parsing off and sorted data, visibly slower on 23k x 3 live-updating series, and decimation hides single-sample impact spikes (the thing being measured) |
+| Map | Leaflet 1.9.4 + leaflet.heat | MapLibre GL 6.13.0 / deck.gl | Vector/WebGL stack needs tile style/key hosting, bigger, heavier; MapLibre has a native heatmap layer, but with 23k points and a raster OSM base Leaflet is sufficient and simpler. Revisit only if tilted/3D or >500k points |
+| Data | Columnar JSON | Float32 binary / Parquet / Arrow | Extra decode code and an unreadable artifact for 23k rows; JSON is diffable and debuggable |
+| Data | Plain JSON (Pages gzips) | Pre-gzipped `.json.gz` + pako/fflate (fflate 0.8.3) | Not needed; `DecompressionStream('gzip')` exists natively if ever required |
+| Converter | openpyxl read_only | pandas / calamine | See above; `python-calamine` is faster but another binary dependency |
+| Deploy | Actions workflow | gh-pages branch | See above |
 
-# 3.x (CORRECT)
-from pymodbus.client import ModbusSerialClient
-```
+## Integration Points
 
-**2. Constructor signature changed:**
-```python
-# 2.x (WRONG for 3.x)
-client = ModbusSerialClient(method="rtu", port="COM3", baudrate=9600, timeout=1)
+- Converter output schema is the contract between Python and JS: version it (`meta.schema: 1`) and include `meta.run` (id, date, train, unit/line) so the multi-run selector (deferred) can be added later without redesign.
+- Converter must keep AZ's -1 g convention and "dinamico = medido - mediana do eixo" consistent with the workbook; the JS "rest-level offset" parameter replaces the median at runtime, so ship the **medido** columns and let JS derive dinamico.
+- Downsample for display only: uPlot handles 23k points natively, so no downsampling is needed. Keep full data for analysis.
+- Heat map weights come from JS-computed metric (e.g. |dominant dynamic| or impact count) on points with non-null GPS; 2,020 rows have no coordinates, so the track must break (not interpolate) across gaps or clearly mark interpolated segments (GPS fix only about every 30 s; consider forward-filling lat/lon per fix window in the converter, flagged in meta).
+- Vendor files into `site/vendor/` (`uPlot.iife.min.js` + `uPlot.min.css`, `leaflet.js/css` + marker images, `leaflet-heat.js`) at the pinned versions; record the versions in `site/vendor/README.md`. Reason: no CDN outage or version drift, works offline, and no SRI bookkeeping.
+- Tests: JS analysis module in plain ESM can be tested with `node --test` (Node built in, no npm install), checking results against `meta.reference` from the workbook. Optional.
 
-# 3.x with framer string (works with deprecation warning in 3.5-3.13)
-client = ModbusSerialClient(port="COM3", framer="rtu", baudrate=9600, timeout=1)
+## Installation
 
-# 3.x canonical (preferred — no deprecation warning)
-from pymodbus.framer import FramerType
-client = ModbusSerialClient(
-    port="COM3",
-    framer=FramerType.RTU,
-    baudrate=9600,
-    bytesize=8,
-    parity="N",
-    stopbits=1,
-    timeout=1,
-)
-```
+```bash
+# Converter (dev-only, separate from logger requirements.txt)
+pip install openpyxl==3.1.5
 
-**3. Context manager is the recommended connection pattern in 3.x:**
-```python
-# 3.x preferred (handles connect/close automatically)
-with ModbusSerialClient(port="COM3", framer=FramerType.RTU, baudrate=9600) as client:
-    result = client.read_holding_registers(address=0x34, count=3, slave=0x50)
-    if not result.isError():
-        print(result.registers)
-```
-
-**4. Slave ID parameter name changed:**
-```python
-# 2.x: unit=0x50
-# 3.x: slave=0x50  (unit= still accepted but deprecated)
-result = client.read_holding_registers(address=0x34, count=3, slave=0x50)
+# Vendor the front-end libs once (no package.json required)
+# uPlot 1.6.32: dist/uPlot.iife.min.js, dist/uPlot.min.css
+# Leaflet 1.9.4: dist/leaflet.js, leaflet.css, images/*
+# leaflet.heat 0.2.0: dist/leaflet-heat.js
+# e.g. via: npm pack uplot@1.6.32 leaflet@1.9.4 leaflet.heat@0.2.0  (extract into a scratch dir, copy the files)
 ```
 
-**5. Error checking — both methods work in 3.x:**
-```python
-# Method A: .isError() — preserved from 2.x for compatibility
-if result.isError():
-    raise RuntimeError(f"Modbus error: {result}")
-
-# Method B: isinstance check — more Pythonic in 3.x
-from pymodbus.exceptions import ModbusException
-if isinstance(result, ModbusException):
-    raise RuntimeError(f"Modbus error: {result}")
-```
-
-**6. register access is unchanged:**
-```python
-value = result.registers[0]  # same in 2.x and 3.x
-```
-
-**Recommendation:** Use pymodbus 3.13.0, FramerType.RTU, slave= parameter, context manager pattern. Pin the version in requirements.txt — do not use `>=3.0.0` because the API has shifted within 3.x (framer enum introduced in 3.5).
-
----
-
-### pyserial 3.5 — Port Enumeration
-
-**Note:** pymodbus 3.x depends on pyserial internally as its transport layer for RTU. Installing pymodbus will pull pyserial automatically. But pyserial is listed explicitly because `list_serial_ports.py` uses its tools API directly.
-
-**Port listing API (stable since 3.0):**
-```python
-import serial.tools.list_ports
-
-def list_ports():
-    ports = serial.tools.list_ports.comports()
-    for p in ports:
-        # p.device      -> "COM3" on Windows, "/dev/ttyUSB0" on Linux
-        # p.description -> "USB-SERIAL CH340 (COM3)"
-        # p.hwid        -> "USB VID:PID=1A86:7523 SER=... LOCATION=..."
-        print(f"{p.device}: {p.description}")
-```
-
-**Windows CH340/CP210x/FTDI identification via hwid:**
-| Chip | VID:PID |
-|------|---------|
-| CH340 (common cheap cable) | 1A86:7523 |
-| CP210x (Silicon Labs) | 10C4:EA60 |
-| FTDI FT232 | 0403:6001 |
-
-**pyserial 3.5 is the latest available on PyPI** (no 4.x exists as of May 2026). This library is mature and stable — no breaking changes expected.
-
----
-
-### PyYAML 6.0.3 — Configuration
-
-**Why YAML over .env or argparse:** YAML is the most readable format for non-technical users who just need to set COM3, baudrate, and slave_id. No quoting rules, no CLI knowledge required. config.yaml can be opened in Notepad.
-
-**Critical YAML loading note — security:**
-```python
-# NEVER use yaml.load() without Loader — arbitrary code execution risk
-data = yaml.load(f, Loader=yaml.FullLoader)  # CORRECT
-data = yaml.safe_load(f)                      # ALSO CORRECT — preferred for config
-data = yaml.load(f)                           # WRONG — deprecated, unsafe
-```
-
-**Use yaml.safe_load()** for config files. It handles all standard YAML types (strings, ints, floats, booleans, lists, dicts) without allowing Python-object deserialization.
-
-**Version 6.0.x vs 5.x:** PyYAML 6.0 dropped `yaml.load()` without Loader as a valid call (now emits FullLoader warning in 5.x, error in 6.x). Use 6.0.3 — it is the stable release.
-
----
-
-### zoneinfo + tzdata — Timezone Handling
-
-**Why not pytz:**
-- pytz requires `pytz.timezone('America/Sao_Paulo').localize(dt)` — non-standard API
-- pytz aware datetimes do not work with `datetime.astimezone()` correctly in all edge cases
-- pytz is officially in maintenance mode; the Python core team created zoneinfo as the successor
-- PEP 615 (zoneinfo) was accepted for Python 3.9 specifically to replace pytz
-
-**zoneinfo availability:**
-- Python 3.9+: `from zoneinfo import ZoneInfo` — built-in stdlib, zero install cost
-- Python 3.8: `from backports.zoneinfo import ZoneInfo` — install `backports.zoneinfo==0.2.1`
-
-**Windows-specific critical requirement:** Windows does NOT ship IANA timezone database (unlike Linux/macOS). Without the `tzdata` package, `ZoneInfo("America/Sao_Paulo")` raises `ZoneInfoNotFoundError` on Windows.
-
-**Verified on this machine:** `tzdata==2025.3` installed, `ZoneInfo("America/Sao_Paulo")` returns correct UTC-3 offset.
-
-**Recommended pattern:**
-```python
-try:
-    from zoneinfo import ZoneInfo          # Python 3.9+
-except ImportError:
-    from backports.zoneinfo import ZoneInfo  # Python 3.8
-
-TZ_SAO_PAULO = ZoneInfo("America/Sao_Paulo")
-
-def now_local() -> datetime:
-    return datetime.now(tz=TZ_SAO_PAULO)
-
-def timestamp_str(dt: datetime) -> str:
-    return dt.isoformat(timespec="seconds")  # "2026-05-19T22:46:06-03:00"
-```
-
-**America/Sao_Paulo DST note:** Brazil abolished Daylight Saving Time in 2019. The timezone is fixed at UTC-3 year-round. However, using the IANA name (not a hardcoded `-03:00` offset) is still correct practice — it correctly handles historical data if timestamps span pre-2019 dates.
-
----
-
-### csv module — Data Output
-
-**Why the stdlib csv module, not pandas:**
-- Zero install cost, zero import overhead
-- pandas is 30+ MB, adds numpy dependency, and is complete overkill for sequential row writing
-- csv.writer is the exact right tool for append-only sequential logging
-- pandas becomes relevant only when doing analysis post-collection, not during collection
-
-**Recommended pattern for append-safe CSV logging:**
-```python
-import csv
-from pathlib import Path
-
-CSV_FIELDS = [
-    "timestamp", "accel_x_g", "accel_y_g", "accel_z_g",
-    "vib_x_mms", "vib_y_mms", "vib_z_mms",
-    "angle_x", "angle_y", "angle_z",
-    "temp_c",
-    "disp_x_um", "disp_y_um", "disp_z_um",
-    "freq_x_hz", "freq_y_hz", "freq_z_hz",
-]
-
-def write_row(path: Path, row: dict) -> None:
-    write_header = not path.exists()
-    with path.open("a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
-        if write_header:
-            writer.writeheader()
-        writer.writerow(row)
-```
-
-**Note:** `newline=""` is required by Python's csv module on Windows to prevent double newlines (CRLF+LF).
-
----
-
-### logging module — Structured Logging
-
-**Pattern: dual-handler logging (console + rotating file):**
-```python
-import logging
-from logging.handlers import RotatingFileHandler
-from pathlib import Path
-
-def setup_logging(log_dir: Path, level: int = logging.INFO) -> None:
-    log_dir.mkdir(parents=True, exist_ok=True)
-    log_path = log_dir / "sensor.log"
-
-    fmt = logging.Formatter(
-        "%(asctime)s %(levelname)-8s %(name)s: %(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%S",
-    )
-
-    root = logging.getLogger()
-    root.setLevel(logging.DEBUG)
-
-    # Console: INFO and above
-    ch = logging.StreamHandler()
-    ch.setLevel(level)
-    ch.setFormatter(fmt)
-    root.addHandler(ch)
-
-    # File: DEBUG and above, 5 MB rotation, keep 3 backups
-    fh = RotatingFileHandler(log_path, maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8")
-    fh.setLevel(logging.DEBUG)
-    fh.setFormatter(fmt)
-    root.addHandler(fh)
-```
-
-**Key decisions:**
-- `RotatingFileHandler` prevents unbounded log growth during long continuous runs
-- Console at INFO, file at DEBUG — users see clean output, full details go to file
-- `encoding="utf-8"` on file handler prevents encoding errors from non-ASCII sensor descriptions
-- Module-level loggers (`logger = logging.getLogger(__name__)`) throughout all modules
-
----
-
-### pathlib — Cross-Platform Paths
-
-**Why pathlib over os.path:** Path objects are more readable, support `/` operator for joining, and work identically on Windows and Linux without string manipulation.
-
-```python
-from pathlib import Path
-
-# Config lookup
-CONFIG_PATH = Path("config.yaml")                    # relative to cwd
-LOG_DIR     = Path("logs")                           # auto-created
-DATA_DIR    = Path("data")                           # CSV output
-
-# Usage
-DATA_DIR.mkdir(parents=True, exist_ok=True)
-csv_path = DATA_DIR / f"wtvb01_{date_str}.csv"
-```
-
-**Windows-specific:** `Path("COM3")` does NOT construct a valid Windows COM port path. Use the string `"COM3"` directly when passing port to pymodbus/pyserial. pathlib is only for filesystem paths, not device paths.
-
----
-
-## Version Compatibility Notes
-
-### Python 3.8 Minimum Target
-
-The project specifies Python 3.8+ for Windows corporate compatibility. Here are the compatibility constraints:
-
-| Feature | 3.8 | 3.9 | 3.10+ | Note |
-|---------|-----|-----|-------|------|
-| zoneinfo | NO | YES | YES | Use backports.zoneinfo on 3.8 |
-| pathlib | YES | YES | YES | Available since 3.4 |
-| dataclasses | YES | YES | YES | Available since 3.7 |
-| typing.TypedDict | YES | YES | YES | Available since 3.8 |
-| walrus operator := | YES | YES | YES | Available since 3.8 |
-| match/case | NO | NO | YES | Do not use — target is 3.8+ |
-| `dict | other` merge | NO | YES | YES | Do not use — target is 3.8+ |
-| f-strings | YES | YES | YES | Available since 3.6 |
-
-**Recommendation:** Target Python 3.9+ in practice. Corporate Windows machines that cannot get past Python 3.8 are rare in 2025, and 3.8 reached EOL in October 2024. If 3.8 truly required, add `backports.zoneinfo` to requirements and use the try/except import pattern shown above.
-
-**pymodbus 3.13.0 Python support:** pymodbus 3.x requires Python 3.8+. This aligns with the project's stated minimum. Verified from PyPI version history — 3.x series has maintained 3.8+ compatibility throughout.
-
-### requirements.txt Recommended Pin Strategy
-
-```
-# requirements.txt
-pymodbus==3.13.0       # pin exact — API changes within 3.x
-pyserial==3.5          # pin exact — stable, but no 4.x exists anyway
-PyYAML==6.0.3          # pin exact — 6.x safe_load API is stable
-tzdata>=2025.3         # floor pin — IANA DB, safe to update for DST rule fixes
-
-# Python 3.8 only (omit on 3.9+)
-# backports.zoneinfo==0.2.1
-```
-
-**Why exact pins for pymodbus:** Within the 3.x series, the framer parameter changed from string to FramerType enum across minor versions. Exact pinning prevents unexpected breakage when a developer runs `pip install --upgrade`.
-
----
-
-## Alternative Libraries Assessed
-
-### minimalmodbus 2.1.1 — Not Recommended for this Project
-
-**What it is:** Lightweight RTU-only library, built directly on pyserial, ~1000 lines of code.
-
-**Strengths:** Simpler API for basic read/write operations. No async complexity. Easy to understand and debug.
-
-**Why not for this project:**
-- Designed for simple instrument reading (one register at a time), not bulk multi-register reads
-- `read_registers(address, count)` exists but the library is optimized for single-value use
-- No context manager support for connection lifecycle
-- Less active development (2.1.1 is the latest, released 2022)
-- pymodbus does everything minimalmodbus does plus handles framing, retries, and multi-register reads more robustly
-
-**When to prefer minimalmodbus:** Extremely simple one-register polling, scripting/prototyping, situations where "I just want to read one value" is the entire use case.
-
-### umodbus 1.0.4 — Not Recommended for this Project
-
-**What it is:** Protocol-layer-only Modbus library. Handles frame construction/parsing but provides no serial transport.
-
-**Strengths:** Very clean separation of concerns. Good for embedding Modbus into custom transports (e.g., over a network socket you already control).
-
-**Why not for this project:** umodbus does not manage the serial connection at all. You would need to implement your own serial read/write loop, timing, retries, and framing. This is significant complexity that pymodbus already handles. umodbus 1.0.4 also has no active maintenance visible from PyPI (last release is 1.0.4 with no updates since ~2019).
-
-**When to prefer umodbus:** Embedding Modbus framing logic into a custom protocol stack, server-side Modbus simulation, or situations where you already have a transport layer and only need frame encode/decode.
-
-### modbus-tk — Not Recommended
-
-Not assessed in depth. Older library, last meaningful update pre-2020. Superseded by pymodbus 3.x in all respects. Avoid.
-
----
-
-## Windows-Specific Considerations
-
-### COM Port Numbering
-
-- Windows assigns COM ports automatically by USB hub port and USB VID:PID
-- The same physical cable can appear as COM3 on one boot and COM5 on next if USB devices are added/removed
-- config.yaml must allow easy port reconfiguration — this is why `port: COM3` is user-editable
-- `list_serial_ports.py` exists specifically to help users find the right COM port before editing config.yaml
-
-### High COM Port Numbers
-
-- Windows allows COM1-COM256, but many legacy programs only support COM1-COM9
-- For COM10+, pyserial requires the `\\.\COM10` format internally
-- **pyserial 3.x handles this automatically** — pass `"COM10"` as string, pyserial converts to `\\.\COM10`
-- No special handling required in application code
-
-### Driver Installation Requirement
-
-The WitMotion WTVB01-485 cable contains a USB-RS485 converter. The chip determines the required driver:
-
-| Chip | Driver | Status |
-|------|--------|--------|
-| CH340/CH341 | CH340 driver from WCH | Not inbox on Windows — must install manually |
-| CP2102 (CP210x) | Silicon Labs driver | Available via Windows Update or manual download |
-| FTDI FT232 | FTDI VCP driver | Available via Windows Update (most systems auto-install) |
-
-**Detection:** `python list_serial_ports.py` will show no COM port (or show a generic "USB Device") if driver is not installed. This must be documented in README.md troubleshooting.
-
-### Windows Permission Model
-
-- Windows does not require elevated privileges to access COM ports (unlike Linux where user must be in `dialout` group)
-- If COM port is "in use" error: close any other program that may have the port open (Device Manager, another terminal, previous Python session that did not close cleanly)
-- **Ctrl+C handling:** pymodbus 3.x context manager (`with` statement) closes the serial port on exit, including KeyboardInterrupt. This is the correct pattern — prevents port staying locked after crash.
-
-### Antivirus / Firewall
-
-- Windows Defender does not block COM port access
-- No firewall rules needed for serial communication
-- Some corporate environments block driver installation — document in README
-
----
-
-## What NOT to Use
-
-| Library | Why Not |
-|---------|---------|
-| pymodbus 2.x | EOL. API is completely different from 3.x. All StackOverflow answers pre-2022 show 2.x API. Do not mix them. |
-| pytz | Maintenance mode. Non-standard `.localize()` API. Superseded by zoneinfo (PEP 615). Use only if forced to support 3.8 AND backports.zoneinfo has install issues. |
-| pandas | 30MB dependency for writing sequential CSV rows. Zero benefit at collection time. Use post-collection for analysis. |
-| sqlite3 | Out of scope per PROJECT.md. CSV is the specified output format. |
-| asyncio / pymodbus async client | Adds complexity without benefit for single-sensor polling at 1Hz intervals. Use synchronous ModbusSerialClient. |
-| yaml.load() without Loader | Security vulnerability. Always use yaml.safe_load() for config files. |
-| os.path string operations | Use pathlib.Path instead — cleaner, cross-platform, Pythonic. |
-| hardcoded UTC-3 offset | Use ZoneInfo("America/Sao_Paulo") — handles historical DST records correctly even though Brazil abolished DST in 2019. |
-
----
-
-## Confidence Summary
-
-| Area | Confidence | Basis | Caveat |
-|------|-----------|-------|--------|
-| pymodbus 3.13.0 is latest | HIGH | Live `pip index versions pymodbus` output | Confirmed |
-| pymodbus 2.x vs 3.x breaking changes | MEDIUM | Training knowledge, version history analysis | Could not fetch pymodbus changelog directly — WebFetch denied. Recommend verifying at https://pymodbus.readthedocs.io/en/latest/source/changelog.html |
-| FramerType.RTU available in pymodbus 3.5+ | MEDIUM | Training knowledge consistent with version cadence | Verify in pymodbus 3.13.0 docs before final implementation |
-| pyserial 3.5 is latest | HIGH | Live `pip index versions pyserial` output | Confirmed |
-| PyYAML 6.0.3 is latest | HIGH | Live PyPI check — already installed locally | Confirmed |
-| zoneinfo requires tzdata on Windows | HIGH | Verified locally — ZoneInfo("America/Sao_Paulo") works with tzdata installed | Confirmed working |
-| backports.zoneinfo 0.2.1 for Python 3.8 | HIGH | Live `pip index versions backports.zoneinfo` | Confirmed available |
-| tzdata 2026.2 is latest | HIGH | Live `pip index versions tzdata` | Confirmed |
-| csv newline="" required on Windows | HIGH | Python docs + training knowledge | Standard Python behavior |
-| minimalmodbus/umodbus assessment | MEDIUM | Training knowledge + PyPI version inspection | Not deeply tested |
-| CH340/CP210x VID:PID values | MEDIUM | Training knowledge (well-established hardware IDs) | Standard industry values |
+## What NOT to add
+
+- Node/Vite/webpack, React/Vue/Svelte, TypeScript compile step, Tailwind build.
+- pandas/numpy, Jupyter, a database, any backend or serverless function.
+- Plotly, ECharts, Chart.js, MapLibre, deck.gl (see table).
+- A date library (moment/dayjs): native `Intl` is enough.
+- Analytics/trackers, API-key map providers.
+
+## Confidence
+
+| Item | Confidence | Basis |
+|------|------------|-------|
+| Package versions (uPlot, Leaflet, leaflet.heat, openpyxl, alternatives) | HIGH | Queried npm registry / PyPI on 2026-10-08 |
+| uPlot suitability/performance for 23k x 3, sync, zoom | MEDIUM | Training knowledge of uPlot design and benchmarks; not re-verified against its docs this session |
+| leaflet.heat compatibility with Leaflet 1.9.4 | MEDIUM | Long-standing common pairing; plugin has not changed since 2019 |
+| Pages gzip on the fly, Actions versions | MEDIUM | Not verified against current GitHub docs; check when writing the workflow |
+| openpyxl `data_only` returning cached values for treated sheet | MEDIUM | Must be confirmed on the actual workbook in the converter phase (cells could be formulas without cached values) |
+
+## Sources
+
+- npm registry (uplot, leaflet, leaflet.heat, echarts, plotly.js-dist-min, chart.js, maplibre-gl, fflate) and PyPI (openpyxl, pandas): version queries, 2026-10-08
+- Project context: `.planning/PROJECT.md`

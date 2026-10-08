@@ -1,524 +1,402 @@
 # Architecture Patterns
 
-**Domain:** Python Modbus RTU industrial data acquisition logger
-**Project:** WTVB01 Notebook Logger (WitMotion WTVB01-485)
-**Researched:** 2026-05-19
-**Confidence:** HIGH — pymodbus and Python serial patterns are stable and well-documented
+**Domain:** Static field-run dashboard (accelerometer + GPS) added to an existing Python logger repo
+**Milestone:** v1.3 Field Run Dashboard
+**Researched:** 2026-10-08
+**Overall confidence:** HIGH for the analysis pipeline and data schema (verified by re-implementing the workbook logic and reproducing the golden numbers from the actual file); MEDIUM for deploy/CI details (standard GitHub Pages Actions flow, not run here); LOW for the raw-logger-CSV adapter (trecho assignment is an unsolved design question, see Gaps).
 
----
+## Verified Facts That Drive the Design
+
+I loaded `Results_1st.Run/Final - Monitoramento de Sapata coletora - Linha 04.xlsx` (cached values, sheet `02 — DADOS TRATADOS`) and re-implemented the workbook formulas in plain Python. Result at default parameters, **exact match** with the workbook: Normal 21,031 / Leve 1,611 / Moderado 512 / Severo 173 / Crítico 56; 2,352 eventos; 1,749 impactos; 101 pontos. This proves the rules below are complete and sufficient (HIGH confidence).
+
+| Fact | Evidence (formulas in sheet 02 / 11) | Design consequence |
+|------|--------------------------------------|--------------------|
+| Dynamic = measured − **median of whole run per axis** (`MED_AX/AY/AZ` = 0.0458984375 / −0.0185546875 / −0.9853515625) | col N,O,P `=I2-MED_AX` | "Rest-level offset" is a real parameter; JS must compute the median itself (exact with integer LSB, see below) |
+| Dominant axis = max `abs(dynamic)`; ties resolved X, then Y, then Z | col R `IF(AND(ABS(N)>=ABS(O),ABS(N)>=ABS(P)),"Longitudinal",IF(ABS(O)>=ABS(P),"Lateral","Vertical"))` | Port the tie-break verbatim |
+| Class on `abs(dominant dynamic)` with **lower bound inclusive** (`>=`) | col T nested `IF(AO>=THR_C ...)` | Thresholds are 4 numbers; `Normal` is "below Leve" |
+| Evento = class != Normal (i.e. `>= Leve`) | col U | Event threshold is tied to the Leve limit |
+| Impacto = run of **consecutive rows** with Evento=1; class = class of the run's peak; peak = first strict maximum in the run | cols W (start), AX/AY/AZ (peak, `N(AX4)<AO5` strict) | Grouping param = tolerated gap (default 0 = workbook) |
+| Ponto de impacto = per **location key**, the Evento row with max `abs(dominant)`; ties go to the earliest row (`key = AO - ROW()*1e-10`) | cols AP, Z, AT | Location key is the 6-decimal coordinate string, or `"SEM GPS \| <trecho>"` when no fix |
+| Location keys **recur at different times**: 115 distinct keys vs 142 contiguous coordinate runs (train revisits/stands at same fix) | measured | Key points by coordinate (loc id), NOT by fix index or time segment |
+| 15 of the 101 pontos are "SEM GPS \| trecho" groups (2,020 rows without coordinates) | measured | No-GPS points exist in KPIs/matrix but cannot be drawn on the map; show a footnote |
+| Filters in the Painel are `COUNTIFS` over **globally precomputed flags** (Ev, ImpPk, Ponto): flags first, filters second | `00 — PAINEL` formulas | **Derive on the full series, then filter by the attributes of the flagged row.** A time window does not re-split an impact; it counts by the peak row. This makes filtered numbers match the workbook and keeps validation trivial |
+| All 70,149 accel values are exact multiples of 1/2048 g (max deviation 0.0) | measured; also true for raw logger CSV (e.g. 0.03515625 = 72/2048) | Store accel as **integer LSB counts** (`per_g: 2048`). Exact medians, exact threshold comparisons, ~4x smaller than floats, zero rounding drift vs workbook |
+| Treated sheet time has **1 s resolution** (3–6 rows share a second; 4,669 distinct seconds), monotonic, one gap of 567 s (the sentido 1→2 turnaround at row 10,839) | measured | Converter reconstructs sub-second offsets evenly within each second and flags `t_quality`; JS never assumes uniform 5 Hz |
+| Sentido flips once (row 10,839); 22 contiguous trecho runs for 21 trechos | measured | RLE for trecho/sentido (2 + 22 entries) instead of per-row columns |
+
+**Source-of-truth decision:** converter reads **only** sheet `02 — DADOS TRATADOS` (cached values via `data_only=True`). It must never read sheet `01` (lost decimal separators). A mandatory sanity gate: every accel value must satisfy `abs(v*2048 - round(v*2048)) < 1e-6`, and every GPS point must fall inside the configured envelope (lat −22.92…−22.88, lon −43.22…−43.16); violations abort the conversion (`--strict`, default) or are reported. If cached values are empty (file saved by a tool that does not recalc), fail with a clear message to open/save in Excel.
 
 ## Recommended Architecture
 
 ```
-main.py
-  |
-  +--> load_config()          (config_loader.py)
-  |         |
-  |         v
-  +--> WitMotionSensor        (sensor.py)        <-- Modbus RTU lifecycle
-  |         |
-  |         | SensorReading dataclass (utils.py)
-  |         v
-  +--> acquisition_loop()     (main.py)
-            |
-            +--> CSVLogger.write()   (csv_logger.py)
-            +--> console_print()     (main.py or utils.py)
-            +--> [future: callbacks] (see extension section)
+                 BUILD TIME (developer machine, Python, dev-only deps)
+ +---------------------------+     +-----------------------------------------+
+ | Results_1st.Run/*.xlsx    |     | tools/dashboard_converter/              |
+ | (sheet 02 cached values)  +---->|  sources/xlsx_treated.py  (adapter 1)   |
+ | later: data/wtvb01_*.csv  +---->|  sources/logger_csv.py    (adapter 2)   |
+ +---------------------------+     |  model.py  RunData (neutral, validated) |
+                                    |  gps.py    fixes, loc ids, speed        |
+                                    |  analysis_ref.py  Python reference impl |
+                                    |  crosscheck.py    vs workbook flags     |
+                                    |  writer.py  -> run JSON + golden JSON   |
+                                    +--------------------+--------------------+
+                                                         |
+                          site/data/run-<id>.json        |   tests/js/golden/run-<id>.golden.json
+                          (deployed, committed)          v   (NOT deployed, committed)
+ ------------------------------------------------------------------------------------------
+                 RUN TIME (browser, static files, no backend)
+ +---------+   +-----------+   +--------------------------------------------------------+
+ | fetch   |-->| core/data |-->| core/pipeline (pure functions over typed arrays)       |
+ | JSON    |   | decode    |   |  S1 dynamics -> S2 classify -> S3 events/impacts       |
+ +---------+   +-----------+   |  -> S4 points -> S5 filter mask -> S6 aggregates       |
+                                +----------------------+---------------------------------+
+                                                       | products (immutable per recompute)
+   +-----------+  patch   +----------+  subscribe      v
+   | ui/controls|-------->| state.js |-------> views: kpis, charts(uPlot), map(Leaflet),
+   | (inputs)   |<--------| store    |         matrix, ranking table
+   +-----------+  render  +----------+
+                  hash-sync (URL #fragment) for shareable parameter sets
 ```
 
-Data flows in ONE direction: Sensor → Reading → Consumers. Consumers never talk back to Sensor.
-
----
-
-## Component Boundaries
-
-| Component | File | Responsibility | Does NOT do |
-|-----------|------|---------------|-------------|
-| Config loader | `config_loader.py` | Load YAML, merge defaults, validate types | Never touches serial/Modbus |
-| Sensor | `sensor.py` | Modbus connection lifecycle, raw register read, unit conversion | Never writes CSV or prints |
-| CSV Logger | `csv_logger.py` | Open file, write header, append rows, flush strategy | Never knows about Modbus |
-| Utils | `utils.py` | SensorReading dataclass, signed-16 conversion, serial port discovery | Pure functions only, no I/O |
-| Main | `main.py` | Wire components together, acquisition loop, signal handler | Minimal logic — orchestration only |
-
----
-
-## Data Flow Direction
+### Directory Layout (NEW unless marked)
 
 ```
-config.yaml
-    |
-    v
-AppConfig (dataclass)
-    |
-    v
-WitMotionSensor.connect()
-    |
-    v
-WitMotionSensor.read_all() --> raw_registers (list[int])
-    |
-    v
-_convert_registers()       --> SensorReading (dataclass, typed, in physical units)
-    |
-    v
-[acquisition loop dispatches to all consumers]
-    |
-    +----> CSVLogger.write(reading)
-    +----> print_to_console(reading)
-    +----> [future: MQTTPublisher.publish(reading)]
-    +----> [future: InfluxDBWriter.write(reading)]
+Accel_mro/
+├── main.py, src/, tests/, config.yaml, requirements.txt     (EXISTING, untouched)
+├── requirements-dashboard.txt        NEW  openpyxl==3.1.5 (dev-only; keeps logger requirements.txt clean)
+├── .gitignore                        NEW  repo currently has none: ignore __pycache__/, logs/, data/*.csv,
+│                                          Results_1st.Run/*.xlsx (22 MB), WTVB01 documents/, *.docx
+├── tools/
+│   └── dashboard_converter/          NEW  python package, run: python -m tools.dashboard_converter ...
+│       ├── __init__.py
+│       ├── __main__.py / cli.py      argparse: --input --output --run-id --title --strict --emit-golden
+│       ├── model.py                  RunData dataclass: arrays + meta (adapter-neutral contract)
+│       ├── sources/
+│       │   ├── xlsx_treated.py       reads sheet 02 by HEADER TEXT (not column index)
+│       │   └── logger_csv.py         (phase 9) uses SensorReading CSV columns; needs run descriptor
+│       ├── gps.py                    envelope check, coordinate->loc id (6 dp), fix runs, speed km/h
+│       ├── quantize.py               g -> LSB ints, sanity gate, sub-second time reconstruction
+│       ├── analysis_ref.py           Python reference of workbook rules (same API shape as JS pipeline)
+│       ├── crosscheck.py             row-level compare vs workbook cached flags (xlsx source only)
+│       └── writer.py                 schema v1 JSON + golden JSON
+├── site/                             NEW  the published directory (Pages artifact root)
+│   ├── index.html                    pt-BR, relative URLs only
+│   ├── .nojekyll
+│   ├── css/app.css
+│   ├── js/
+│   │   ├── main.js                   bootstrap: load, init store, mount views
+│   │   ├── state.js                  store, defaults, URL-hash sync, stage scheduler
+│   │   ├── core/                     PURE (no DOM, no Leaflet/uPlot): importable from Node tests
+│   │   │   ├── data.js               decode JSON -> typed arrays
+│   │   │   ├── dynamics.js           S1
+│   │   │   ├── classify.js           S2
+│   │   │   ├── events.js             S3 + S4
+│   │   │   ├── filter.js             S5
+│   │   │   ├── aggregate.js          S6 (KPIs, class counts, matrix, ranking, heat weights, trecho priority)
+│   │   │   └── defaults.js           thresholds, class names/colours (single source), param schema
+│   │   ├── ui/                       controls.js, kpis.js, charts.js, map.js, matrix.js, table.js
+│   │   └── i18n-pt.js                all user-visible strings and number/date formatting (pt-BR)
+│   ├── vendor/                       uPlot, Leaflet, leaflet.heat (pinned, vendored; see STACK.md)
+│   └── data/run-2026-10-02-l4-t102.json
+├── tests/                            EXISTING dir, pytest (testpaths = tests)
+│   ├── test_dashboard_converter_*.py NEW  flat naming like existing tests; fixtures built in tmp_path
+│   ├── fixtures/parity_cases.json    NEW  Python-generated random cases + expected outputs (JS parity)
+│   └── js/                           NEW  node:test files (pytest ignores non-test_*.py)
+│       ├── core.golden.test.mjs
+│       ├── core.params.test.mjs
+│       ├── core.parity.test.mjs
+│       └── golden/run-2026-10-02-l4-t102.golden.json
+└── .github/workflows/pages.yml       NEW  test + deploy
 ```
 
-`SensorReading` is the contract between the sensor layer and all consumers. It must never contain raw register integers — only converted, typed physical values plus a timezone-aware timestamp.
+Why `site/` and not `docs/`: `docs/` invites confusion with `.planning/` and the many `.docx/WTVB01 documents`; a Pages **Actions** deploy can publish any folder, and the same workflow can gate deploy on tests. If the user prefers zero-CI, `site/` can be renamed `docs/` and Pages set to "Deploy from branch /docs" (loses the test gate).
 
----
+Why keep tests outside `site/`: everything under `site/` is published. Node's built-in `node --test` (Node 24 is installed locally) means **no `package.json`, no node_modules, no npm** is needed. If a bundler or Vitest is ever adopted, that is a deliberate later decision.
 
-## Component Design Details
+### Component Boundaries
 
-### 1. WitMotionSensor class (sensor.py)
+| Component | Responsibility | Communicates With | New/Modified |
+|-----------|---------------|-------------------|--------------|
+| `tools/dashboard_converter` | Source adapters -> neutral `RunData` -> schema v1 JSON + golden; validation gates | Reads xlsx/CSV; writes `site/data`, `tests/js/golden` | NEW |
+| `analysis_ref.py` | Python reference of the severity/event/impact/point rules | converter crosscheck, pytest, parity-fixture generator | NEW |
+| `site/js/core/*` | Pure pipeline S1-S6 over typed arrays | `state.js` only | NEW |
+| `site/js/state.js` | Holds params/filters/display, schedules stages, notifies views, syncs URL hash | `core/*`, `ui/*` | NEW |
+| `site/js/ui/*` | Rendering + input widgets; no business logic | `state.js` | NEW |
+| `src/`, `main.py`, logger tests | Unchanged. Logger CSV is only an *input* to adapter 2 | n/a | EXISTING, untouched |
+| `SensorReading` / CSV columns | Read-only contract for adapter 2 (21 columns, GPS last 3) | `sources/logger_csv.py` | EXISTING, read-only |
+| `requirements.txt` | Must NOT gain openpyxl (test_structure.py asserts its content; logger stays lean) | n/a | EXISTING, untouched |
+| `.github/workflows/pages.yml` | pytest + `node --test` + deploy `site/` | GitHub | NEW |
 
-**Separation of concerns principle:** The class knows about Modbus and the WTVB01 register map. It knows nothing about CSV, logging destinations, or display format.
+No existing file needs modification for v1.3 (only `.gitignore`, README pointer and `.planning/*` docs are added/edited). The existing 95 tests are unaffected as long as `tools/` is not under `src/` (test_docs.py globs `src/**/*.py` for naive `datetime.now()`).
 
-```python
-# Conceptual structure — not implementation code
-class WitMotionSensor:
-    def __init__(self, port, baudrate, slave_id, timeout, retries)
-    def connect() -> None          # raises ConnectionError if fails
-    def disconnect() -> None       # always safe to call, even if not connected
-    def read_all() -> SensorReading  # raises ModbusReadError on failure
-    def is_connected() -> bool
-    # private:
-    def _read_registers(start, count) -> list[int]
-    def _convert(raw_registers) -> SensorReading
+## JSON Data Schema (v1): raw samples, not pre-aggregated
+
+**Decision:** ship the *measured samples* (quantized, columnar) plus param-independent structure (GPS fixes, trecho/sentido runs). Ship **no** class, dynamic value, event, impact or point arrays: all of those change when a threshold, offset or grouping parameter changes, so they are computed in JS (S1-S6). Python computes only things that do **not** depend on user-adjustable parameters.
+
+| Computed in Python (converter) | Computed in JS (live) |
+|--------------------------------|-----------------------|
+| Decimal-separator-safe values (use treated sheet), LSB quantization | Rest-level offset (median/mean/manual) |
+| GPS envelope validation; coordinate->loc id (6 dp); fix speed km/h (haversine, dt<=120 s, <=50 km/h) | Dynamic axes, dominant axis, severity value |
+| Trecho/sentido normalization (sheet's standardized names, order) | Class per sample (thresholds) |
+| Sub-second time reconstruction | Events, impact grouping, impact peaks, pontos de impacto |
+| Golden/reference numbers (separate file, tests only) | Filters, KPIs, matrix, ranking, heat weights, trecho priority |
+
+Rationale for "raw samples": 23,383 rows x (3 ints + dt + 2 RLE columns) is about 350-450 KB raw, roughly 100 KB gzipped (Pages gzips text). Pre-aggregating would make every slider an impossible request. Even at 10 Hz for 8 h (288k rows) typed-array recompute stays well under 100 ms; only payload size would need chunking then (not now).
+
+```jsonc
+{
+  "schema": 1,
+  "meta": {
+    "run_id": "2026-10-02-l4-t102",
+    "title": "VLT Carioca · Linha 4 · Trem 102 (MRO 102) · Sapata coletora",
+    "sensor_id": "wtvb01",
+    "source": { "kind": "xlsx_treated", "file": "Final - Monitoramento ... Linha 04.xlsx",
+                "sheet": "02 — DADOS TRATADOS", "sha256": "…" },
+    "t0": "2026-10-02T00:30:56-03:00", "tz": "America/Sao_Paulo",
+    "n": 23383, "t_quality": "second-resolution; sub-second reconstructed",
+    "axes": { "ax": "Longitudinal", "ay": "Lateral", "az": "Vertical" },
+    "workbook_defaults": { "thresholds_g": [0.5, 1, 2, 4], "rest": "median",
+                           "max_speed_kmh": 50, "max_fix_gap_s": 120 },
+    "converter_version": "1.0.0", "generated_at": "2026-10-08T…"
+  },
+  "t": { "dt_ms": [0, 200, 200, 190, …] },           // delta-encoded, first = 0 -> cumulative sum in JS
+  "accel": { "unit": "lsb", "per_g": 2048,           // fallback {"unit":"g"} + float arrays if a source is not on the 1/2048 grid
+             "ax": [94, 98, …], "ay": [-38, …], "az": [-2015, …] },
+  "sentidos": [ { "code": "TIG-PXV", "name": "Sentido 1 — Terminal Gentileza → Praça XV" },
+                { "code": "PXV-TIG", "name": "Sentido 2 — Praça XV → Terminal Gentileza" } ],
+  "trechos":  [ { "name": "Terminal Gentileza – Rodoviária", "sentido": 0, "order": 1 }, … ],   // 21
+  "sentido_runs": [[0, 0], [10839, 1]],              // [start_index, sentido_idx]
+  "trecho_runs":  [[0, 0], [412, 1], …],             // [start_index, trecho_idx]; 22 runs
+  "gps": {
+    "lat": [-22.898793, …], "lon": [-43.211217, …],  // one entry per contiguous coordinate run (142), 6 dp
+    "loc": [0, 1, 2, 1, …],                          // loc id per fix: equal coordinates -> equal id (113 ids)
+    "speed_kmh": [0.96, null, …],                    // precomputed from fixes; null = invalid/unavailable
+    "status": [0, 0, 1, …]                           // 0 original, 1 corrigido (separador decimal), 2 fora da região (excluded)
+  },
+  "fix_runs": [[0, 0], [186, 1], …, [9120, -1]]      // [start_index, fix_idx or -1 = sem GPS]
+}
 ```
 
-**Connection lifecycle:**
-- `connect()` creates the `ModbusSerialClient` and calls `.connect()`. pymodbus 3.x returns `bool` from `.connect()` — check it explicitly. Do not swallow False silently.
-- Store `self._client` as instance variable. Do NOT create a new client on every read — that causes serial port thrashing.
-- `disconnect()` calls `self._client.close()` inside a `try/except` so it is always safe in `finally` blocks.
-- `is_connected()` returns `self._client is not None and self._client.connected` (pymodbus 3.x exposes `.connected` property).
+Rules:
+- RLE (`*_runs`) for piecewise-constant columns; JS expands once into `Int16Array` per sample. This avoids repeating 21,363 identical-lat/lon rows and keeps location identity explicit.
+- Accel as integer LSB: JS keeps `Int16Array`, converts with `/ 2048` at S1. The 4-decimal rounding suggested in STACK.md is **not** recommended: it perturbs the median offset (e.g. −0.0185546875 -> −0.0186) and can flip samples sitting exactly on a threshold, breaking parity with the workbook.
+- `schema` integer; JS refuses unknown majors with a pt-BR error banner.
+- File name carries `run_id` (`run-<id>.json`); `main.js` reads the id from one constant/`?run=` param. Multi-run selector remains out of scope, but nothing in the schema blocks it.
+- Golden file (tests only) is a separate object, **not** shipped to the browser:
 
-**Read pattern (pymodbus 3.x):**
-```python
-# pymodbus 3.x synchronous pattern
-result = self._client.read_holding_registers(
-    address=0x34,
-    count=19,           # 0x34 through 0x46 = 19 registers in one burst
-    slave=self._slave_id
-)
-if result.isError():
-    raise ModbusReadError(str(result))
-return result.registers   # list of 19 unsigned 16-bit ints
+```jsonc
+{ "run_id": "...", "oracle": "workbook-cached-values",
+  "class_counts": [21031, 1611, 512, 173, 56],
+  "class_hash_fnv1a": "…",                 // hash of the per-row class byte array (row-level check without 23k values)
+  "eventos": 2352,
+  "impact_starts": [ … 1749 sample indices … ],
+  "impacts_by_class": [0, 1112, 423, 159, 55],
+  "point_rows": [ … 101 sample indices … ],
+  "points_by_class": [0, 8, 16, 36, 41],
+  "trecho_matrix_points": [[…5 ints…] x 21], "trecho_matrix_impacts": [[…] x 21],
+  "top_points": [ { "row": 18631, "value_g": 11.66, "axis": "az", "trecho": "Santo Cristo – Cordeiro da Graça" } ],
+  "medians_lsb": [94, -38, -2018],
+  "sentido_counts": { "records": [10839, 12544], "eventos": [1262, 1090] } }
 ```
 
-Read all registers in a SINGLE burst (0x34 to 0x46, count=19) rather than individual reads. This minimizes round-trips on a 9600-baud RS-485 link. At 9600 baud, each Modbus RTU frame takes ~10-20ms; a burst read costs ~30ms total vs ~570ms for 19 individual reads.
+(Numbers in `class_counts`..`points_by_class`, `sentido_counts` come from `WORKBOOK-CRITERIA.md`/my reproduction; `point_rows`, `impact_starts`, `top_points.row` are filled by the converter from the workbook's own cached flag columns `AT`, `W`, `U`.)
 
-**pymodbus version note:** pymodbus 3.x changed the API significantly from 2.x. The synchronous client is `ModbusSerialClient` from `pymodbus.client`. The `slave=` parameter replaces the old `unit=` parameter. In 3.x, `.connect()` returns `bool` (not None). Confidence: HIGH based on pymodbus 3.x changelog and stable API since 3.0.
+## Client-Side State / Recompute Pipeline
 
-### 2. Retry / Reconnect Pattern (main.py acquisition loop)
+### State shape (one object, three slices)
 
-Do NOT put retry logic inside `WitMotionSensor.read_all()`. Keep the sensor class simple. Handle retries in the acquisition loop:
-
-```python
-# Acquisition loop retry pattern (conceptual)
-consecutive_failures = 0
-MAX_CONSECUTIVE_FAILURES = 5
-
-while running:
-    loop_start = time.monotonic()
-    try:
-        reading = sensor.read_all()
-        consecutive_failures = 0
-        csv_logger.write(reading)
-        print_reading(reading)
-    except ModbusReadError as e:
-        consecutive_failures += 1
-        logger.warning(f"Read failure {consecutive_failures}/{MAX_CONSECUTIVE_FAILURES}: {e}")
-        if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
-            logger.error("Too many failures, attempting reconnect...")
-            sensor.disconnect()
-            time.sleep(2.0)
-            sensor.connect()   # let ConnectionError propagate if unrecoverable
-            consecutive_failures = 0
-
-    # Timing: sleep for remainder of interval to maintain sample rate
-    elapsed = time.monotonic() - loop_start
-    sleep_time = max(0.0, config.interval_seconds - elapsed)
-    time.sleep(sleep_time)
+```js
+state = {
+  params: {                                   // ANALYSIS: change S1..S4  (+ everything downstream)
+    thresholds: [0.5, 1, 2, 4],               // Leve, Moderado, Severo, Crítico lower bounds (g), validated ascending
+    rest: { mode: 'median' | 'mean' | 'manual', manual: [0, 0, 0] },   // g per axis
+    grouping: { maxGapSamples: 0 },           // 0 == workbook (strictly consecutive)
+    pointKey: 'coordenada'                    // reserved: future radius-based clustering
+  },
+  filters: {                                  // S5 only
+    sentidos: Set, trechos: Set, eixos: Set<'ax'|'ay'|'az'>, classes: Set,
+    window: [tStartMs, tEndMs] | null
+  },
+  display: {                                  // views only, never trigger S1-S5
+    heatMetric: 'severidade' | 'contagem' | 'ax' | 'ay' | 'az',
+    heatBasis: 'pontos' | 'impactos' | 'medicoes',
+    heatRadius: 25, heatBlur: 15, heatIntensity: 1,
+    matrixBasis: 'pontos' | 'impactos' | 'medicoes',
+    seriesMode: 'medido' | 'dinamico', showEventMarkers: true, rankingTopN: 20
+  }
+}
 ```
 
-**Why `time.monotonic()` for timing:** `time.time()` can jump backward (NTP sync, DST). `time.monotonic()` is guaranteed monotonic. Use it for interval timing; use `datetime.now(tz)` only for the human-readable timestamp stored in SensorReading.
+### Stages and dependency keys
 
-**Blocking vs async:** Use blocking/synchronous for this project. Reasons:
-- 9600 baud Modbus RTU is inherently slow; async adds complexity with no benefit at this throughput
-- pymodbus 3.x sync client is simpler and more stable for RTU
-- `time.sleep()` in a loop is perfectly adequate for 1-10Hz sampling
-- Async becomes worthwhile only when polling multiple devices simultaneously (out of scope)
+| Stage | Output (typed arrays unless noted) | Depends on | Cost |
+|-------|------------------------------------|------------|------|
+| S1 dynamics | `dx,dy,dz` (Float64), `domAxis` (Uint8 0/1/2), `domAbs` (Float64), `medians` | `params.rest` | O(n) + O(n log n) median, only when rest changes |
+| S2 classify | `cls` (Uint8 0..4) | S1, `params.thresholds` | O(n) |
+| S3 events + impacts | `ev` (Uint8), `impacts[]` {start,end,peak,cls,nEv} + `impactOfSample` | S2, `params.grouping` | O(n) |
+| S4 points | `points[]` {row, locKey, cls, nEvAtLoc} | S2, S3 flags, loc ids, trecho runs | O(n) with a `Map` |
+| S5 filter | `mask` (Uint8) over samples; `impactKeep`, `pointKeep` derived from the flagged row's attributes | S1-S4, `filters` | O(n) |
+| S6 aggregate | KPIs, class x axis counts, trecho x class matrix, ranking, heat weights, per-trecho priority, series slices | S5, `display` | O(n) |
 
-### 3. Signed 16-bit Conversion (utils.py)
+`state.js` keeps `{key -> product}` per stage where key = `JSON.stringify` of that stage's inputs; `set(patch)` marks the lowest changed slice, runs stages from there, and notifies subscribers once per animation frame (inputs of type range are debounced about 80 ms). Views subscribe to a product name and re-render only if the reference changed. With 23k samples a full recompute is a few ms, so caching is an optimization, not a requirement; do **not** add a framework, reactive library or web worker for this size. (Worker only if a run exceeds roughly 500k samples.)
 
-This is a common industrial sensor gotcha. Modbus registers return unsigned 16-bit integers (0 to 65535). The WitMotion sensor stores signed values in two's complement.
+### Core algorithm (port of workbook rules)
 
-**Canonical Python pattern:**
-
-```python
-import struct
-
-def to_signed16(raw: int) -> int:
-    """Convert unsigned 16-bit Modbus register value to signed int."""
-    # struct.pack/unpack is the most readable and reliable method
-    return struct.unpack('>h', struct.pack('>H', raw))[0]
-
-# Alternative (pure arithmetic, same result):
-def to_signed16_alt(raw: int) -> int:
-    return raw if raw < 32768 else raw - 65536
-```
-
-The `struct` approach is preferred because it is explicit about byte order and width, making the intent obvious to readers unfamiliar with two's complement arithmetic.
-
-**Physical unit conversion table (from PROJECT.md register map):**
-
-```python
-# In utils.py
-ACCEL_SCALE    = 16.0 / 32768.0   # g  (registers 0x34-0x36)
-VIBVEL_SCALE   = ???               # mm/s (0x3A-0x3C) — NEEDS VALIDATION
-ANGLE_SCALE    = ???               # degrees (0x3D-0x3F) — NEEDS VALIDATION
-TEMP_SCALE     = 1.0 / 100.0      # °C  (0x40) — common WitMotion convention
-DISPLACEMENT_SCALE = ???          # µm  (0x41-0x43) — NEEDS VALIDATION
-FREQUENCY_SCALE    = ???          # Hz  (0x44-0x46) — NEEDS VALIDATION
-```
-
-CRITICAL: The acceleration scale (`/ 32768 * 16`) is confirmed in PROJECT.md. The scales for vibration velocity, displacement, and frequency are NOT documented in PROJECT.md. These MUST be validated against the WitMotion WTVB01-485 datasheet during Phase 1 implementation. Do not assume they share the same divisor as acceleration.
-
-### 4. SensorReading dataclass (utils.py)
-
-```python
-from dataclasses import dataclass
-from datetime import datetime
-
-@dataclass
-class SensorReading:
-    timestamp: datetime            # timezone-aware, America/Sao_Paulo
-    accel_x: float                 # g
-    accel_y: float                 # g
-    accel_z: float                 # g
-    vibvel_x: float                # mm/s
-    vibvel_y: float                # mm/s
-    vibvel_z: float                # mm/s
-    angle_x: float                 # degrees
-    angle_y: float                 # degrees
-    angle_z: float                 # degrees
-    temperature: float             # °C
-    displacement_x: float          # µm
-    displacement_y: float          # µm
-    displacement_z: float          # µm
-    frequency_x: float             # Hz
-    frequency_y: float             # Hz
-    frequency_z: float             # Hz
-```
-
-Use `@dataclass` (not `@dataclass(frozen=True)`) to keep it mutable for testing. All fields are typed. No raw register values exposed — the dataclass is the public contract.
-
-### 5. CSVLogger (csv_logger.py)
-
-**File corruption risk:** The main risk is a partial row being written if the process is killed mid-write. The mitigation is: write complete rows atomically (a single `csv.writer.writerow()` call) and flush after every row.
-
-```python
-# csv_logger.py pattern (conceptual)
-import csv
-import io
-from pathlib import Path
-
-class CSVLogger:
-    def __init__(self, output_dir: Path, filename_prefix: str):
-        # Generate filename with date: "wtvb01_2026-05-19.csv"
-        # Create parent directories with parents=True, exist_ok=True
-        self._file = open(path, 'a', newline='', encoding='utf-8', buffering=1)
-        # buffering=1 = line-buffered (flush on every newline)
-        self._writer = csv.writer(self._file)
-        if path.stat().st_size == 0:
-            self._writer.writerow(HEADER_COLUMNS)
-
-    def write(self, reading: SensorReading) -> None:
-        self._writer.writerow(reading_to_row(reading))
-        # buffering=1 handles flush automatically for text files
-
-    def close(self) -> None:
-        self._file.flush()
-        self._file.close()
-```
-
-**Flush strategy:** `buffering=1` (line-buffered) is correct for text-mode files on CPython. It flushes on every newline, which `csv.writer.writerow()` always appends. This gives corruption safety without the overhead of `file.flush()` after every write.
-
-**File naming:** `wtvb01_YYYY-MM-DD.csv` — one file per day, created fresh each run for the current date, opened in append mode (`'a'`) so a restart does not overwrite existing data from the same day.
-
-**Header idempotency:** Check `path.stat().st_size == 0` after opening in append mode to decide whether to write the header. This prevents duplicate headers when restarting mid-day.
-
-**newline='':** Required by the Python csv module docs. Without it, csv.writer double-writes `\r\n` on Windows.
-
-### 6. Config Loader (config_loader.py)
-
-**Pattern: load with defaults, validate, return typed dataclass.**
-
-```python
-# Defaults defined in code, not in YAML — YAML only overrides
-DEFAULTS = {
-    "serial": {
-        "port": "COM3",
-        "baudrate": 9600,
-        "timeout": 1.0,
-    },
-    "modbus": {
-        "slave_id": 80,   # 0x50
-    },
-    "acquisition": {
-        "interval_seconds": 1.0,
-        "max_retries": 5,
-        "retry_delay_seconds": 2.0,
-    },
-    "output": {
-        "directory": "data",
-        "filename_prefix": "wtvb01",
-    },
-    "logging": {
-        "level": "INFO",
-        "file": "logs/wtvb01.log",
-        "max_bytes": 5_242_880,   # 5 MB
-        "backup_count": 3,
-    },
+```js
+// S3: event + impact grouping. gap = params.grouping.maxGapSamples (0 == workbook)
+export function groupImpacts(domAbs, cls, thrLeve, gap) {
+  const n = cls.length, impacts = [];
+  let cur = null, lastEv = -1e9;
+  for (let i = 0; i < n; i++) {
+    if (domAbs[i] < thrLeve) continue;               // not an event (cls > 0 <=> domAbs >= thrLeve)
+    if (cur === null || i - lastEv - 1 > gap) {      // gap=0: any normal sample between events splits
+      cur = { start: i, end: i, peak: i, nEv: 0 };
+      impacts.push(cur);
+    }
+    if (domAbs[i] > domAbs[cur.peak]) cur.peak = i;  // strict ">" -> first maximum wins (workbook tie rule)
+    cur.end = i; cur.nEv++; lastEv = i;
+  }
+  for (const m of impacts) m.cls = cls[m.peak];
+  return impacts;
 }
 
-def load_config(path: Path = Path("config.yaml")) -> AppConfig:
-    raw = {}
-    if path.exists():
-        with open(path) as f:
-            raw = yaml.safe_load(f) or {}
-    merged = deep_merge(DEFAULTS, raw)
-    return AppConfig.from_dict(merged)
+// S4: one point per location key (first strict max wins)
+export function pointsByLocation(domAbs, cls, locOfSample, trechoOfSample) {
+  const best = new Map();
+  for (let i = 0; i < cls.length; i++) {
+    if (cls[i] === 0) continue;
+    const k = locOfSample[i] >= 0 ? locOfSample[i] : -1 - trechoOfSample[i];   // "SEM GPS | trecho"
+    const b = best.get(k);
+    if (b === undefined || domAbs[i] > domAbs[b]) best.set(k, i);
+  }
+  return [...best.values()].sort((a, b) => a - b);
+}
 ```
 
-**Why defaults in code not YAML:** If config.yaml is deleted or malformed, the application runs with safe defaults rather than crashing. The user can start with a minimal config.yaml that only overrides the port.
+Median for S1 must replicate Excel `MEDIAN` (average of the two middle values for even n); working on LSB integers makes it exact.
 
-**Use `yaml.safe_load` not `yaml.load`:** `yaml.load` can execute arbitrary Python. `yaml.safe_load` is always correct for config files.
+Filter semantics (documented in the UI as a tooltip "Contagem pelo registro de maior valor"): measurements are filtered by their own attributes; impacts by their peak sample's sentido/trecho/eixo/class and by the peak's time against the window; points by the point row. A class filter on impacts/points uses the class of the peak/point row. These are exactly the workbook's `COUNTIFS(... T_ImpPk,1 ...)` / `T_Ponto,1` semantics.
 
-**`deep_merge` function:** A simple recursive dict merge where `raw` values override `DEFAULTS`. Available as a pure function in `utils.py`.
+## Replicating and Validating Against the Workbook
 
-### 7. Serial Port Detection (list_serial_ports.py)
+Three independent safety nets, in order of strength:
 
-**Cross-platform pattern using `serial.tools.list_ports` from pyserial:**
+1. **Convert-time cross-check (Python, xlsx source only)** - `crosscheck.py` runs `analysis_ref.py` on the quantized arrays and compares **row by row** with the workbook's own cached columns: `CLASSIFICAÇÃO` (T), `Evento` (U), `Início Impacto` (W), `PICO DO IMPACTO` (AZ), `PONTO DE IMPACTO` (AT), `Eixo Dominante` (R). Any mismatch fails conversion (`--strict`). It also asserts the headline numbers 21,031 / 2,352 / 1,749 / 101 when the source is this run. This validates the *reference*, and the converter is also the only place that sees the workbook.
+2. **JS golden test (`node --test`)** - loads `site/data/run-*.json`, runs S1-S6 with `defaults.js` thresholds, and asserts equality with the golden file: class counts, `class_hash_fnv1a`, `impact_starts` (all 1,749 indices), `point_rows` (all 101), class splits (impactos 1,112/423/159/55; pontos 8/16/36/41), trechos sem Crítico = 6, trecho com mais eventos = Vila Olímpica – Central (304), #1 ponto (01:53:16, Santo Cristo – Cordeiro da Graça, AZ −11.66 g), medians. Also asserts the JS default thresholds equal `meta.workbook_defaults` so the UI "Restaurar padrão" can never drift from the workbook.
+3. **Python<->JS parity on random data** - `tests/fixtures/parity_cases.json` is generated by a small script from `analysis_ref.py` (seeded random series with injected edge cases: values exactly on a threshold, ties for dominant axis, ties for peak, events at array start/end, runs separated by gap 1/2, no-GPS stretches, repeated coordinates). `core.parity.test.mjs` replays the same cases through the JS pipeline for several parameter sets (non-default thresholds, rest offset manual, grouping gap 0/1/3). This is what protects the **non-default** parameters, which no workbook number covers.
 
-```python
-import serial.tools.list_ports
+Additional property tests (JS and/or Python): raising any threshold never increases eventos; `gap` is monotone non-increasing in impact count; sum of class counts == n; filters never change the pre-filter totals; impact count with no filters equals count of event runs; every point row is an event row.
 
-def list_ports():
-    ports = serial.tools.list_ports.comports()
-    for p in sorted(ports):
-        print(f"{p.device:15s}  {p.description}  [{p.hwid}]")
-```
+Float note: all comparisons happen between values derived from exact binary fractions (`LSB/2048` minus a median that is itself `k/2048` or half of one), so JS and Python IEEE doubles agree bit for bit; no epsilon is needed. User-typed thresholds like `0.3` are compared as doubles, which is the same as Excel for realistic inputs. The one place to be careful is `manual` offsets typed in decimal; round them to the LSB grid only if parity with a decimal workbook edit is wanted (not required).
 
-`serial.tools.list_ports.comports()` works on Windows (COM*), Linux (`/dev/ttyUSB*`, `/dev/ttyACM*`), and macOS (`/dev/tty.usbserial-*`, `/dev/cu.*`) without any platform branching. pyserial handles the platform detection internally.
+## Testing Approach
 
-**In config_loader.py for auto-detection fallback:** If `config.yaml` does not specify a port, attempt to find the first port whose description matches known USB-RS485 chip signatures: `CH340`, `CP210`, `FTDI`, `USB Serial`. Offer it as a suggestion in the warning message but do not auto-connect without explicit confirmation — unexpected port selection is a worse failure mode than a clear error.
+| Layer | Tool | What |
+|-------|------|------|
+| Converter unit | pytest in `tests/`, synthetic tiny xlsx built with openpyxl in `tmp_path` | header-based column lookup; decimal/LSB gate; GPS envelope; loc ids; RLE round-trip; sub-second reconstruction; schema shape; clear errors (missing sheet, empty cached values) |
+| Converter vs reality | pytest marked `skipif(not Path("Results_1st.Run/....xlsx").exists())` | full cross-check against the real workbook; runs locally, skipped in CI where the 22 MB xlsx is not committed |
+| Reference analysis | pytest | hand-computed mini cases (boundary, ties, gap) |
+| JS core | `node --test tests/js` | golden + parity + properties (above); import `site/js/core/*.js` as ES modules (name them `.js` and add `"type":"module"` via `site/js/package.json`, or use `.mjs`; pick `.mjs` for `core/` to avoid any package.json) |
+| UI smoke | one manual checklist in the phase plan; optional Playwright later | Pure `core` carries the risk; UI is thin rendering. Do not add a browser test stack in v1.3 |
+| Existing logger | pytest (95 tests) | Must stay green; run in the same CI job |
 
-### 8. Logging Configuration (main.py setup)
+## Deploy Flow (GitHub Pages)
 
-Configure logging once at application startup in `main.py`, before any other imports initialize their loggers:
+1. One-time: create the GitHub repo (none exists; local branch is `master`, PR-main is `main` - rename or trigger the workflow on both), push, set **Settings > Pages > Source: GitHub Actions**. Repo must be public on a free plan (user accepted public data).
+2. `.github/workflows/pages.yml` on push to the default branch: job `test` (checkout, setup-python 3.12 + setup-node, `pip install -r requirements.txt -r requirements-dashboard.txt` - winrt lines are `sys_platform == "win32"`-guarded so Linux runners are fine - `pytest`, `node --test tests/js`), then job `deploy` (`needs: test`; `actions/configure-pages`, `actions/upload-pages-artifact` with `path: site`, `actions/deploy-pages`; `permissions: pages: write, id-token: write`).
+3. The run JSON is a **committed build artifact** produced locally by the converter (the xlsx stays out of git or in Git LFS-free local storage). CI does not run the converter on the real workbook; it validates the committed JSON through the JS golden test, which is the integrity check that matters. `meta.source.sha256` gives provenance.
+4. Pages is served from `https://<user>.github.io/<repo>/`: **every URL must be relative** (`./data/...`, `./vendor/...`). A leading `/` breaks the project site. ES modules and `fetch` do not work from `file://`; local preview is `python -m http.server -d site`.
+5. Add `site/.nojekyll`. Tile layer is OSM with attribution; no API keys anywhere.
 
-```python
-import logging
-from logging.handlers import RotatingFileHandler
-from pathlib import Path
+## Patterns to Follow
 
-def setup_logging(config):
-    log_path = Path(config.logging.file)
-    log_path.parent.mkdir(parents=True, exist_ok=True)
+### Pattern 1: Pure core, thin views
+**What:** All numbers shown to users come from `core/*` functions that take typed arrays + plain objects and return plain objects. Views never recompute classes or counts.
+**When:** Always. It is what makes golden/parity tests meaningful.
 
-    root = logging.getLogger()
-    root.setLevel(logging.DEBUG)   # root captures all; handlers filter
+### Pattern 2: Derive globally, then filter by flagged row
+**What:** Compute events/impacts/points over the full series; filters select among flagged rows by their attributes.
+**Why:** Matches workbook `COUNTIFS` semantics so filtered KPIs equal the workbook's; avoids ambiguous "impact cut in half by the time window".
 
-    # Console: INFO and above, human-readable
-    console = logging.StreamHandler()
-    console.setLevel(logging.INFO)
-    console.setFormatter(logging.Formatter("%(levelname)-8s %(message)s"))
-    root.addHandler(console)
+### Pattern 3: Single source for classes/colours/labels
+**What:** `defaults.js` holds class names, order, colours (Normal verde, Leve amarelo, Moderado laranja, Severo vermelho, Crítico roxo), default thresholds, axis names. Charts, map, matrix, legend all import it.
 
-    # File: DEBUG and above, with timestamps — rotating to prevent unbounded growth
-    file_handler = RotatingFileHandler(
-        log_path,
-        maxBytes=config.logging.max_bytes,
-        backupCount=config.logging.backup_count,
-        encoding='utf-8',
-    )
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(
-        logging.Formatter("%(asctime)s %(levelname)-8s %(name)s: %(message)s")
-    )
-    root.addHandler(file_handler)
-```
+### Pattern 4: Adapter -> neutral RunData -> writer
+**What:** Each source (treated xlsx, raw logger CSV) only produces `RunData`; validation, quantization, GPS processing and writing are shared. Adding the raw-CSV path later touches one file.
 
-Each module then uses `logger = logging.getLogger(__name__)` — no configuration at module level, just name acquisition. This is the standard Python logging architecture.
-
-**Do NOT use `logging.basicConfig()` if any RotatingFileHandler is needed.** `basicConfig()` is only for the simplest cases and cannot be reconfigured after the first call.
-
-### 9. Graceful Shutdown (main.py)
-
-```python
-import signal
-
-running = True
-
-def handle_shutdown(signum, frame):
-    global running
-    running = False
-
-signal.signal(signal.SIGINT, handle_shutdown)
-signal.signal(signal.SIGTERM, handle_shutdown)
-
-# ... acquisition loop checks `while running: ...`
-
-# After loop exits:
-finally:
-    sensor.disconnect()
-    csv_logger.close()
-    logging.info("Shutdown complete.")
-```
-
-On Windows, `SIGTERM` may not arrive (process kill), but `SIGINT` (Ctrl+C) always does. The `finally` block in `main()` is the safety net.
-
----
-
-## Extension Architecture: Observer/Callback Pattern
-
-**Recommendation: Use a simple callback list (not full Observer pattern, not pub/sub).**
-
-The callback list pattern is the correct choice for this project size. It adds zero dependencies, is trivially testable, and supports all planned extensions (MQTT, InfluxDB, REST).
-
-```python
-# In main.py (conceptual wiring)
-consumers = [
-    csv_logger.write,
-    print_reading,
-    # future: mqtt_publisher.publish,
-    # future: influxdb_writer.write,
-]
-
-# In acquisition loop:
-for consumer in consumers:
-    try:
-        consumer(reading)
-    except Exception as e:
-        logger.error(f"Consumer {consumer.__name__} failed: {e}")
-        # One consumer failing must NOT stop others
-```
-
-**Why NOT a full Observer pattern (EventEmitter/subscribe/notify):** The overhead is unjustified for a list of 2-4 consumers. The callback list is explicit, debuggable, and avoids the magic of dynamic dispatch.
-
-**Why NOT async pub/sub (e.g., asyncio.Queue):** This project is synchronous. Adding asyncio to support a single MQTT publisher would require converting the entire acquisition loop. The correct approach for future MQTT is a synchronous MQTT client (paho-mqtt) called directly as a callback, or a simple threading.Queue if network I/O latency becomes a concern.
-
-**Extension contract:** Any future consumer must accept a single `SensorReading` argument and return None. Errors must not propagate — catch internally or let the loop's try/except catch them.
-
----
+### Pattern 5: URL-hash state
+**What:** `#t=0.5,1,2,4&rest=median&gap=0&s=1&...` serialized from `state`; lets managers share a configured view without any backend. Only non-default values are written.
 
 ## Anti-Patterns to Avoid
 
-### Anti-Pattern 1: Mixing Modbus logic with output logic in sensor.py
-**What goes wrong:** Adding `csv_writer.write()` calls inside `WitMotionSensor.read_all()` makes the sensor class untestable in isolation and impossible to reuse with different output backends.
-**Instead:** Sensor returns `SensorReading`. Caller decides what to do with it.
+### Anti-Pattern 1: Shipping classified/aggregated data
+**Why bad:** Sliders become impossible; Python and JS rules drift into two sources of truth.
+**Instead:** Samples + structure only; rules live once in JS (with a Python reference used only to test).
 
-### Anti-Pattern 2: Reading registers one at a time
-**What goes wrong:** At 9600 baud, reading 19 individual registers takes ~570ms. The acquisition interval must be >600ms just to complete one read cycle.
-**Instead:** One burst read from 0x34 to 0x46 (count=19) takes ~30ms.
+### Anti-Pattern 2: Reading sheet `01 — DADOS ORIGINAIS`
+**Why bad:** Decimal separators lost; the workbook itself repairs them with heuristics (power-of-ten + 1/2048 grid) that the converter would have to duplicate.
+**Instead:** Sheet 02 cached values + the LSB/envelope sanity gates.
 
-### Anti-Pattern 3: Creating a new ModbusSerialClient per read
-**What goes wrong:** Opening and closing the serial port on every read causes Windows to occasionally fail to reopen (port not released fast enough), and adds 100-300ms latency per open.
-**Instead:** Connect once in `WitMotionSensor.connect()`, reuse `self._client` for the session lifetime.
+### Anti-Pattern 3: Per-sample lat/lon columns and fix-index points
+**Why bad:** Bloats the file, and fix-index/segment keys split locations the workbook merges (115 keys vs 142 runs -> wrong 101).
+**Instead:** `fix_runs` + `gps.loc` ids.
 
-### Anti-Pattern 4: Writing timestamps in UTC without explicit timezone
-**What goes wrong:** Industrial CBM data with ambiguous timestamps becomes useless during DST transitions. "2026-11-01 01:30:00" is ambiguous — it occurs twice in Sao Paulo.
-**Instead:** Always use `datetime.now(ZoneInfo('America/Sao_Paulo'))` and format with UTC offset included: `2026-05-19T14:30:00-03:00`.
+### Anti-Pattern 4: Rounding accel to 4 decimals "to save bytes"
+**Why bad:** Breaks exact median/threshold parity (see above); integers are smaller anyway.
 
-### Anti-Pattern 5: `csv.writer` without `newline=''` on Windows
-**What goes wrong:** Python's csv.writer appends `\r\n`; if the file is opened in text mode (default), Python adds another `\r`, resulting in blank rows in Excel.
-**Instead:** `open(path, 'a', newline='', encoding='utf-8')` — always.
+### Anti-Pattern 5: Putting converter or tests inside `src/` or `site/`
+**Why bad:** `src/` is the logger runtime package (test_docs scans it); `site/` is published verbatim.
 
-### Anti-Pattern 6: `yaml.load()` instead of `yaml.safe_load()`
-**What goes wrong:** `yaml.load()` can deserialize arbitrary Python objects. A malformed config.yaml could execute code.
-**Instead:** Always `yaml.safe_load()` for config files.
-
-### Anti-Pattern 7: Global `logging.basicConfig()` in modules
-**What goes wrong:** Any module that calls `basicConfig()` before `main.py` sets up logging will freeze the configuration, causing RotatingFileHandler to be silently ignored.
-**Instead:** Modules only call `logging.getLogger(__name__)`. Only `main.py` configures handlers.
-
----
-
-## Build Order Implications
-
-The dependency graph drives the implementation order:
-
-```
-Phase 1 (foundation — no dependencies):
-  utils.py        --> SensorReading dataclass, to_signed16(), deep_merge()
-  config_loader.py --> AppConfig dataclass, load_config(), DEFAULTS
-
-Phase 2 (depends on Phase 1):
-  sensor.py       --> WitMotionSensor (needs AppConfig, SensorReading, utils)
-  csv_logger.py   --> CSVLogger (needs SensorReading, AppConfig)
-
-Phase 3 (depends on all above):
-  main.py         --> wires everything together, acquisition loop, signal handler
-  list_serial_ports.py --> standalone utility, no internal deps
-
-Phase 4 (validation):
-  Connect hardware, validate register scales, adjust conversion constants in utils.py
-```
-
-`utils.py` and `config_loader.py` can be written and unit-tested entirely without hardware. `sensor.py` requires either hardware or a Modbus simulator for testing. This ordering means progress is possible without the WTVB01 connected.
-
----
+### Anti-Pattern 6: Assuming uniform 5 Hz
+**Why bad:** Treated sheet timestamps are 1 s; rows per second vary 3-6; one 567 s gap exists. Use `t.dt_ms` cumulative values; grouping is by sample order (as the workbook), optionally by time gap later.
 
 ## Scalability Considerations
 
-| Concern | Current (1 sensor, CSV) | Future (MQTT/InfluxDB) | Requires redesign? |
-|---------|------------------------|------------------------|-------------------|
-| Multiple consumers | Callback list in main.py | Add to callback list | No |
-| Multiple sensors | Out of scope | New WitMotionSensor instances | No (sensor.py stays) |
-| Higher sample rate | Reduce interval in config | Consider threading if >10Hz | Maybe at >50Hz |
-| MQTT publishing | Not applicable | paho-mqtt as callback | No |
-| InfluxDB writing | Not applicable | influxdb-client as callback | No |
-| Dashboard | Not applicable | REST/WebSocket layer in main.py | No (sensor.py stays) |
+| Concern | This run (23k) | 10 Hz, 8 h (288k) | Multi-run (future) |
+|---------|----------------|-------------------|--------------------|
+| Payload | ~100 KB gz | ~1.5 MB gz; consider chunked `dt_ms`/accel or binary | one JSON per run + `runs.json` manifest |
+| Recompute | few ms | ~50-100 ms on main thread; debounce | per selected run only |
+| Chart | uPlot handles 23k x 3 directly | min/max decimation per pixel column | same |
+| Heat/markers | 101 points, ~115 locations | cluster markers | same |
 
-The key insight: `sensor.py` does not change for any of these extensions. The acquisition loop in `main.py` gains additional consumers. `SensorReading` may gain fields but existing fields do not change.
+## Suggested Build Order (dependencies drive it)
 
----
+0. **Repo hygiene (parallel, small):** `.gitignore`, create GitHub remote, `requirements-dashboard.txt`, empty `tools/` and `site/` skeletons.
+1. **Converter + schema + reference + cross-check** (`tools/dashboard_converter`, pytest). Output: committed `site/data/run-*.json` and golden. Gate: row-level equality with the workbook and 21,031/2,352/1,749/101. Everything downstream depends on the schema, so freeze schema v1 here (a tiny hand-made JSON lets phase 2 start in parallel if needed).
+2. **JS core pipeline + node tests** (`site/js/core`, `tests/js`). No UI. Gate: golden + parity + property tests green. This is the highest-risk, highest-value step, and the cheapest to test in isolation.
+3. **Site shell + state store + KPIs + threshold/filter controls + Pages deploy skeleton.** Deploy early (even with only KPIs) to catch the relative-path/`.nojekyll`/Actions-setup issues before features pile up. Gate: live KPI recompute equals golden at defaults; public URL reachable.
+4. **Time-series charts** (uPlot, 3 axes, medido/dinâmico, event markers coloured by class, brush -> `filters.window`). Depends on S1-S3.
+5. **Map** (Leaflet track from `fix_runs`, impact/point markers by class, leaflet.heat driven by `display.heat*`). Depends on S4/S6 and GPS arrays; shares filters with charts.
+6. **Trecho x severidade matrix** (+ click-to-filter, trecho priority badge). Depends on S6 aggregates.
+7. **Analysis-parameter UI** (rest offset modes, grouping gap) + URL-hash sharing + "Restaurar padrão/valores do relatório". Logic already exists and is tested from step 2, so this is mostly inputs.
+8. **Polish and release:** pt-BR copy pass, responsive layout for management on tablets/phones, accessibility (matrix as real `<table>`), attribution, README section on regenerating data, final Pages verification.
+9. **(Deferred, separate milestone-sized item) Raw logger CSV adapter** once the trecho-assignment question is decided.
 
-## Confidence Assessment
+Phases 4, 5, 6 are independent of each other after phase 3 and can be reordered; 5 (map) is the riskiest of them (tiles, heat plugin tuning).
 
-| Area | Confidence | Notes |
-|------|------------|-------|
-| pymodbus 3.x API (ModbusSerialClient, .connect(), .read_holding_registers(), slave=) | HIGH | Stable since pymodbus 3.0; well-documented; matches training data |
-| Burst register read pattern | HIGH | Standard Modbus best practice, independent of library version |
-| Signed 16-bit struct pattern | HIGH | Python stdlib, deterministic behavior |
-| csv module newline='' behavior on Windows | HIGH | Documented in Python csv module docs |
-| RotatingFileHandler logging pattern | HIGH | Python stdlib, stable API |
-| ZoneInfo for Sao Paulo timezone | HIGH | Available Python 3.9+; project requires 3.8+, needs `backports.zoneinfo` on 3.8 |
-| WitMotion register scale factors (non-acceleration) | LOW | Only acceleration scale confirmed in PROJECT.md; others need datasheet validation |
-| callback list as extension mechanism | HIGH | Well-established pattern for this scale of application |
+## Research Flags for Phases
 
-**Important 3.8 compatibility note:** `ZoneInfo` is in the stdlib only from Python 3.9+. For 3.8 compatibility (stated in PROJECT.md constraints), add `backports.zoneinfo` to `requirements.txt` and use:
-```python
-try:
-    from zoneinfo import ZoneInfo
-except ImportError:
-    from backports.zoneinfo import ZoneInfo
-```
+| Phase | Flag |
+|-------|------|
+| 1 Converter | Standard, but verify cached-value availability and `read_only` speed (non-read-only load of the 22 MB file took >100 s here; use `read_only=True, data_only=True`) |
+| 2 JS core | Standard; the rules are now fully specified and reproduced |
+| 5 Map | Needs a short spike: leaflet.heat weighting for "metric" options, basemap choice/contrast, behaviour of 15 no-GPS points (list/footnote, not map) |
+| 9 Raw CSV adapter | Needs real design research (below) |
 
----
+## Gaps to Address
+
+- **Raw logger CSV has no trecho/sentido.** The logger writes `timestamp, ax..., gps_lat, gps_lon, gps_speed_mps` only. A later adapter needs a run descriptor (time windows per trecho, or a station polyline for nearest-segment matching). Not needed for v1.3; do not bake trecho assumptions into `RunData` beyond "trecho runs may be absent" (UI must degrade: hide matrix/trecho filter when `trechos` is empty).
+- **Raw CSV GPS is a 1 Hz cached value** (repeated coordinates, `gps_speed_mps` may be empty because Wi-Fi location has no speed), so speed must be derived from fixes as in the workbook, and the 6-dp coordinate-key logic must be re-checked on those files.
+- **Raw CSV sample rate is ~10 Hz** (the logger target) vs ~5 Hz in the treated run; "grouping gap in samples" semantics differ in time; consider exposing the gap in milliseconds in a later iteration.
+- **Sub-second reconstruction** only affects chart x-position, not any KPI; but state this in the UI footnote ("resolução de 1 s na fonte").
+- **Trecho priority rule** (1 Alta / 2 Média / 3 Baixa / 4 Monitorar) is in WORKBOOK-CRITERIA.md; its bases (pontos vs impactos) should be confirmed against sheet `05 — ANÁLISE POR TRECHO` when building phase 6.
+- Branch naming (`master` locally vs `main`) and repo/user name for the Pages URL are open.
 
 ## Sources
 
-- pymodbus 3.x documentation and API design (training data, HIGH confidence)
-- Python csv module documentation — newline parameter behavior (training data, HIGH confidence)
-- Python logging HOWTO — handler configuration pattern (training data, HIGH confidence)
-- Python dataclasses documentation (training data, HIGH confidence)
-- pyserial serial.tools.list_ports cross-platform behavior (training data, HIGH confidence)
-- Modbus RTU protocol specification — burst register read efficiency (training data, HIGH confidence)
-- WitMotion WTVB01-485 register map — acceleration scale confirmed in PROJECT.md; other scales LOW confidence pending datasheet
+- Direct inspection of `Results_1st.Run/Final - Monitoramento de Sapata coletora - Linha 04.xlsx` (formulas of sheets 00, 02, 03, 04, 11; defined names; cached values of sheet 02), 2026-10-08 - HIGH
+- Python re-implementation reproducing 21,031 / 1,611 / 512 / 173 / 56, 2,352, 1,749, 101 exactly; measurements of key/run counts, time resolution, LSB grid - HIGH
+- `.planning/research/WORKBOOK-CRITERIA.md` and `.planning/research/STACK.md` (sibling research for this milestone) - consistent with the above except the accel rounding recommendation (superseded here by LSB integers)
+- `.planning/PROJECT.md`, `requirements.txt`, `tests/test_structure.py`, `tests/test_docs.py`, `pytest.ini`, sample `data/wtvb01_20260525_092005.csv` - HIGH
+- GitHub Pages custom Actions workflow pattern (`configure-pages` / `upload-pages-artifact` / `deploy-pages`) - MEDIUM (standard, from training knowledge; not re-verified against current docs in this session)
+- Node built-in test runner (`node --test`), Node v24.14.0 present locally - HIGH for availability, MEDIUM for API details

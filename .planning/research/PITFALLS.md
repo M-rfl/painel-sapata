@@ -1,928 +1,233 @@
-# Domain Pitfalls: Python Modbus RTU / RS-485 Industrial Data Acquisition
+# Domain Pitfalls
 
-**Domain:** Python serial Modbus RTU acquisition with pymodbus, targeting WitMotion WTVB01-485
-**Researched:** 2026-05-19
-**Confidence:** HIGH for items 1-9, 11-13 (well-documented in official sources and community);
-               MEDIUM for item 10 (WitMotion-specific quirks based on device class patterns)
+**Domain:** Static GitHub Pages dashboard (pt-BR) for an accelerometer + GPS field run, added to an existing Python logger repo
+**Milestone:** v1.3 Field Run Dashboard
+**Researched:** 2026-10-08
+**Overall confidence:** MEDIUM. Project-specific facts come from PROJECT.md and the repo state (HIGH). Leaflet.heat, GitHub Pages and OSM policy points come from training knowledge and were not re-verified this session (MEDIUM). Items marked LOW need a check in the owning phase.
+
+Phase names below are suggested labels, not final roadmap numbering:
+- **P-A** Converter (xlsx/CSV to JSON)
+- **P-B** Site core (KPIs, charts, parameter engine)
+- **P-C** Map and heat maps
+- **P-D** Publication (new repo, Pages)
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause silent failures, rewrites, or data corruption.
-
----
-
-### Pitfall 1: pymodbus 3.x API is completely different from 2.x
-
-**What goes wrong:**
-Code written for pymodbus 2.x breaks entirely under 3.x, and vice versa. The two versions
-are not source-compatible. Copy-pasted examples from Stack Overflow or tutorials dated
-before 2023 are almost certainly 2.x code that will fail under 3.x with cryptic errors.
-
-**Exact breaking changes (2.x → 3.x):**
-
-1. **Client construction** — `ModbusSerialClient` constructor signature changed:
-   - 2.x: `ModbusSerialClient(method='rtu', port='COM3', baudrate=9600, ...)`
-   - 3.x: `ModbusSerialClient('COM3', baudrate=9600, framer=FramerType.RTU, ...)`
-   - The `method='rtu'` keyword is gone. First positional argument is now the port directly.
-   - In 3.x, framer is specified via `framer=FramerType.RTU` from `pymodbus.framer`.
-
-2. **`unit` parameter renamed to `slave`** — Every read/write call affected:
-   - 2.x: `client.read_holding_registers(address=0x34, count=3, unit=80)`
-   - 3.x: `client.read_holding_registers(address=0x34, count=3, slave=80)`
-   - Using `unit=` in 3.x raises `TypeError` or silently uses the wrong slave.
-   - In 3.5+, `unit` was fully removed (not deprecated — removed).
-
-3. **Return value handling** — Response objects changed:
-   - 2.x: `result.registers` could be `None` on error, no exception raised.
-   - 3.x: Raises `ModbusException` on bus errors. Must wrap in try/except.
-   - `result.isError()` still works but is secondary to exception handling in 3.x.
-
-4. **`connect()` / `close()` context manager** — 3.x encourages `with` statement:
-   - 2.x: Manual `client.connect()` / `client.close()` was the norm.
-   - 3.x: `with ModbusSerialClient(...) as client:` is preferred; bare connect() still works.
-
-5. **Async client** — 3.x split sync and async completely:
-   - 3.x sync: `pymodbus.client.ModbusSerialClient`
-   - 3.x async: `pymodbus.client.AsyncModbusSerialClient` (requires `await`)
-   - 2.x mixed these via `asyncio` parameter — that parameter is gone.
-
-6. **`stopbits`, `bytesize`, `parity` parameters** — Still present in 3.x but must be
-   passed as keyword arguments, not positional.
-
-**Why it happens:**
-pymodbus 3.0 (released late 2022) was a ground-up rewrite. The project acknowledged
-it broke backward compatibility. `pip install pymodbus` installs 3.x by default since 2023.
-
-**Consequences:**
-- `TypeError: __init__() got an unexpected keyword argument 'method'` — obvious
-- `TypeError: read_holding_registers() got an unexpected keyword argument 'unit'` — obvious
-- Silent wrong-slave communication if `unit` kwarg is silently ignored — dangerous
-
+### 1. The 22 MB xlsx, raw CSVs and generated data get committed or published (repo has NO .gitignore)
+**What goes wrong:** `git status` shows `Results_1st.Run/`, `data/`, `logs/`, `WTVB01 documents/`, `__pycache__/` and the `.docx` files all untracked, and there is no `.gitignore` in the repo root. A careless `git add .` pushes the 22 MB workbook, logger CSVs, logs and vendor PDFs to a PUBLIC repo. Git history keeps them forever, even after deletion.
+**Why it happens:** The dashboard repo is "new", so people skip hygiene. The Pages site is also often served from the repo root, so anything in the tree becomes a public URL.
+**Consequences:** Raw data and vendor manuals exposed. Repo bloat is permanent without a history rewrite. A file over 100 MB is rejected at push, and a 22 MB file is allowed but wasteful.
 **Prevention:**
-- Pin version in `requirements.txt`: `pymodbus>=3.5,<4.0`
-- Write code targeting 3.x exclusively; do not support 2.x.
-- Verify installed version at startup: `import pymodbus; assert pymodbus.__version__.startswith('3')`
-- Use the 3.x import path: `from pymodbus.client import ModbusSerialClient`
+- First commit of v1.3 is a `.gitignore` covering `Results_1st.Run/`, `data/`, `logs/`, `*.xlsx`, `*.csv`, `__pycache__/`, `WTVB01 documents/`, `*.docx`, `.venv/`. Allowlist only the generated site JSON if it is committed.
+- Decide the repo layout up front. Preferred: the site lives in `docs/` or `site/` and is the only published tree. Source data never lives under it.
+- Use `git add <explicit paths>`. Run `git status` and `git diff --cached --stat` before the first push to the new remote.
+- Add a converter guard that refuses to write outside the configured output dir.
+- If the dashboard goes to a separate new repo, copy only the site folder. Do not push this logger repo's history, which contains other material.
+**Detection:** `git count-objects -vH` jumps. `git ls-files | xargs du -h` shows files over 1 MB. The Pages URL serves `/Results_1st.Run/...xlsx`.
+**Phase:** P-D (but the `.gitignore` is created in P-A).
 
-**Detection (warning signs):**
-- Any `TypeError` mentioning `method=` or `unit=`
-- `ModuleNotFoundError: No module named 'pymodbus.client.sync'` (that was a 2.x path)
-- `AttributeError` on the client object for methods that should exist
-
-**Phase:** Must be addressed in Phase 1 (serial connection foundation). Pin version before writing any code.
-
----
-
-### Pitfall 2: Slave ID / Unit ID confusion — 0x50 = 80, not 50
-
-**What goes wrong:**
-The WitMotion WTVB01-485 uses slave ID `0x50` in hex, which is decimal `80`. Developers
-who copy the datasheet hex value into code as the integer `50` (decimal) will always get
-"No response" or Modbus exception code 0x04 (SLAVE_DEVICE_FAILURE) — the sensor simply
-never responds because no device has ID 50.
-
-Additionally, the pymodbus `slave` parameter (3.x) must be an integer. Passing `"0x50"` as
-a string silently fails or raises `ValueError` depending on pymodbus version.
-
-**The three representations:**
-```
-Hex in datasheet:  0x50
-Decimal (correct): 80
-Wrong decimal:     50   ← common mistake
-```
-
-**Why it happens:**
-Datasheets list addresses in hex. Developers read `0x50`, mentally parse it as "fifty", and
-type `50` in code. This is one of the most common Modbus commissioning mistakes.
-
-**Consequences:**
-- Complete silence from the sensor — no response, no error that explains why
-- Timeout errors that look like wiring problems or baud rate mismatches
-- Hours of debugging the wrong layer (RS-485 wiring) when the issue is the ID
-
+### 2. Raw sheet decimal corruption leaks into the converter (wrong source sheet or wrong parse)
+**What goes wrong:** The raw sheet has values like `2.165e+16` and GPS like `-2289879276454220`. Reading `01 dados originais` instead of `02 — DADOS TRATADOS`, or "fixing" the numbers heuristically in the converter, silently yields garbage. Examples are 1e16 g, or lat of -2.29e15 that Leaflet renders in the ocean or throws on.
+**Why it happens:** The "reusable for raw logger CSVs later" requirement tempts a generic path. Raw logger CSVs are fine (dot decimals, ISO timestamps), but the xlsx raw sheet is already damaged.
+**Consequences:** Wrong KPIs, a broken map, a crashed Leaflet (`Invalid LatLng`).
 **Prevention:**
-- Store slave ID in config.yaml as decimal `80` with an explicit comment: `# 0x50 hex`
-- Or store as `0x50` in YAML and let Python parse it: PyYAML parses `0x50` as int 80
-- Add assertion in config loader: `assert 1 <= config.slave_id <= 247`
-- Print slave ID at startup: `logger.info(f"Slave ID: {slave_id} (0x{slave_id:02X})")`
+- The converter has two explicit input adapters (workbook treated sheet, logger CSV) that normalize to one internal schema. They do not share a heuristic.
+- Validate ranges and fail loudly (exit non-zero) rather than emit bad JSON. Checks: |lat| <= 90, |lon| <= 180, and for Rio roughly lat -23.1 to -22.7 and lon -43.8 to -43.1 as a warning. Also |accel| < 16 g, which is the sensor range and gives hard bounds.
+- Emit a `meta.validation` block in the JSON (counts of dropped and out-of-range rows).
+- Prefer reading the workbook with `openpyxl` `read_only=True, data_only=True`. Do NOT use the formula view, because formulas without cached values yield `None`.
+**Detection:** Min and max of the series in the converter log. A KPI mismatch against the workbook (see pitfall 6).
+**Phase:** P-A.
 
-**Detection (warning signs):**
-- Consistent timeout on every read attempt
-- No response even after confirming wiring, power, baud rate
-- Error message: `pymodbus.exceptions.ConnectionException: Failed to connect`
-  or `ModbusIOException: [Input/Output] No Response received from the remote unit`
-
-**Phase:** Phase 1. Document the hex/decimal table in config.yaml comment.
-
----
-
-### Pitfall 3: RS-485 timing — turnaround delay, inter-frame gaps, silent failures
-
-**What goes wrong:**
-RS-485 is half-duplex. After the master sends a request, the bus driver must switch from
-transmit to receive mode before the slave response arrives. If the timeout is too tight or
-the inter-frame gap is too short, the master misses the response — and pymodbus reports a
-timeout, not a timing problem.
-
-**Specific timing issues:**
-
-1. **RTS-controlled turnaround (hardware converters):**
-   Some cheap USB-RS485 adapters (especially clone CH340 boards) rely on software RTS
-   toggling to switch TX/RX direction. pymodbus 3.x has `rtscts=False` by default.
-   If the adapter requires RTS toggling, every read will silently time out.
-   The fix: `rts_level_for_tx=True, rts_level_for_rx=False` in `ModbusSerialClient` — but
-   most modern adapters (CH340G, CP2102, FT232RL) are auto-direction; they do not need this.
-
-2. **Inter-frame gap (Modbus RTU spec: 3.5 character times):**
-   At 9600 baud, one character = ~1.04 ms. 3.5 chars = ~3.6 ms.
-   pymodbus respects this internally, but if the host OS scheduler wakes the process late,
-   the gap can be violated. On Windows, the default timer resolution is 15.6 ms — this means
-   `time.sleep(0.004)` may actually sleep for 15+ ms. This is usually fine (longer gaps are
-   acceptable; shorter ones cause framing errors), but it means the effective minimum poll
-   interval on Windows is ~20-30 ms per register read, not ~5 ms.
-
-3. **Timeout too short:**
-   Default pymodbus timeout is 3 seconds. For a slow sensor or noisy line, this may actually
-   be fine. The mistake is setting `timeout=0.1` or `timeout=0.5` trying to "speed up" the
-   loop — at 9600 baud, a 3-register read response takes ~6 ms just for transmission. With
-   processing time, 200-500 ms timeout is the safe minimum.
-
-4. **Polling too fast — no rest between requests:**
-   Sending back-to-back requests without any delay can overwhelm the sensor's UART buffer.
-   WitMotion sensors are embedded devices with limited processing; they need a small gap
-   (typically 50-100 ms) between sequential requests to process and respond.
-
-**Why it happens:**
-Developers optimize for throughput, not realizing that 9600 baud RS-485 has hard physical
-limits. Unlike TCP/IP, there is no congestion control — packets just disappear.
-
-**Consequences:**
-- Intermittent `ModbusIOException: No Response` on seemingly random polls
-- CRC errors logged by pymodbus (framing corruption from too-fast polling)
-- Sensor appears to work for minutes, then stops responding (buffer overflow in sensor)
-
+### 3. GPS repeated coordinates and the "tunnel" gap produce a misleading map and heat map
+**What goes wrong:** The fix updates only every ~30 s (about 150 samples at 5 Hz share one coordinate). Plotting every sample as a heat point stacks 150 points on one spot. That spot becomes a hot blob regardless of vibration, and the "heat" reflects dwell count, not severity. The 2,020 rows without coordinates are either dropped from the geographic view without telling the user, or linearly interpolated across the tunnel as if exact.
+**Why it happens:** leaflet.heat sums point weights per pixel cell. Many duplicate points with weight 1 saturate the gradient.
+**Consequences:** Management reads the blobs as the worst locations when they are only the places where a fix was held longest. Impact positions can be off by hundreds of metres (a train at ~40 km/h covers ~330 m in 30 s).
 **Prevention:**
-- Keep `timeout=1` (1 second) minimum at 9600 baud for this sensor
-- Add `time.sleep(0.1)` between sequential Modbus calls in the same poll cycle
-- Use `inter_char_timeout=0.005` in pymodbus if encountering framing errors
-- Do not set polling interval below 500 ms total (read all registers + processing + sleep)
+- Collapse to one entry per distinct GPS fix (or per fix-bucket) before heat-mapping, and use the MAX of the chosen metric for that fix (this mirrors the workbook's "ponto de impacto = 1 per GPS location, max value"). Never feed raw samples.
+- Optionally interpolate position between consecutive fixes by timestamp, but show interpolated positions distinctly (marked "posição estimada") and never claim sub-fix accuracy. Make this a documented choice, not a silent one.
+- Show a visible caveat in the UI ("GPS atualiza a cada ~30 s; posição de impacto aproximada") and the tunnel segment as a dashed gap labelled "sem sinal GPS". Do not draw a straight polyline through the gap without styling it.
+- Count points without coordinates in the KPI panel ("2.020 registros sem GPS") so totals reconcile with 23.383.
+- Break the polyline at gaps (separate segments) instead of connecting across them.
+**Detection:** Heat blobs sit on exact fix coordinates. Number of unique (lat, lon) pairs is much smaller than the number of rows.
+**Phase:** P-A (dedupe/fix-index in JSON) and P-C (rendering and caveat).
 
-**Detection (warning signs):**
-- `No Response received` errors that are intermittent, not consistent
-- Errors go away when you add `time.sleep(0.2)` between reads
-- CRC errors in pymodbus logs (`pymodbus.logging` at DEBUG level)
-
-**Phase:** Phase 1 (serial connection) and Phase 2 (polling loop). Bake timing constants into config.yaml from the start.
-
----
-
-### Pitfall 4: Signed 16-bit integer conversion — the most common data corruption bug
-
-**What goes wrong:**
-Modbus registers hold 16-bit unsigned integers (0–65535). Physical measurements like
-acceleration can be negative. WitMotion encodes negatives as two's complement 16-bit:
-for example, -1g is stored as `0x8000 = 32768` unsigned.
-
-`pymodbus.result.registers` returns a Python `list[int]` where each int is **unsigned**
-(0–65535). Python's `int` type is arbitrary precision — it will never naturally wrap around
-to negative.
-
-**The three broken approaches:**
-
-```python
-# WRONG 1: direct use as unsigned
-raw = result.registers[0]   # gets 32768 for -1g
-accel_g = raw / 32768 * 16  # returns 16.0 g instead of -16.0 g
-
-# WRONG 2: struct.unpack without correct byte packing
-import struct
-raw = result.registers[0]
-# THIS FAILS: struct.unpack expects bytes, not int
-signed = struct.unpack('>h', raw)  # TypeError
-
-# WRONG 3: masking with wrong sign check
-raw = result.registers[0]
-if raw > 128:              # wrong threshold — should be > 32767
-    raw -= 256             # wrong wraparound — should be 65536
-```
-
-**The correct approach:**
-
-```python
-def to_signed16(value: int) -> int:
-    """Convert unsigned 16-bit Modbus register to signed Python int."""
-    if value >= 32768:        # bit 15 is set → negative in two's complement
-        return value - 65536
-    return value
-
-# Or using struct correctly (pack first, then unpack):
-import struct
-def to_signed16_struct(value: int) -> int:
-    return struct.unpack('>h', struct.pack('>H', value))[0]
-
-# Or using ctypes:
-import ctypes
-def to_signed16_ctypes(value: int) -> int:
-    return ctypes.c_int16(value).value
-```
-
-All three correct approaches are equivalent. The `to_signed16(value)` arithmetic is the
-most readable and has no imports beyond builtins.
-
-**WitMotion-specific scaling:**
-```
-Acceleration:   signed_16 / 32768 * 16     (range: -16g to +16g)
-Vibration vel:  signed_16 / 100.0          (mm/s, check datasheet for exact factor)
-Temperature:    signed_16 / 100.0          (°C, may also be /10 — verify with datasheet)
-Angle:          signed_16 / 32768 * 180    (degrees)
-```
-
-The exact scaling factors must be verified against the WitMotion WTVB01-485 datasheet
-because WitMotion has released multiple firmware versions with different scale factors.
-
-**Why it happens:**
-Python developers unfamiliar with fixed-width integer representations assume Python's int
-behaves like C's `int16_t`. It does not. Python ints never overflow.
-
-**Consequences:**
-- Negative accelerations reported as large positive values (e.g., -0.5g shown as +15.5g)
-- Values look plausible (within physical range) so the bug survives testing
-- FFT analysis or alarm thresholds will be completely wrong in production
-
-**Detection (warning signs):**
-- Accelerometer reads ~32g when sensor is at rest (gravity should read ~1g on Z axis)
-- Values jump discontinuously around zero (one side is correct, other side is wrapped)
-- Temperature reads ~600°C when ambient is 25°C (sign bit was misinterpreted)
-
-**Phase:** Phase 2 (register parsing). Write unit tests for `to_signed16()` with edge cases:
-`0`, `1`, `32767`, `32768`, `65535`, `32769`.
-
----
-
-### Pitfall 5: Serial port permissions and access conflicts
-
-**What goes wrong:**
-
-**Windows-specific:**
-
-1. **Port already open by another process:**
-   Windows COM ports allow only one exclusive open at a time. If any other tool has the port
-   open (Putty, Arduino IDE serial monitor, another Python script that crashed without
-   closing), `ModbusSerialClient.connect()` will raise:
-   `serial.serialutil.SerialException: could not open port COM3: [Error 5] Access is denied`
-   or `[Error 2] The system cannot find the file specified` if the port number is wrong.
-
-2. **Port number confusion after replug:**
-   Windows assigns COM port numbers to USB serial adapters by device serial number. The
-   same physical adapter will always get the same COM number IF it has a unique serial
-   number. Clone CH340 adapters often have no serial number (all show `0000000`), so
-   Windows assigns the next available COM number on each plug — it can change.
-
-3. **COM port > COM9 in legacy applications:**
-   Ports above COM9 require the path prefix `\\.\COM10` in Win32 API. pyserial handles this
-   automatically, but some tutorials show bare `COM10` which may fail in edge cases.
-   pyserial correctly uses `\\.\COMn` internally so this is not a pyserial issue, but
-   external tools (Putty, etc.) may need the `\\.\` prefix for COM10+.
-
-**Linux-specific:**
-
-1. **`/dev/ttyUSB0` permission denied:**
-   By default, only root and the `dialout` group can access `/dev/ttyUSB*`. Running as a
-   normal user gives: `serial.serialutil.SerialException: [Errno 13] Permission denied`
-   Fix: `sudo usermod -aG dialout $USER` then log out and log back in.
-   Temporary fix (do not use in production): `sudo chmod 666 /dev/ttyUSB0`
-
-2. **`/dev/ttyUSB0` disappears and reappears as `/dev/ttyUSB1`:**
-   On Linux, if the adapter is unplugged and replugged while another process holds the
-   device open, the kernel may assign a new device node number.
-
-**Prevention (Windows):**
-- List available ports at startup with `serial.tools.list_ports.comports()`
-- If `config.yaml` port is not found, print available ports and exit with a helpful message
-- Never leave the serial port open in debug/REPL sessions
-- Check Device Manager: under "Ports (COM & LPT)" the device should appear
-
-**Prevention (Linux):**
-- Add user to `dialout` group in README as Step 1
-- Use udev rules to assign a fixed symlink: `/dev/wtvb01` → `/dev/ttyUSB0`
-
-**Detection (warning signs):**
-- `SerialException: [Error 5] Access is denied` → another process holds the port
-- `SerialException: [Error 2] The system cannot find the file specified` → wrong port name
-- `Permission denied` on Linux → dialout group
-
-**Phase:** Phase 1. The `list_serial_ports.py` utility is already in the project requirements — build it early and test it before writing the main logger.
-
----
-
-### Pitfall 6: Wrong Modbus function code — FC03 vs FC04
-
-**What goes wrong:**
-Modbus defines multiple register types:
-- **Holding Registers (FC03):** Read with `read_holding_registers()` — read/write, for configuration
-- **Input Registers (FC04):** Read with `read_input_registers()` — read-only, for measurements
-
-WitMotion WTVB01-485 exposes sensor data (acceleration, temperature, etc.) as **holding
-registers** accessible via **FC03**. Using `read_input_registers()` (FC04) on those addresses
-will cause the sensor to return Modbus exception code `0x02` (ILLEGAL DATA ADDRESS) or
-`0x01` (ILLEGAL FUNCTION) — the sensor may have no input registers at those addresses.
-
-**The confusion:**
-The naming is counterintuitive. "Input registers" sounds like where sensor inputs would live.
-In practice, many sensors (including most WitMotion devices) use holding registers for all
-data, because the Modbus standard's register type distinction is often ignored by embedded
-device manufacturers.
-
-**Modbus exception codes to know:**
-```
-0x01  ILLEGAL FUNCTION       — function code not supported by this device
-0x02  ILLEGAL DATA ADDRESS   — register address not valid on this device
-0x03  ILLEGAL DATA VALUE     — write value out of range
-0x04  SLAVE DEVICE FAILURE   — internal device error
-```
-
-pymodbus will set `result.function_code` to `0x83` (0x80 | 0x03) for a FC03 exception,
-which means the `isError()` method returns True.
-
+### 4. Leaflet.heat intensity and max normalization misread
+**What goes wrong:** leaflet.heat's per-point intensity is 0 to 1, and the `max` option (default 1.0) is the value that maps to the top of the gradient. Feeding raw g values (0.5 to 6) clips everything to red. Normalizing each filter state to its own max makes colors non-comparable between filters. The `radius` is in pixels, not metres, so the apparent footprint changes with zoom. The `maxZoom` option affects intensity scaling with zoom. The plugin is old and its behavior is not a physically meaningful density. (Behavior from training knowledge, MEDIUM.)
+**Why it happens:** The "live radius/intensity" sliders are exposed without defining what they mean.
+**Consequences:** Heat colors change when the user zooms or filters; a Moderado hotspot looks as hot as a Crítico one; comparisons are invalid.
 **Prevention:**
-- Use `read_holding_registers()` (FC03) for WitMotion WTVB01-485 — confirmed by datasheet
-- When commissioning a new sensor, test FC03 first; if it returns exception 0x01, try FC04
-- Log the raw function code on errors: `logger.debug(f"FC: 0x{result.function_code:02X}")`
+- Map the metric to 0..1 using FIXED severity-anchored scales, e.g. `w = clamp(|dyn| / Crítico_threshold, 0, 1)`, so color means the same thing under every filter. Offer "relativo ao filtro atual" only as an explicit opt-in.
+- Set `max` = 1 and drive scale via the weight. Test with `minOpacity`, `blur`, `radius` at several zoom levels.
+- Label the legend in severity terms (Leve to Crítico), not "densidade".
+- Treat the slider "intensidade" as a multiplier on weight and document it. Consider capping the radius range.
+- Because leaflet.heat is a canvas that redraws on `setLatLngs`, debounce slider input (~100 to 150 ms) and call `setLatLngs` once per change.
+- Consider a circle-marker layer colored by severity as the primary view, with heat as the secondary, since heat can mislead for sparse, dedupe'd points.
+**Detection:** Whole map red on first load. Colors shift when you zoom in.
+**Phase:** P-C.
 
-**Detection (warning signs):**
-- `ExceptionResponse(143, 2, 2)` — function 143 (0x8F is illegal) with exception 2 (illegal address)
-- `result.isError()` returns True immediately (not a timeout — the sensor did respond)
-- Response arrives fast (sub-millisecond) but is an error frame
-
-**Phase:** Phase 1. Confirm FC03 vs FC04 in first connection test before building polling loop.
-
----
-
-### Pitfall 7: WitMotion WTVB01-485 specific quirks
-
-**Confidence: MEDIUM** — Based on WitMotion device class patterns; verify against physical device.
-
-**Known WitMotion RS-485 device patterns:**
-
-1. **Default slave ID is 0x50 (80 decimal), not 1:**
-   Most Modbus tutorials assume slave ID 1 (the Modbus default). WitMotion chose 0x50.
-   This is not wrong, but it means all boilerplate code will have the wrong slave ID.
-   Some WitMotion units ship with slave ID 0x01 if custom-ordered — check the label.
-
-2. **Baud rate must be exactly 9600:**
-   WitMotion WTVB01-485 default baud rate is 9600. Some WitMotion documentation for other
-   models mentions 115200 as optional — but this specific model (WTVB01) uses 9600 default.
-   The baud rate is configurable via Modbus write to a config register, but until explicitly
-   changed, 9600 is required. Mismatch = complete silence (see Pitfall 13).
-
-3. **Register addresses are 0-indexed in pymodbus:**
-   The datasheet may list register addresses as Modbus "protocol addresses" starting at 1
-   (e.g., register 40053 = holding register 52). pymodbus uses 0-indexed protocol data unit
-   (PDU) addresses. If the datasheet says register address `0x34`, use `address=0x34`
-   in pymodbus — do NOT subtract 1. pymodbus does not apply the +1 offset; the address
-   passed is used directly in the PDU.
-
-4. **Bulk read is more reliable than individual register reads:**
-   Reading all sensor registers in a single `read_holding_registers(address=0x34, count=19)`
-   call (covers 0x34 through 0x46) is more reliable than 19 individual calls. Fewer
-   round trips = fewer opportunities for timing failure. The WitMotion sensor supports
-   multi-register reads up to at least 32 registers.
-
-5. **Power cycling vs. connection reset:**
-   If the sensor stops responding mid-session, it may need a full power cycle (disconnect
-   5-36V supply), not just a serial port reconnect. Some WitMotion devices enter a locked
-   state after receiving malformed Modbus frames (e.g., from wrong baud rate attempts).
-
-6. **Register map gaps:**
-   Not all addresses between 0x34 and 0x46 are valid. Reading an undefined address does not
-   always return exception 0x02 — some firmware versions return garbage data (0x0000 or
-   0xFFFF) for undefined registers. Validate that read values are within physical bounds.
-
+### 5. Client-side recompute does not match the workbook KPIs
+**What goes wrong:** The JS re-implementation produces different counts of events, impacts and impact points than the workbook, so management numbers contradict the Excel report.
+**Why it happens (specific causes in this project):**
+- Dynamic = measured minus the MEDIAN of the axis. If the JS computes the median over a filtered subset, over a different row set (including tunnel rows or not), or with a different even-count rule, offsets differ. Fix the median over the full treated series, and expose "offset de repouso" as an explicit parameter whose default equals the workbook value.
+- AZ includes -1 g. The "dominant axis" must be decided on the DYNAMIC values, not on measured. Using measured AZ would make AZ dominant everywhere.
+- Threshold boundaries are half-open: Normal < 0,5 <= Leve < 1 <= Moderado < 2 <= Severo < 4 <= Crítico. Use `>=` on the lower bound and compare the ABSOLUTE value. An off-by-one `>` vs `>=` changes counts only at exact equality, which is likely given values quantized at 1/2048 g (0.5 g is exactly representable).
+- Event grouping ("consecutive event measurements") depends on the gap rule: consecutive in index or in time, and across the sentido boundary or the tunnel gap. Reproduce the Python/Excel rule exactly.
+- Floating-point: JS doubles equal Python floats, but the source values are rounded in the sheet. Compare with a tolerance only for derived floats and exact for integer counts.
+**Consequences:** Loss of trust in the dashboard.
 **Prevention:**
-- Confirm slave ID, baud rate, and register map on first connection using a known-good
-  Modbus scanner (e.g., `mbpoll` on Linux, "Modbus Poll" trial on Windows)
-- Read all 19 registers in one call from 0x34 to 0x46 (count=19) rather than individually
-- Print raw hex of every register on first connection for manual verification
+- Build a golden-file test. The converter emits `expected_kpis` (computed in Python from the workbook's own sheets `eventos`, `picos`, `estatísticas`) into a test fixture. A Node or browser test loads the JSON, runs the JS engine with default params, and asserts exact equality on counts and max values by trecho and sentido.
+- Put the engine in a pure JS module (no DOM) so it can be tested with `node --test`.
+- Document each rule in one place (`docs/regras.md`) and reference the workbook sheet that defines it.
+- Show a "valores conforme planilha" badge when params equal defaults, and "parâmetros alterados" when they differ.
+**Detection:** KPI cards at default parameters differ from the workbook's summary sheet by any amount.
+**Phase:** P-B (engine and golden test). Define the expected values in P-A.
 
-**Phase:** Phase 1 (connection test), Phase 2 (register parsing with raw hex logging).
-
----
-
-### Pitfall 8: CSV file corruption — incomplete writes, buffer not flushed, crash residue
-
-**What goes wrong:**
-
-1. **Python's `csv.writer` buffers writes:**
-   By default, Python file I/O buffers writes in a kernel buffer. If the process crashes
-   (power loss, KeyboardInterrupt not caught, unhandled exception), the last N rows may
-   never reach disk. The number of lost rows depends on the OS buffer size (typically 4 KB),
-   which at one row per second and ~100 bytes/row means up to ~40 rows of data loss.
-
-2. **File left open and truncated on crash (Windows):**
-   On Windows, an open file may be exclusively locked. If the process is killed via Task
-   Manager, the OS releases the lock but the file may be left in an inconsistent state
-   (partial last row without a newline, or an empty file if it was just opened and never
-   flushed).
-
-3. **BOM (Byte Order Mark) encoding issue on Windows:**
-   If the CSV is opened in Excel on Windows and re-saved, Excel may add a UTF-8 BOM prefix
-   (`\xef\xbb\xbf`). More relevantly, if the file is opened with `encoding='utf-8-sig'`
-   on Windows (which some developers do to make Excel happy), but later read with
-   `encoding='utf-8'`, the BOM appears as a column name corruption.
-
-4. **Newline handling on Windows:**
-   `csv.writer` by default writes `\r\n` on Windows when the file is opened in text mode.
-   If the file is later processed on Linux, the extra `\r` characters cause issues.
-   Fix: open with `newline=''` as specified in Python docs for csv: 
-   `open(filepath, 'w', newline='', encoding='utf-8')`
-
-5. **Header written on every open (append mode bug):**
-   If the logger opens the CSV in append mode and always writes the header, every restart
-   adds a duplicate header row in the middle of the data file.
-
+### 6. 23k x 3 time series: JSON size and rendering lock the browser
+**What goes wrong:** Naive JSON of 23,383 rows x many keys (ISO timestamp strings, repeated keys, 15 digits of float) is easily 8 to 15 MB. Plotting 70k points in an SVG chart library or re-rendering on every slider tick freezes the page. Mobile management users get a blank page.
 **Prevention:**
-```python
-# Correct CSV open pattern:
-import csv
-from pathlib import Path
-
-def open_csv(filepath: Path, write_header: bool):
-    file = open(filepath, 'a', newline='', encoding='utf-8')
-    writer = csv.writer(file)
-    if write_header:
-        writer.writerow(['timestamp', 'ax_g', 'ay_g', 'az_g', ...])
-    return file, writer
-
-# Flush after every write (or every N writes):
-writer.writerow(row)
-file.flush()  # push from Python buffer to OS buffer
-# os.fsync(file.fileno())  # uncomment for guaranteed disk write (slower)
-```
-
-- Write header only if file is new (check `filepath.exists()` and `filepath.stat().st_size == 0`)
-- Wrap the main loop in `try/finally` to ensure `file.close()` is called on any exit
-- Use `atexit.register(file.close)` as backup for unexpected exits
-- Rotate files by date (daily files) to limit the size of any single corrupt file
-
-**Detection (warning signs):**
-- CSV has no header row (header-write-on-append bug)
-- Last row of CSV is truncated (missing columns or partial number)
-- File ends without a newline (write was interrupted mid-row)
-- Duplicate header rows in the middle of the file
-
-**Phase:** Phase 3 (CSV logger module). Unit test the logger by simulating a crash mid-write.
-
----
-
-### Pitfall 9: Timestamp issues — DST, America/Sao_Paulo, pytz vs zoneinfo
-
-**What goes wrong:**
-
-1. **Brazil abolished DST in 2019:**
-   `America/Sao_Paulo` no longer observes daylight saving time since 2019. Brazil law
-   abolished DST by Decree 9.772/2019. The UTC offset for `America/Sao_Paulo` is now
-   permanently **UTC-3** (BRT) with no seasonal change.
-   Consequence: no DST transition bug will occur — but outdated timezone databases may still
-   have DST rules that trigger incorrectly. Using pytz with a stale `tzdata` package could
-   theoretically apply wrong rules.
-
-2. **pytz vs zoneinfo (Python 3.9+):**
-   - `pytz` is a third-party package, has a known footgun: you must use `tz.localize(dt)`,
-     not `dt.replace(tzinfo=tz)`. The latter silently gives wrong offsets for DST-affected
-     timezones (irrelevant for Sao Paulo now, but a general hazard).
-   - `zoneinfo` (Python 3.9 standard library) is the modern approach and uses the same IANA
-     database. `datetime.now(ZoneInfo('America/Sao_Paulo'))` is correct and safe.
-   - The project targets Python 3.8+ which predates `zoneinfo` (added in 3.9). For 3.8
-     compatibility, use `backports.zoneinfo` or use `pytz` carefully.
-
-3. **`datetime.now()` without timezone is naive — ambiguous in CSV:**
-   Using `datetime.now()` produces a naive datetime with no timezone info in the ISO string.
-   Industrial data MUST have unambiguous timestamps. Use `datetime.now(tz)` always.
-
-4. **Timestamp resolution on Windows:**
-   `datetime.now()` on Windows has ~15.6 ms resolution due to the default timer interval.
-   For vibration analysis, millisecond timestamps are meaningful. Use `time.perf_counter()`
-   as a relative counter if sub-millisecond resolution is needed, anchored to a
-   `datetime.now(tz)` at session start.
-
-5. **ISO 8601 format consistency:**
-   Use `isoformat()` which produces `2026-05-19T14:30:00.123456-03:00`. This is unambiguous
-   and parseable by pandas, Excel (with import wizard), and InfluxDB.
-   Avoid `strftime('%d/%m/%Y %H:%M:%S')` — it drops timezone and uses locale-specific format.
-
-**Recommended pattern for Python 3.8 compatibility:**
-```python
-# requirements.txt: backports.zoneinfo; python_version < "3.9"
-try:
-    from zoneinfo import ZoneInfo
-except ImportError:
-    from backports.zoneinfo import ZoneInfo  # Python 3.8
-
-TZ = ZoneInfo('America/Sao_Paulo')
-
-def now_sao_paulo() -> datetime:
-    return datetime.now(TZ)
-
-# In CSV row:
-row['timestamp'] = now_sao_paulo().isoformat()
-# Produces: "2026-05-19T11:30:00.123456-03:00"
-```
-
-**Detection (warning signs):**
-- Timestamps in CSV have no timezone suffix (naive datetime was used)
-- Timestamps jump by 1 hour in April or October (stale pytz with old DST rules)
-- Timestamps show UTC instead of local time (wrong timezone or `.utcnow()` was used)
-
-**Phase:** Phase 3 (CSV logger). Write a test that calls `now_sao_paulo()` and checks the UTC offset is `-03:00`.
-
----
-
-### Pitfall 10: Connection recovery after USB unplug/replug
-
-**What goes wrong:**
-When the USB-RS485 adapter is unplugged, `pyserial` does not raise an exception immediately.
-The serial port object remains "open" in Python, but the next read or write will raise
-`serial.serialutil.SerialException: [Errno 5] Input/output error` (Linux) or
-`serial.serialutil.SerialException: ClearCommError failed (PermissionError(13, ...))` (Windows).
-
-pymodbus will catch this and raise `ModbusIOException`, but the client object is now in an
-undefined state. Simply calling the next `read_holding_registers()` will continue to fail
-even after the adapter is replugged — the underlying serial port is still "open" on a dead
-device handle.
-
-**The correct recovery pattern:**
-```python
-def read_with_retry(client, address, count, slave, max_retries=3):
-    for attempt in range(max_retries):
-        try:
-            result = client.read_holding_registers(address=address, count=count, slave=slave)
-            if result.isError():
-                raise IOError(f"Modbus error: {result}")
-            return result.registers
-        except Exception as e:
-            logger.warning(f"Read failed (attempt {attempt+1}/{max_retries}): {e}")
-            time.sleep(2 ** attempt)  # exponential backoff: 1s, 2s, 4s
-            try:
-                client.close()
-            except Exception:
-                pass
-            try:
-                client.connect()
-            except Exception as reconnect_err:
-                logger.error(f"Reconnect failed: {reconnect_err}")
-    raise IOError("Max retries exceeded")
-```
-
-**Windows COM port renaming after replug:**
-If the CH340 adapter has no unique serial number, Windows may assign COM4 after the original
-COM3 disappears. The application must detect "port not found" vs. "IO error" differently:
-- IO error on existing port → retry reconnect to same port name
-- Port not found error → scan `serial.tools.list_ports` for the device by VID/PID
-
-**CH340 VID/PID:** `0x1A86:0x7523` — use this to identify the adapter regardless of port name:
-```python
-import serial.tools.list_ports
-def find_ch340_port():
-    for port in serial.tools.list_ports.comports():
-        if port.vid == 0x1A86 and port.pid == 0x7523:
-            return port.device
-    return None
-```
-
-**Prevention:**
-- Never terminate on first IO error — use retry with exponential backoff
-- Log every reconnection attempt with timestamp
-- Set a maximum retry window (e.g., 5 minutes) then exit with a clear error message
-- Store `port.vid`, `port.pid` in config.yaml as optional hints for port auto-detection
-
-**Detection (warning signs):**
-- `ModbusIOException` after cable pull, followed by continued failures after replug
-- `SerialException: ClearCommError` on Windows
-- Log shows "connected" but reads still fail after replug
-
-**Phase:** Phase 2 (main polling loop / error handling).
-
----
-
-### Pitfall 11: Windows COM port number instability
-
-**What goes wrong:**
-Windows ties COM port numbers to the device's USB serial number. Clone CH340 adapters
-(widely sold on AliExpress, Amazon) often all have the same empty or repeated serial number
-`0000000000`. When two such adapters have ever been plugged in — even months apart — Windows
-may have registered both under "COM3" and "COM4" in the registry. Plugging in one of them
-may come up as COM3 or COM4 depending on which registry slot it lands in.
-
-This means: the user configures `port: COM3` in `config.yaml`, it works for a month, they
-use a different USB port one day, and now it's `COM5`. They get "port not found" and do not
-know why.
-
-**Registry residue:**
-Windows accumulates "ghost" COM port entries in the registry under
-`HKLM\SYSTEM\CurrentControlSet\Enum\USB\VID_1A86&PID_7523`. Removing ghost ports via
-Device Manager (View → Show Hidden Devices → Ports → right-click → Uninstall) can fix
-spurious port number changes.
-
-**Prevention:**
-- `list_serial_ports.py` should show all ports with description and VID/PID, not just names
-- At startup, if configured port is not found, auto-scan and print candidates
-- README should warn: "If port is wrong, run `python list_serial_ports.py` to find the current name"
-- Instruct users to always use the same physical USB port on the laptop — Windows maps
-  hardware path (USB hub port) to COM number independently of device serial number
-
-**Detection (warning signs):**
-- `SerialException: could not open port COM3: [Error 2]` after a replug
-- Device appears in Device Manager under a different COM number
-- `python list_serial_ports.py` shows the device under COM5 or COM6 instead of COM3
-
-**Phase:** Phase 1. Make `list_serial_ports.py` the first utility built and tested.
-
----
-
-### Pitfall 12: USB-RS485 driver issues — CH340, CP210x, FTDI on Windows 10/11
-
-**What goes wrong and which drivers are problematic:**
-
-**CH340 / CH340G (most common in WitMotion cables):**
-- Windows 10/11 has inbox CH340 support but it may be an older version (driver date 2019).
-- The inbox driver works for standard use but has known issues at high baud rates (>115200).
-- At 9600 baud (this project), the inbox driver is typically fine.
-- Clone CH340 adapters may have modified VID/PID that prevents Windows Update from finding
-  the correct driver. The manufacturer driver from `wch.cn` is the authoritative source.
-- Issue: Windows sometimes installs the wrong driver (e.g., USB Serial Device instead of
-  CH340) — appears as "USB Serial Device" in Device Manager with no COM port.
-  Fix: Right-click → Update Driver → Browse → WCH driver folder.
-- CH341 (a later variant) requires a different driver from the same manufacturer.
-
-**CP210x (Silicon Labs — used in some higher-end adapters):**
-- Generally the most stable option on Windows 10/11.
-- Windows 10 has inbox CP210x support since ~2019. Windows 11 also has it.
-- Rarely needs manual driver installation.
-- VCP (Virtual COM Port) mode is the default — appears as COM port immediately.
-- Known issue: on Windows 11 22H2+, some users report CP210x being registered as
-  "USB Serial Device" without a COM port after fast plug-unplug cycles.
-  Fix: Device Manager → right-click "USB Serial Device" → Properties → Driver → Update.
-
-**FTDI (FT232RL — premium adapters):**
-- Best Windows support historically, but FTDI had a controversy in 2014 where official
-  drivers "bricked" counterfeit FTDI chips by zeroing their VID. Clone FTDI adapters may
-  be silently non-functional.
-- Genuine FTDI: extremely reliable, never needs manual driver on Windows 10/11.
-- Clone FTDI: may work with older drivers (2.08.14 and earlier), fail with newer ones.
-- Use FTDI Chip's `FT_Prog` tool to check if the chip is genuine.
-
-**Practical recommendation for this project:**
-The WitMotion cable likely uses CH340G. Install the latest WCH driver from `wch.cn` before
-connecting the device. After installation, Device Manager should show:
-`Ports (COM & LPT) → USB-SERIAL CH340 (COM3)` — the "CH340" name confirms correct driver.
-
-**Detection (warning signs):**
-- Device Manager shows "USB Serial Device" (generic) instead of "CH340" or "CP210x"
-- Yellow exclamation mark on the device in Device Manager
-- Port appears then disappears within 5 seconds of connection (driver crash/reload loop)
-- `list_serial_ports.py` shows the port but `connect()` immediately fails
-
-**Phase:** Phase 0 / README. Driver installation should be Step 1 in the setup guide, before any Python code.
-
----
-
-### Pitfall 13: Baud rate mismatch — detection without oscilloscope
-
-**What goes wrong:**
-If the host baud rate does not match the sensor (e.g., host at 115200, sensor at 9600),
-the symptom is **complete silence** — no response, no error frame, just timeout. The sensor
-never receives a valid Modbus frame because the UART bit timing is wrong.
-
-At the wrong baud rate, the sensor receives garbled data. Most embedded Modbus devices
-simply ignore frames that fail the CRC check — they do not respond with an error.
-
-**How to diagnose without hardware tools:**
-
-1. **Systematic baud rate sweep:**
-   Try all standard Modbus RTU baud rates in sequence. Most sensors support a small set:
-   `[1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200]`
-   Write a `baud_scan.py` script that tries each, sends a FC03 request to slave 80, waits
-   1 second for response. The correct baud rate is the one that gets a response.
-
-2. **pyserial loopback test (confirms adapter works):**
-   Short TX and RX pins on the RS-485 adapter (only valid for TTL-level USB-UART adapters,
-   not true RS-485 with separate A/B terminals). Send a byte and read it back. If nothing
-   comes back, the adapter itself may be broken or the driver is not working.
-   For RS-485 adapters, a loopback test is not straightforward — skip this.
-
-3. **WitMotion-specific baud rate confirmation:**
-   The WTVB01-485 ships at 9600 baud. Unless the register for baud rate configuration
-   has been written (which requires the correct baud rate to begin with), it cannot have
-   changed. If you have never configured it, it is 9600.
-
-4. **Character echoes / garbage data indicator:**
-   If `pymodbus` logs CRC errors (set logging to DEBUG), it means the adapter is receiving
-   data — but it is corrupted. This is different from total silence (no data at all).
-   CRC errors + data received → baud rate is close but wrong, or there is line noise.
-   Total silence → baud rate completely wrong, or wiring issue, or power issue.
-
-5. **Multi-meter voltage check (no oscilloscope):**
-   Measure DC voltage across RS-485 A/B terminals with no traffic. Should be +200mV to
-   +600mV (A is positive relative to B) at idle. 0V means the line has no bias — missing
-   termination resistor or the sensor is unpowered.
-
-**Common wrong baud rates seen in the wild:**
-- 115200 — default for Arduino/FTDI boards; many tutorials use this
-- 19200 — some older WitMotion products used this
-- 4800 — some legacy industrial sensors
-
-**Prevention:**
-- Hardcode `baudrate: 9600` in config.yaml with comment: `# WTVB01-485 factory default — do not change`
-- Log the configured baud rate at every startup: `logger.info(f"Baud rate: {config.baudrate}")`
-- Include `baud_scan.py` as a diagnostic utility in the project
-
-**Detection (warning signs):**
-- Complete timeout silence on every request (vs. intermittent = timing/noise issue)
-- pymodbus DEBUG logs show `No response received` with no partial frame data
-- Switching to a different baud rate produces CRC errors (you're "close") or response (correct)
-
-**Phase:** Phase 1 (connection diagnostics). `baud_scan.py` should be a shipped utility.
+- Columnar JSON (`{"t":[...], "ax":[...], ...}`), not an array of objects. Timestamps as integer epoch offsets or seconds from run start (one `t0` plus deltas). Round accel to 4 decimals, or store integers in 1/2048 g units (exact and compact) and divide in JS. Coordinates to 6 decimals. Expect roughly 1 to 2 MB raw and a few hundred KB gzipped. (GitHub Pages serves gzip automatically; LOW to MEDIUM on exact ratio, so measure.)
+- Keep a size budget in the converter (warn above e.g. 3 MB) and print the size.
+- Do not duplicate data: the dynamic series is derived in JS from measured minus offset, so do not ship both.
+- Use a canvas-based chart (uPlot, ECharts canvas, or Plotly `scattergl`) with built-in downsampling or windowing. Avoid SVG for 23k+ points. Consider LTTB or min/max-per-pixel decimation for the overview and full resolution on zoom. Peaks must survive decimation (use min/max buckets, not every Nth sample), otherwise a Crítico impact disappears from the chart.
+- Recompute with typed arrays (`Float32Array`/`Int16Array`) and a single pass. Debounce sliders. Run heavy recomputes in `requestAnimationFrame` or a Web Worker only if profiling demands it.
+- Lazy-load the map and chart libraries per tab.
+**Detection:** JSON over 5 MB. Chart interaction below 30 fps. Slider drag lag.
+**Phase:** P-A (format) and P-B (rendering).
 
 ---
 
 ## Moderate Pitfalls
 
-### Pitfall 14: pymodbus logging noise vs. actionable errors
-
-**What goes wrong:**
-By default, pymodbus logs every Modbus transaction at DEBUG level, which floods the log
-file with low-value entries. Conversely, at WARNING level, transient communication errors
-that should be retried are mixed with genuine failures.
-
+### 7. Timezone and date parsing (dd/mm vs mm/dd, local vs UTC)
+**What goes wrong:** `02/10/2026` parsed as 10 February by `new Date("02/10/2026")` (US order). The date means 2 October. Excel cells may hold a real datetime or a string, depending on the sheet. The run crosses midnight (00:30 to 01:58 on a date that straddles 01/10 to 02/10 local), so a time-only column can wrap. Treating naive local timestamps as UTC shifts the display by 3 h. Brazil has no DST since 2019, but do not rely on that: the converter should not guess.
 **Prevention:**
-```python
-import logging
-logging.getLogger('pymodbus').setLevel(logging.ERROR)   # production
-logging.getLogger('pymodbus').setLevel(logging.DEBUG)   # debugging sessions
-```
+- The converter parses with explicit formats and emits absolute epoch seconds (UTC) plus a `tz: "America/Sao_Paulo"` meta field. Logger CSV already has ISO 8601 with offset, so parse it with the offset.
+- JS formats with `Intl.DateTimeFormat('pt-BR', {timeZone:'America/Sao_Paulo'})`. Never use `new Date(string)` on dd/mm strings and never the browser's local zone (a viewer abroad would see shifted times).
+- If openpyxl returns `datetime` objects they are naive local. Attach the zone explicitly with `zoneinfo` (`tzdata` is already a dependency).
+- Test: the first row displays as 00:30 local and the last as 01:58.
+**Detection:** Axis labels read 03:30 or show the wrong day. Dates of 10 Feb.
+**Phase:** P-A, with the formatting in P-B.
 
-Separate the application logger (which logs sensor data + status) from the pymodbus logger.
-**Phase:** Phase 2. Configure logging hierarchy at application startup.
-
----
-
-### Pitfall 15: `count` parameter off-by-one in `read_holding_registers`
-
-**What goes wrong:**
-If register map spans 0x34–0x46, the count is `0x46 - 0x34 + 1 = 19`, not 18.
-An off-by-one reads 18 registers, missing the last one (frequency Z at 0x46).
-
+### 8. pt-BR number formatting and parsing
+**What goes wrong:** Mixed up decimal commas: the sheet/UI shows `0,5`, JSON requires `0.5`. `parseFloat("0,5")` returns 0. `<input type="number">` accepts locale-specific input inconsistently across browsers, so a user typing `0,75` for a threshold may get an empty value. Thousands separators ("23.383") get parsed as 23.383. The Portuguese-text cells in the workbook (e.g. a criteria sheet with "0,5") may be strings.
 **Prevention:**
-Define register map as named constants and compute count from them:
-```python
-REG_START = 0x34
-REG_END   = 0x46
-REG_COUNT = REG_END - REG_START + 1  # = 19
-```
-**Phase:** Phase 2 (register parsing).
+- JSON is always dot-decimal numbers (never strings with commas). The converter normalizes `,` to `.` only on string cells and logs the count.
+- Display via `Intl.NumberFormat('pt-BR', {minimumFractionDigits, maximumFractionDigits})`. Do not hand-replace characters.
+- For threshold inputs use `type="text" inputmode="decimal"` with a small tolerant parser that accepts both `,` and `.` and rejects ambiguity. Validate that thresholds are strictly increasing, and show an inline error in Portuguese.
+- Chart libraries' tooltip and axis formatters must be given the pt-BR formatter explicitly. Many default to en-US.
+- Keep all UI strings in one dictionary. Check accents (UTF-8 meta tag, files saved as UTF-8 without BOM issues, `<meta charset="utf-8">` first in head). On Windows, Python `open()` defaults to cp1252, so pass `encoding="utf-8"` and `ensure_ascii=False` (or keep ASCII-escaped, since JSON is valid either way) when writing JSON.
+**Detection:** Thresholds of 0 after typing a comma. `�` in labels.
+**Phase:** P-A (encoding) and P-B (inputs and formatting).
 
----
-
-### Pitfall 16: KeyboardInterrupt not caught — serial port left open
-
-**What goes wrong:**
-If `Ctrl+C` is not caught, Python exits immediately without calling `client.close()`.
-On Linux, this releases the file descriptor and the port is freed. On Windows, the COM
-port lock may persist until the Python process fully exits (which it does — this is usually
-fine). However, the CSV file may not be flushed (see Pitfall 8).
-
-The real issue: if pymodbus is in the middle of a serial write when `Ctrl+C` is received,
-the RS-485 bus may be left with a partial frame on the line, causing the sensor to wait for
-the rest of the frame (up to its own timeout) before it can respond to the next connection.
-
+### 9. Jekyll silently breaks the site (underscore paths, `.nojekyll`)
+**What goes wrong:** Pages runs Jekyll by default when publishing from a branch. Files and folders starting with `_` or `.` are ignored (e.g. `_data/`, `_assets/`, `_next/`), so a JSON or JS in such a path 404s. Some files with front matter get processed. Vendored node_modules style folders may also be skipped.
 **Prevention:**
-```python
-try:
-    main_loop()
-except KeyboardInterrupt:
-    logger.info("Shutdown requested by user")
-finally:
-    client.close()
-    csv_file.flush()
-    csv_file.close()
-    logger.info("Clean shutdown complete")
-```
-**Phase:** Phase 2. Required in the main entry point from day one.
+- Add an empty `.nojekyll` at the published root. Do not use underscore-prefixed directory names for data or assets. Name them `data/`, `assets/`, `vendor/`.
+- Alternative: deploy via GitHub Actions (`actions/upload-pages-artifact` + `actions/deploy-pages`), which bypasses Jekyll, and also makes the converter output a build artifact instead of a committed file. Weigh this against simplicity: for a single run, committing the small JSON under `docs/data/` is simpler and the version is auditable.
+**Detection:** Works locally with `python -m http.server`, 404 on Pages.
+**Phase:** P-D.
 
----
-
-### Pitfall 17: Python 3.8 compatibility — `walrus operator`, `match`, f-string `=`
-
-**What goes wrong:**
-The project targets Python 3.8+. Several modern Python features are not available:
-- `match` statement (Python 3.10+) — use `if/elif` chains
-- `zoneinfo` module (Python 3.9+) — use `backports.zoneinfo` on 3.8
-- `f"{value=}"` debug format (Python 3.8 — actually available in 3.8, no issue)
-- `dict | dict` merge operator (Python 3.9+) — use `{**a, **b}`
-- `type hints` with `list[int]` lowercase (Python 3.9+) — use `List[int]` from `typing`
-
+### 10. Base path breakage on project pages
+**What goes wrong:** A project page is served at `https://<user>.github.io/<repo>/`, not at the root. Absolute URLs like `/data/run.json` or `/assets/app.js` resolve to `github.io/data/...` and 404. Works at `localhost:8000/` and breaks in production. Also: `fetch('data/run.json')` from a file opened via `file://` fails due to CORS, so developers think the code is broken.
 **Prevention:**
-- Test on Python 3.8 explicitly (use `pyenv` on dev machine or a Docker container)
-- Use `from __future__ import annotations` for deferred evaluation of type hints
-- Include `backports.zoneinfo; python_version < "3.9"` in requirements.txt
+- Use relative URLs everywhere (`./data/run.json`) or a `<base>` configured once. Avoid router-style paths and no SPA history-API routing (GitHub Pages has no rewrite, so deep links 404). Use hash or tab state in the query string instead.
+- Test locally under a sub-path (serve the parent folder and open `/<repo>/`) or test on the real URL right after the first deploy, before building more.
+- Document `python -m http.server -d docs` as the dev command.
+**Phase:** P-B (conventions) and P-D (verify on the live URL).
 
-**Phase:** Phase 1. Set up dev environment with Python 3.8.
+### 11. Caching serves stale data after the converter reruns
+**What goes wrong:** Pages sends caching headers (about 10 minutes max-age) and CDN edge caching. After re-converting and pushing, users (and the author) see old JSON with new JS, or the reverse, so a version-mismatched schema crashes the page.
+**Prevention:**
+- Put `schema_version` and `generated_at` and a content hash in the JSON `meta`. The JS checks `schema_version` and shows a clear error on mismatch.
+- Cache-bust by appending `?v=<hash>` in the loader (the hash is injected by the converter into a small `manifest.json`, or use `fetch(url, {cache:'no-cache'})` for the manifest only).
+- Display "gerado em ..." in the footer so staleness is visible.
+**Phase:** P-A (meta fields), P-B (loader).
+
+### 12. Third-party CDN, CORS and supply-chain risk
+**What goes wrong:** Leaflet, leaflet.heat and chart libs loaded from unpkg/cdnjs without version pins or SRI. An outage, a corporate firewall (the target audience is a railway operator and may block CDNs or tile servers) or a silent update breaks the page. leaflet.heat is unmaintained (last release years ago), so it is not an auto-updating dependency worth floating.
+**Prevention:**
+- Vendor the pinned JS/CSS and Leaflet marker images into `docs/vendor/` (small, a few hundred KB), or pin exact versions with `integrity` + `crossorigin="anonymous"`. Vendoring also avoids the well-known Leaflet default-marker icon path breakage under bundlers/base paths (use `L.circleMarker` or `L.divIcon` and avoid default PNG icons).
+- Same-origin JSON needs no CORS. Do not fetch from other origins other than tiles.
+- Tiles: see pitfall 13. Provide a graceful degraded state when tiles fail (track and markers still draw on a blank background, with a note).
+**Phase:** P-B/P-C (decision), P-D (verify).
+
+### 13. OpenStreetMap tile usage policy
+**What goes wrong:** The default `tile.openstreetmap.org` is for light, non-commercial-scale use only: it requires attribution ("© OpenStreetMap contributors"), a valid HTTP Referer/identifying User-Agent (browsers send a Referer automatically, but a `Referrer-Policy: no-referrer` meta tag will break it), no bulk download or prefetch, and the service can block heavy traffic. A shared link in a management channel can spike load. (MEDIUM, from the OSM Foundation tile usage policy; recheck the current text.)
+**Prevention:**
+- Keep the attribution control visible. Do not set `<meta name="referrer" content="no-referrer">`. Do not prefetch tiles or set high `maxZoom` with `detectRetina` spam.
+- Plan an alternative provider switch via one config constant (e.g. CARTO basemaps with attribution, or a keyed provider such as MapTiler/Stadia with a free tier restricted by domain). A dark or light CARTO base also improves heat contrast (note that provider terms also require attribution).
+- Do not embed API keys that cannot be domain-restricted. A key in public JS is public.
+**Phase:** P-C.
+
+### 14. Privacy and sensitivity of "public" data
+**What goes wrong:** The user confirmed public publication is acceptable, but the data still reveals the operator (VLT Carioca), line, train ID (Trem 102), exact route, precise time windows of a night maintenance run (00:30 to 01:58), and location of defects on a rail asset (infrastructure condition and potentially security-relevant). Workbook files may also contain embedded metadata (author name, file paths, personal comments in the criteria sheet). The git author/email in commits is also public (`montesrfl@gmail.com` appears in the account context; use the project-specific git identity "Accel MRO" and consider a no-reply email).
+**Prevention:**
+- Confirm scope again with the user in the roadmap phase: what fields are published, and whether to reduce coordinate precision (5 decimals is about 1 m, 4 decimals is about 11 m, enough for a maintenance view) or to show it as-is. This is a one-line config in the converter (`--coord-decimals`).
+- The converter outputs ONLY an allowlist of fields (no raw filenames, author, sheet names with internal paths, sensor/COM identifiers). Strip workbook doc properties by never copying them.
+- Add a visible disclaimer ("dados de ensaio; valores não calibrados; unidade g inferida") on the page. This is an honesty issue, not just privacy, because the unit is inferred and velocity/displacement/frequency channels were all 0.
+- Remember that anything pushed is permanent in git history; scrub before first push, not after.
+**Phase:** P-A (allowlist, precision) and P-D (pre-push review).
+
+### 15. Hiding the data-quality caveats of this run
+**What goes wrong:** The dashboard shows vibration/displacement/frequency tabs full of zeros, angle placeholders, or a "temperature" chart, implying measurement. Unit g is inferred, AZ includes gravity (a user may read AZ = 1 g as a Crítico-adjacent impact if the measured series is shown beside thresholds).
+**Prevention:**
+- Converter detects all-zero or all-null channels and omits them (`meta.channels_available`), and the UI hides those controls instead of displaying flat zeros.
+- Thresholds apply to the dynamic value only. When the user plots "medido", draw no severity bands on AZ, or shift them by the offset.
+- Provide a short "Notas e limitações" section.
+**Phase:** P-A (channel detection), P-B (UI).
 
 ---
 
 ## Minor Pitfalls
 
-### Pitfall 18: `result.registers` raises `AttributeError` instead of returning empty
+### 16. Repo and Pages size/limit surprises
+GitHub: a single file over 100 MB is rejected on push (warning at 50 MB), the repo should stay under about 1 GB, the published site under 1 GB, and soft bandwidth of 100 GB/month. A published site of a few MB is fine. The risk is only from accidental additions (pitfall 1). Also, GitHub Pages for private repos needs a paid plan, and public Pages from a free account requires a PUBLIC repo, which matches the stated intent (MEDIUM).
+**Prevention:** Add a CI or pre-commit check: fail if any tracked file is over 5 MB.
 
-**What goes wrong:**
-In pymodbus 3.x, if `read_holding_registers` returns a `ModbusIOException` (which is also
-the return value in some error paths, not always raised), accessing `result.registers`
-raises `AttributeError: 'ModbusIOException' object has no attribute 'registers'`.
+### 17. Windows-specific converter gotchas
+`Results_1st.Run/Final - ... .xlsx` has spaces and an en-dash style name; the sheet name `02 — DADOS TRATADOS` contains an em dash (U+2014). Typing a plain hyphen in code gives `KeyError`. Match sheets by prefix (`startswith("02")`) or by an index map with a clear error that lists available sheet names. Console output of accented characters on cp1252 may raise `UnicodeEncodeError`, so set `PYTHONUTF8=1` or reconfigure stdout. Use `pathlib` and `argparse` (`--input`, `--out`, `--run-id`). Keep `openpyxl` in a separate `requirements-dev.txt`, not in the logger runtime `requirements.txt`. A 22 MB workbook in non-read-only mode can use 1 GB+ RAM and take minutes: use `read_only=True` and iterate rows once.
 
-**Prevention:**
-```python
-result = client.read_holding_registers(...)
-if result is None or result.isError():
-    raise IOError(f"Read failed: {result}")
-registers = result.registers
-```
-Always check `isError()` before accessing `.registers`.
-**Phase:** Phase 2.
+### 18. Output not deterministic
+Dict ordering, float repr and timestamps in the output make every conversion produce a noisy git diff. Use sorted keys for meta, fixed rounding, and separators `(",", ":")`. Put `generated_at` in a single field so diffs are small. Easy to test by running the converter twice and comparing hashes.
 
----
+### 19. Accessibility and mobile for management audience
+The heat matrix with only red/green gradients is unreadable for color-blind users. Use a sequential palette (e.g. viridis/YlOrRd) plus numeric labels in the cells. Make controls usable on a phone (collapsible parameter panel, 16 px minimum input font to avoid iOS zoom). Check contrast of severity colors against text.
 
-### Pitfall 19: YAML parsing of hex values and integers
+### 20. Trecho x severidade matrix pitfalls
+Empty cells (0 events) must render as 0, not blank or NaN. Order trechos by route order and sentido, not alphabetically ("Trecho 10" sorts before "Trecho 2"). With the two sentidos, 21 trechos need a stable key (`sentido|trecho`). Row totals must reconcile with KPI totals. Matrix cells recompute on filters, so confirm that a "janela de tempo" filter also affects the matrix.
 
-**What goes wrong:**
-In YAML, `0x50` is parsed by PyYAML as integer `80`. This is correct behavior and is
-actually useful — but if a developer writes `slave_id: "0x50"` (with quotes), PyYAML
-gives the string `"0x50"`, not the integer `80`. Passing a string as slave ID to pymodbus
-causes `TypeError`.
-
-**Prevention:**
-In config.yaml, write `slave_id: 80` (decimal) with a comment. Do not quote hex values.
-Add type assertion in config loader: `assert isinstance(config['slave_id'], int)`.
-**Phase:** Phase 1 (config loader).
+### 21. Live-parameter state hygiene
+Thresholds not monotonic, rest-offset applied twice (once in the converter and once in JS), filter state not reset by "Restaurar padrões", URL state not encoded so the author cannot share a particular view. Keep the converter output as measured data plus metadata, with derived values only in the JS engine, except for the golden `expected_kpis` fixture. Single state object, single `recompute(state)` function.
 
 ---
 
-### Pitfall 20: Sensor power dependency — USB does not power the sensor
-
-**What goes wrong:**
-The WitMotion WTVB01-485 requires external power (5-36Vcc, recommended 12Vcc). It is NOT
-powered by the USB-RS485 adapter. If the sensor is unpowered, the RS-485 bus has no
-termination and no bias — the adapter's receiver floats.
-
-This looks identical to a baud rate mismatch or wrong slave ID: complete silence on every
-read. New users often assume the USB connection provides power.
-
-**Prevention:**
-README Step 1: "Connect external 12V power supply to sensor before connecting USB."
-Startup log should include: "Ensure sensor has external power (5-36V) — USB provides RS-485 comm only."
-**Phase:** Phase 0 / README. Hardware prerequisite.
-
----
-
-## Phase-Specific Warning Summary
+## Phase-Specific Warnings
 
 | Phase Topic | Likely Pitfall | Mitigation |
-|-------------|----------------|------------|
-| Phase 0: Setup | Wrong pymodbus version installed | Pin `pymodbus>=3.5,<4.0` in requirements.txt before writing any code |
-| Phase 0: Setup | No CH340 driver → port not found | Install WCH driver from wch.cn; document in README |
-| Phase 0: Setup | Sensor unpowered | README: external 12V required; check before debugging serial |
-| Phase 1: Serial connection | Wrong COM port name | Run `list_serial_ports.py` first; show VID/PID |
-| Phase 1: Serial connection | `unit=` keyword in 3.x | Use `slave=` in every Modbus call |
-| Phase 1: Serial connection | Slave ID decimal vs hex | Use `80`, document as `# 0x50` |
-| Phase 1: Serial connection | FC03 vs FC04 confusion | Use `read_holding_registers()` for WitMotion |
-| Phase 1: Serial connection | Baud rate mismatch | Start with `baudrate=9600`; include baud scan utility |
-| Phase 2: Polling loop | Signed integer conversion | `to_signed16()` function + unit tests |
-| Phase 2: Polling loop | RS-485 timing | `timeout=1`, `sleep(0.1)` between calls |
-| Phase 2: Polling loop | register count off-by-one | Use `REG_COUNT = REG_END - REG_START + 1` |
-| Phase 2: Polling loop | Connection recovery | Exponential backoff retry + client.close/reconnect |
-| Phase 2: Polling loop | KeyboardInterrupt safety | `try/finally` wrapping `client.close()` |
-| Phase 3: CSV logger | Buffer not flushed on crash | `file.flush()` after each row; `finally: file.close()` |
-| Phase 3: CSV logger | Header duplicated on restart | Check file size before writing header |
-| Phase 3: CSV logger | Wrong newline on Windows | `open(..., newline='', encoding='utf-8')` |
-| Phase 3: CSV logger | Naive timestamps | `datetime.now(ZoneInfo('America/Sao_Paulo'))` always |
-| Phase 3: CSV logger | pytz DST footgun | Use `zoneinfo` (3.9+) or `backports.zoneinfo` (3.8) |
-| All phases | Python 3.8 compatibility | Test on 3.8; use `typing.List`, `backports.zoneinfo` |
+|-------------|---------------|------------|
+| P-A Converter: repo setup | No `.gitignore`, xlsx/CSV committed (1) | `.gitignore` as the very first commit; explicit `git add` |
+| P-A Converter: input | Wrong sheet / decimal corruption (2), em dash sheet name (17) | Use the treated sheet by prefix; range validation; fail loudly |
+| P-A Converter: output | JSON bloat (6), non-determinism (18), privacy allowlist (14) | Columnar + integer units, size budget, field allowlist, coordinate precision option |
+| P-A Converter: time | Naive datetime / dd-mm (7) | Epoch UTC + explicit zone; test first/last row labels |
+| P-A Converter: GPS | Repeated fixes, gaps (3) | Emit fix index, `has_gps` flag, gap segments |
+| P-B Engine | KPI drift vs workbook (5) | Golden-file test, pure JS module, documented rules |
+| P-B UI | pt-BR parsing and formatting (8), cache/schema (11) | `Intl`, tolerant parser, schema_version check |
+| P-B Charts | 70k points freezing the page (6) | Canvas library, min/max decimation, typed arrays, debounce |
+| P-C Map | Heat saturation and scale (4), duplicate points (3), tiles policy (13) | Fixed severity-anchored weights, dedupe by fix, attribution and a swap-able provider |
+| P-C Map | Default marker icons 404 under base path (12) | `circleMarker`/`divIcon` or vendored images |
+| P-D Publish | Jekyll (9), base path (10), CDN reliance (12), caching (11), push of sensitive files (1, 14) | `.nojekyll`, relative URLs, vendored libs, test on the live URL, `git diff --cached --stat` before push |
 
----
+## Research Flags
+
+- **P-C (heat map):** deeper research recommended. Verify the current leaflet.heat API (`max`, `maxZoom`, `radius`, `blur`, `gradient`) against its README, and decide between leaflet.heat, a maintained alternative, or severity circle markers.
+- **P-B (charts):** quick spike to choose between uPlot and ECharts/Plotly for 23k x 3 points with decimation. Measure real JSON size after the converter exists.
+- **P-D:** verify the current GitHub Pages limits and the "Pages from `/docs` vs Actions" behavior in current GitHub docs before relying on the numbers above.
+- **P-A and P-B (KPI parity):** needs a careful read of the workbook's `eventos`, `picos` and `critérios` sheets to pin the exact grouping and rounding rules (not yet inspected in this research).
 
 ## Sources
 
-**Confidence notes:** WebSearch and WebFetch tools were not available during this research.
-All findings are based on training data (knowledge cutoff August 2025) covering:
-- pymodbus official documentation and changelog (versions 2.x through 3.6.x)
-- Modbus RTU specification (Modbus.org)
-- Python 3.8-3.12 documentation (docs.python.org)
-- pyserial documentation
-- WitMotion device class patterns (WTVB01-485, WT901-485, and similar)
-- Windows serial port behavior (Microsoft Docs)
-- Linux udev and dialout group behavior
-- CH340/CP210x/FTDI driver documentation
-
-**HIGH confidence items** (pymodbus API changes, Python stdlib behavior, Modbus spec): 1-6, 8-9, 11, 13-20
-**MEDIUM confidence items** (WitMotion-specific register behavior, driver-specific bugs): 7, 10, 12
+- `.planning/PROJECT.md` (field-run data facts, constraints; HIGH)
+- Repo state: `git status` shows no `.gitignore`, untracked `Results_1st.Run/`, `data/`, `logs/` (HIGH)
+- Training knowledge, NOT re-verified this session: Leaflet.heat README behavior (MEDIUM), GitHub Pages limits and Jekyll underscore/`.nojekyll` behavior (MEDIUM-HIGH, long-standing documented behavior), OSM tile usage policy (https://operations.osmfoundation.org/policies/tiles/; MEDIUM), `Intl` and `Date` parsing behavior (HIGH, standard)

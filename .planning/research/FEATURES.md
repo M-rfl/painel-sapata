@@ -1,378 +1,191 @@
-# Features Research: Industrial Sensor Data Logger
+# Feature Landscape
 
-**Domain:** Python Modbus RTU data logger for vibration/CBM
-**Sensor:** WitMotion WTVB01-485 (accelerometer, vibration, displacement, frequency, temperature)
-**Use Case:** Windows notebook, bench validation -> railway CBM integration
-**Researched:** 2026-05-19
-**Confidence:** HIGH (core Modbus/CSV patterns) | MEDIUM (CBM conventions) | noted per section
+**Domain:** Static, Portuguese-language condition-monitoring dashboard (rail vibration plus GPS track) for a single field run
+**Milestone:** v1.3 Field Run Dashboard
+**Researched:** 2026-10-08
+**Confidence:** MEDIUM overall. This is synthesized from domain knowledge of railway and vibration CBM dashboards and geo-sensor explorers (Grafana/Kibana-style panels, Leaflet/Mapbox heat maps, track-geometry and inspection viewers). I did not verify it with Context7 or web sources in this pass. Library-specific claims belong in STACK.md.
 
----
+## How this domain typically works (short orientation)
 
-## Table Stakes (must-have)
+- Condition-monitoring views follow "overview first, zoom and filter, details on demand". The top shows KPI cards and a severity distribution. The middle shows time series and a map. The bottom shows a ranked table of worst events.
+- Severity is always a banded classification on a magnitude, with a fixed colour ramp (green, yellow, orange, red, dark red). The same colours must be used on every view (KPI, chart, map, matrix, table). This is the single strongest consistency convention.
+- Maintenance users want "where do I go inspect": a ranked list, a map pin and a coordinate or Google Maps link. Management users want "how bad is it": counts per class, the worst trecho and a trend or comparison.
+- Geo-sensor explorers link every view to a shared selection and filter state. Brushing a time range highlights the map, and clicking a map point highlights the time series.
 
-Features where absence causes the tool to fail its primary job. Users abandon or distrust
-loggers that skip any of these.
+## Table Stakes
 
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Modbus RTU connection with configurable COM port, baud, slave ID | Without this, the tool cannot talk to the sensor at all | Low | Slave ID 0x50 (80), 9600 baud, 8N1 are fixed for WTVB01 but must be config-file driven so they can be changed without code edits |
-| Read all sensor registers in one poll cycle | Partial reads leave columns empty and corrupt CBM baselines | Low-Med | Registers 0x34–0x46: accel X/Y/Z, vibration velocity X/Y/Z, angle X/Y/Z, temperature, displacement X/Y/Z, frequency X/Y/Z — all in one `read_holding_registers` call |
-| Signed 16-bit raw-to-physical conversion | Raw Modbus values are meaningless without scaling; wrong conversion = bad CBM alarms | Low | Accel: `signed_16 / 32768 * 16` g. Each register group has its own formula — must be explicit and documented |
-| Timestamped rows in CSV output | Without timestamps, vibration trends cannot be correlated to events or times | Low | ISO 8601 format `YYYY-MM-DDTHH:MM:SS.ffffff+HH:MM`. Explicit timezone (America/Sao_Paulo) is non-negotiable for CBM — ambiguous timestamps break maintenance records |
-| Append-mode CSV with header on first write only | Data must survive restarts; re-opening the file must not overwrite prior sessions | Low | Check `file.exists()` before writing header. Open in `'a'` mode. Never truncate on start |
-| Configurable sample interval | Polling every 100 ms vs every 1 s changes file size and Modbus bus load dramatically | Low | YAML key `sample_interval_s`. Reasonable range: 0.1–60 s for this sensor |
-| config.yaml for all runtime parameters | Field operators and beginners cannot use CLI flags reliably; YAML is readable without Python knowledge | Low | Covers: `port`, `baud_rate`, `slave_id`, `sample_interval_s`, `output_dir`, `log_level` |
-| Graceful Ctrl+C shutdown | Abrupt termination leaves Modbus connection in unknown state; can lock COM port until reboot on Windows | Low | `signal.signal(SIGINT, handler)` + `atexit.register()`. Close Modbus client and flush/close CSV file explicitly |
-| Transient error retry without exit | RS-485 lines are noisy; a single CRC error or timeout must NOT kill the logger | Low-Med | See Error Resilience section |
-| Error and status logging to file | Console output disappears; field troubleshooting requires persistent log | Low | Python `logging` module, rotating file handler, separate from CSV data |
-| Human-readable terminal output during run | Operators need to confirm the sensor is live; silent loggers appear frozen | Low | One line per sample: timestamp, key values, error count. See Terminal Display section |
-| list_serial_ports.py utility | COM port identification on Windows is non-obvious; without this, setup fails | Low | `serial.tools.list_ports.comports()` — name, description, hwid. Critical for USB-RS485 adapters (CH340/CP210x/FTDI) |
+Missing any of these makes the dashboard feel incomplete to either audience.
 
-**Dependency chain for table stakes:**
-```
-config.yaml loader
-    -> COM port + baud + slave_id
-        -> Modbus RTU connection
-            -> Register reads (all in one call)
-                -> raw-to-physical conversion
-                    -> timestamped row dict
-                        -> CSV append
-                        -> terminal display
-    -> sample_interval_s -> poll timing loop
-```
+| Feature | Why Expected | Complexity | Notes / Dependencies |
+|---------|--------------|------------|----------------------|
+| KPI cards row: registros, eventos, impactos, pontos de impacto, plus per-class counts (Normal/Leve/Moderado/Severo/Crítico) | Every CBM overview opens with headline numbers. Management reads only this. | Low | Cards must be derived from current client-side state, so they change when thresholds or filters change. Show the run context (date, trem 102, linha 4, duration, 23.383 samples) in a header strip. |
+| Severity colour legend, applied consistently | Without it the colours are unreadable. | Low | Single shared palette constant. Make it colour-blind-safe and give each class a text label, not colour alone. |
+| Per-axis acceleration time series (AX/AY/AZ), medido vs dinâmico toggle | The core user request. Engineers expect the raw and the baseline-removed signal. | Med | 23k points × 3 axes. Needs downsampling or a WebGL/canvas renderer (see PITFALLS). Draw threshold lines at the current Leve/Moderado/Severo/Crítico values on the chart. AZ measured includes −1 g, so label it clearly. |
+| Threshold bands/lines drawn on the time series | Lets the user see why a point is classed Severo. | Low | Re-render when sliders move. |
+| Route map: GPS track polyline plus impact points coloured by severity | Locating spots is the maintenance use case. | Med | Basemap tiles are an external dependency (OSM/CARTO). Offline fallback is not needed. The track is only about 190 fixes at 30 s, so it is sparse (see GPS gap handling). |
+| Point popup/tooltip: severity, value in g, dominant axis, trecho, sentido, time, coordinates, Google Maps link | Engineers act on it in the field. | Low | The Google Maps link `https://www.google.com/maps?q=lat,lon` is already in the workbook's top-50. Generate it client-side so it stays valid when parameters change. |
+| Geographic heat map (intensity layer) | Explicitly requested. | Med | Weight by the selected metric (see Heat map weighting). Rendered from impact points or from interpolated samples, not from the 190 raw fixes alone. |
+| Trecho × severidade matrix heat map | Explicitly requested. It is the management view of "which segment is worst". | Med | 21 rows × 5 classes. Cell = count (toggle to % of the trecho's samples). Row and column totals. Clicking a cell applies a filter. Sort rows by priority or by Crítico+Severo count. |
+| Top-N peaks table (default 50) with rank, value, class, axis, trecho, sentido, time, map link | The maintenance worklist. It already exists in Excel, so users will expect it. | Med | Sortable. N is adjustable. Recomputed when thresholds, filters or rest-offset change. Row click flies the map to the point and highlights it on the chart. CSV download of the table. |
+| Filters: sentido, trecho, eixo dominante, classe de severidade, janela de tempo | Requested. A standard faceted-filter set. | Med | One shared filter store drives every view. Show the active filters as removable chips and a visible "limpar filtros" button. Show "N de M registros" so the user knows what is filtered. |
+| Adjustable severity thresholds (4 cut-points) | Requested headline feature. | Med | Enforce monotonic ordering (Leve < Moderado < Severo < Crítico). Show defaults (0,5/1/2/4 g) and a "restaurar padrão" button. Numeric input plus slider. The slider range is roughly 0.1–8 g. Use debounced recompute (~100 ms) or `input` events with cheap recalculation. |
+| Analysis parameters: rest-level offset (baseline) and event grouping rule | Requested. The Excel pipeline defined these, and they change results. | High | Baseline: mediana (default) / média / manual per axis. Recomputing dynamic axes, severity, eventos, impactos and pontos de impacto in JS must reproduce the Excel numbers at defaults. This is the highest-risk logic. A golden-file test against the workbook is required. Event grouping: "consecutive events" gap tolerance in samples or seconds. |
+| Defaults reproduce the workbook exactly | Trust. Engineers will cross-check against the Excel file. | Med | Needs a verification step. Display "valores padrão = planilha" when the parameters are untouched. |
+| Display options: which metric/axis drives the heat map and the map colouring, heat radius and intensity | Requested. | Low–Med | Metric choices: |dominante|, AX, AY, AZ, count of events. |
+| Responsive layout, readable on a phone | Field engineers open it on a phone, and managers on a tablet or laptop. | Med | See Mobile. |
+| Portuguese UI strings and pt-BR number formatting (decimal comma, dd/mm/aaaa, 24 h) | Stated constraint. | Low | Use `Intl` with `pt-BR`. Don't hardcode strings in scattered places. Centralize them in one dictionary. |
+| Loading/empty/error states | A static site with a ~MB JSON file needs them. | Low | An empty filter result must say "nenhum registro" rather than render a blank chart. |
+| Methodology/legend panel ("Como ler") | Management needs to know what Leve/Moderado mean and which g-values apply. | Low | Short text, with the thresholds interpolated from the current state. |
 
----
+## Differentiators
 
-## Differentiators (competitive advantage)
+These are not required, but they separate a useful dashboard from a chart dump. Each is valued by the audiences in the brief.
 
-Features that are not strictly required but significantly increase reliability, maintainability,
-and downstream CBM usability. Worth building in Phase 1 or 2.
+| Feature | Value Proposition | Complexity | Notes / Dependencies |
+|---------|-------------------|------------|----------------------|
+| Linked brushing: time-series range select filters the map, matrix and table, and vice versa (click a map point, chart cursor jumps) | The single most useful geo-sensor explorer behaviour. It answers "where was I when this spike happened?" | High | Needs a central store with one `selection` (time range and/or sample id) and one `filters` object. All views subscribe. Use selection as a highlight, not a filter, by default, with an "aplicar como filtro" action. Map to chart uses the timestamp as the join key. |
+| Hover sync: chart crosshair moves a marker along the track (and the reverse) | Cheap linked brushing. It gives most of the value for less complexity than range brushing. | Med | Recommended first step before full range brushing. Needs the interpolated position per sample. |
+| URL-encoded state (thresholds, filters, parameters, selected tab) | A shareable link such as "this view with Severo=1,5 g, trecho 7". It is the main export/share route on a static site. | Med | Serialize only non-default values to keep URLs short. Use the hash (`#`) so GitHub Pages needs no routing. Version the schema (`v=1`). Validate and clamp on load. |
+| Per-trecho priority ranking with the rule shown | Management gets "where to spend maintenance budget". It extends the existing Excel per-trecho priority. | Med | Recompute when thresholds change. Show the formula. |
+| Interpolated position for samples between GPS fixes (about 150 samples fall between consecutive 30 s fixes at 5 Hz) | Without it 99% of samples have no coordinates and cannot be mapped. Impact points then sit only on fix locations. | Med | Linear interpolation of lat/lon by timestamp between consecutive fixes, but only when the fix gap is below a limit (see GPS gaps). Mark the interpolated points as estimated. Precomputed in the converter, which keeps the browser simple. |
+| Sentido comparison (TIG-PXV vs PXV-TIG) side by side in the KPI cards or matrix | The two directions show asymmetry in track wear. | Low–Med | A facet toggle on the matrix and the cards. |
+| Heat map toggle between "intensidade (g)" and "densidade de eventos" | Different questions: where is it worst vs where does it occur most. | Low | Lives under display options. |
+| Map layer control: track, impact points, heat map, trecho labels, with a basemap switch (rua/satélite) | Standard for geo explorers. | Low | Leaflet-style layer control. |
+| Trecho boundaries/labels on the map and on the time axis (shaded bands) | Connects the table of trechos to the route and the signal. | Med | Needs trecho start/end time or polygon from the workbook. Check that the converter can extract it. |
+| Export: PNG of charts, CSV of the filtered table / filtered events, "copiar link" button | Engineers paste into reports. Management pastes into slides. | Low–Med | CSV is trivial. PNG is built into most chart libraries. Do not build PDF. |
+| Print/PDF-friendly stylesheet | A manager may print the overview. | Low | CSS `@media print`, instead of generating PDFs. |
+| Gap/quality indicator: "2.020 registros sem coordenadas (túnel Central → Saara)" shown as a data-quality card | Honesty about data. It prevents misreading the empty map stretch as "no impacts". | Low | Computed from the data. Also list the events that cannot be mapped. |
+| Statistics panel per axis (min/max/RMS/p95/mean of the dynamic signal) | The workbook has an Estatísticas sheet. RMS is the standard vibration summary. | Low–Med | Compute from the filtered samples. |
+| Keyboard accessibility and ARIA labels on the controls | Public site. Low cost if done early. | Low | Matters especially for slider and chip components. |
+| Dark mode | Night-time operations staff, and it was already deferred for the logger as VIZ-10. | Low–Med | Optional. Only if the palette is tokenised from the start. |
 
-| Feature | Value Proposition | Complexity | Phase Fit |
-|---------|-------------------|------------|-----------|
-| Atomic CSV row writes (flush after each row) | Prevents partial/corrupt last row on power loss or OS crash | Low | Phase 1 — one line: `csvfile.flush()` after each `writerow()`. Very high value for no cost |
-| Consecutive error counter with configurable max before pause | Distinguishes transient noise from hardware failure; prevents infinite tight retry loops that flood the log | Low | Phase 1 — counter resets on success, increments on any exception from pymodbus |
-| Session summary on shutdown | Shows total samples, error rate, duration — confirms run quality without opening CSV | Low | Phase 1 — print on Ctrl+C handler |
-| ISO 8601 timestamp with microseconds | CBM tools correlate events at sub-second precision; date-only or second-only is insufficient | Low | Phase 1 — `datetime.now(tz).isoformat()` already provides microseconds |
-| Output directory auto-creation | If `output/` doesn't exist, logger crashes on first write — bad UX | Low | Phase 1 — `Path(output_dir).mkdir(parents=True, exist_ok=True)` |
-| Date-stamped output filenames | `data_2026-05-19.csv` prevents accidental overwrite across sessions without relying on append mode alone | Low | Phase 1 — filename template in config: `{prefix}_{date}.csv` |
-| Configurable log level in YAML | `DEBUG` for commissioning, `WARNING` for normal runs — without this, debug sessions produce unreadable output | Low | Phase 1 |
-| Config validation on startup with clear error messages | Missing `port:` or invalid `baud_rate: abc` should print "config.yaml line 3: baud_rate must be integer" not a Python traceback | Low-Med | Phase 1 — validate with pydantic or manual checks before opening COM port |
-| Reconnect loop on connection loss | USB cable wiggle or port enumeration change causes connection drop; auto-reconnect keeps 8-hour runs alive | Med | Phase 2 — separate from transient retry; involves closing and re-opening the Modbus client |
-| Column naming aligned to CBM conventions | `accel_x_g`, `vib_vel_x_mm_s`, `disp_x_um`, `freq_x_hz`, `temp_c` — downstream pandas/InfluxDB imports work without renaming | Low | Phase 1 — baked into csv_logger.py fieldnames list |
-| Optional output to multiple sinks (CSV + console + future DB) | Modular exporter architecture means adding InfluxDB later doesn't touch sensor.py | Med | Phase 2 — define a `Sink` protocol/ABC; CSV is the first implementation |
+## Anti-Features
 
----
-
-## Anti-Features (deliberately exclude)
-
-Features that appear useful but add complexity, maintenance burden, or scope creep for this
-specific use case. The PROJECT.md already identifies most of these; this section adds rationale.
+Features to explicitly NOT build in this milestone.
 
 | Anti-Feature | Why Avoid | What to Do Instead |
 |--------------|-----------|-------------------|
-| Real-time dashboard (terminal TUI / web) | Doubles scope; curses/rich TUI breaks on some Windows terminals; web server adds a process to manage | Plain print() for live status. Plan dashboard as a separate Phase 3+ tool that reads the CSV |
-| Signal processing in logger (FFT, filters, RMS over window) | Logger's job is raw data capture; analysis changes over CBM project lifetime and should not be coupled to acquisition | Post-process with scipy/pandas on the CSV. Keep logger as dumb pipe |
-| SQLite / InfluxDB writes in Phase 1 | Adds dependency, setup complexity, and failure modes before the basic loop is validated | CSV is sufficient for bench validation; design the exporter interface so DB can be plugged in later |
-| Multi-sensor support in Phase 1 | One sensor. Multiple sensors require polling orchestration, collision avoidance on RS-485 bus, and per-sensor config — different problem | Single-sensor loop. `sensor_id` field in CSV row is enough to prepare for future multi-sensor |
-| Auto-discovery of Modbus slaves | Scanning 1–247 slave IDs is slow, risky on production hardware, and unnecessary when slave ID is documented | Hard-code slave ID in config.yaml |
-| GUI configuration wizard | Target user can edit a YAML file; GUI adds PyQt/tkinter dependency for zero functional gain | Document config.yaml keys clearly in README |
-| Remote control / API | Adds network stack, auth, and port conflicts; notebook logger is operated locally | Out of scope for v1; would be Phase 4+ if needed for centralized fleet management |
-| Compression / binary formats (HDF5, Parquet) | CSV is universally readable; compressed formats require tooling to inspect | CSV. If file size becomes a concern, gzip the daily file as a post-processing step |
-| Watchdog / auto-restart daemon | Adds OS-level complexity (Windows Service, systemd); overkill for bench validation | Document manual restart in README; implement only if 24/7 unattended operation is required |
-| Unit testing framework in Phase 1 | Useful but not blocking; introducing pytest before the core loop works adds overhead | Write tests in Phase 2 once the sensor protocol is confirmed correct against real hardware |
+| Live/real-time streaming, WebSocket, polling | Out of scope (static site, no backend). | Static JSON only. Show the run date prominently. |
+| Multi-run selector or run comparison | Explicitly out of scope. | Keep the JSON run-scoped (`run.json` with a run id) so it can be added later without a rewrite. |
+| User accounts, login, private views | Public by decision. | None. Do not put any personal data in the JSON. |
+| Time × trecho heat map | Explicitly not selected. | Only the geographic heat map and the trecho×severidade matrix. |
+| FFT/spectrum analysis, filters, frequency charts | Out of scope for the project. The vibration, displacement and frequency channels were all 0 in this run. | Do not show empty channels. Hide the channels that are all zero rather than plotting flat lines. |
+| Server-side recompute, database, API | Static GitHub Pages only. | All recompute runs in the browser in JS. |
+| Dynamic-axis recomputation from the raw, decimal-damaged sheet | The original data lost its decimal separators. | The converter reads the treated sheet `02 — DADOS TRATADOS` only. |
+| Rendering all 23k points as DOM/SVG elements per axis | The browser slows to a crawl, especially on a phone. | Canvas/WebGL charts plus min/max decimation per pixel bucket. |
+| One heat-map point per raw GPS fix, weighted by nothing | With ~190 fixes at 30 s spacing, this shows where the GPS happened to sample, not where the impacts are. | Weight by the impact metric and place impacts via the interpolated position (see Heat map weighting). |
+| Drawing straight lines across tunnel gaps as if they were measured track | Misleading. It invents a path through Central → Saara. | Break the polyline at large gaps, or draw it dashed and labelled "estimado". |
+| Free-text editing or annotation of events, saving comments | Needs a backend. | Use the exported CSV and the link. |
+| Automatic "AI" diagnosis or maintenance recommendations | The thresholds come from engineering criteria. An invented recommendation is a liability on a public site. | Show the class and the priority rule only. |
+| Many chart types for variety (pie, radar, gauges) | Clutter and worse readability. | Stacked/grouped bar for classes, one matrix, line charts, one map. |
+| Language switcher | Single audience. | Portuguese only, with strings centralised. |
+| Pixel-perfect PDF report generation in the browser | High complexity and fragile. | Print stylesheet. |
+| Auto-refreshing basemap tile key requiring a secret | A public static site cannot hide keys. | Use keyless tiles (OSM/CARTO) with attribution, and respect their usage policy. |
 
----
+## Expected Behaviours (detail for the roadmap)
 
-## CBM / Vibration Analysis Expectations
+### KPI cards
+- Show the current value, the label and a one-line explanation (hover or tooltip). Per-class cards use the class colour.
+- They respond to filters and thresholds, and display "(filtrado)" when any filter is active. Without that tag, users read a filtered count as the whole run.
+- Distinguish **registros**, **eventos** (samples ≥ Leve), **impactos** (grouped) and **pontos de impacto** (one per location). Give a tooltip definition for each, because these terms are confusable and management will ask.
+- Clicking a class card toggles the class filter.
 
-What downstream CBM tools (pandas analysis scripts, InfluxDB dashboards, ISO 10816/20816
-alarm tools) expect from logger outputs. Failure to meet these conventions forces downstream
-renaming and reformatting.
+### Linked brushing (time series ↔ map)
+- Key phase ordering: (1) shared store plus click-to-select, (2) hover sync, (3) range brush. Stop at (2) if time is short.
+- Brushing highlights, and it dims the unselected items rather than hiding them. A clearly visible "limpar seleção" is mandatory.
+- The selection must survive a threshold change (selection is by sample id or time range, not by class).
+- Samples without coordinates (tunnel) can be selected in the chart but have no map marker. Say so in the UI ("N pontos sem coordenada").
 
-### Timestamp Requirements
+### Threshold sliders
+- Four thresholds on one multi-handle control, or four inputs, enforcing order. Show the class names between the handles, and the g-value on each handle.
+- Live recompute while dragging for the cheap parts (colour and counts). Use a throttled update for the expensive parts (grouping into impacts, top-N). 23k samples is small enough for full recompute on `input` in under ~50 ms if it is written with typed arrays. Verify this with a benchmark.
+- "Restaurar padrão" and an indicator showing when the values differ from the workbook's.
 
-- **Format:** ISO 8601 with timezone offset — `2026-05-19T14:32:01.123456-03:00`
-- **Column name:** `timestamp` (universally recognized by pandas `pd.to_datetime()`)
-- **Precision:** Microseconds are free in Python's `datetime`; include them — vibration events can need sub-second correlation
-- **Timezone:** Explicit offset is mandatory. `2026-05-19 14:32:01` with no timezone is ambiguous across DST boundaries and breaks time-series databases that store in UTC
-- **Monotonicity:** Timestamps must be strictly increasing within a session. If sample interval is 1 s and a Modbus retry adds 0.5 s, the next timestamp must still be after the previous one — log the actual wall-clock time, not a computed time
+### Filter UX
+- Persistent filter bar (a sticky bar on desktop, a collapsible drawer on mobile). Multi-select chips for sentido, trecho, eixo and classe. A time window comes from the chart brush or from two time inputs.
+- Always show the match count, active-filter chips, and a clear-all button.
+- Filters AND across dimensions and OR within a dimension. Say so in a tooltip if it is not obvious.
 
-### CSV Structure Conventions
+### Heat map weighting
+- Weight by the severity metric (|dominante| in g, or its square for energy emphasis, with the choice under display options). Never weight by plain sample density, otherwise the slow-speed stretch (more samples per metre) dominates the map. This is the standard pitfall for time-sampled data: samples per metre varies with train speed.
+- Cap or normalise the weight, so one Crítico outlier does not wash out the rest. Offer an intensity slider and a radius slider (the requested display options).
+- Only samples at or above a user-chosen minimum class contribute (default: Leve).
+- Heat layers should be built from the interpolated positions, not from the raw fixes.
 
-```
-timestamp,accel_x_g,accel_y_g,accel_z_g,vib_vel_x_mm_s,vib_vel_y_mm_s,vib_vel_z_mm_s,angle_x_deg,angle_y_deg,angle_z_deg,temp_c,disp_x_um,disp_y_um,disp_z_um,freq_x_hz,freq_y_hz,freq_z_hz
-2026-05-19T14:32:01.123456-03:00,0.012,-0.003,1.001,0.45,0.12,0.33,0.1,-0.2,89.9,25.3,12.0,4.0,8.0,49.8,50.1,50.0
-```
+### Top-N peaks table
+- Default 50. Sort by value desc. Ties are stable. Show the rank, g-value, class chip, dominant axis, trecho, sentido, local time and a map link.
+- Dedupe by location: show one row per ponto de impacto when the "um por local" option is on (the workbook default), otherwise one row per impacto.
+- Row hover highlights the point on the map, and a click centres the map.
+- Rows without coordinates show "sem GPS" with the map link disabled, not a broken link.
 
-- **No spaces after commas** — some industrial CSV parsers break on `col1, col2`
-- **Units in column names** (suffix: `_g`, `_mm_s`, `_um`, `_hz`, `_deg`, `_c`) — self-documenting, survives header loss
-- **No units row** — a second header row with units breaks `pd.read_csv()` default parsing
-- **Empty cell for failed reads** — on Modbus timeout, write the row with empty string for failed channels, not "NaN" or "ERROR" (empty parses cleanly as `NaN` in pandas)
-- **Consistent column count** — every row must have the same number of columns; partial reads must fill missing columns with empty strings
+### Export / share (URL state)
+- Hash-encoded state is the whole sharing story on a static site. Add a "Copiar link" button. Do not use localStorage as the only persistence, because it cannot be shared.
+- CSV download for the filtered table. PNG export for the chart and the map is optional.
 
-### ISO 10816 / 20816 Vibration Velocity Alarm Levels (MEDIUM confidence)
+### GPS gaps (tunnels) and sparse fixes
+- Fixes are about every 30 s, and 2.020 samples have no coordinate. Treat "no fix" as normal data, not an error.
+- Interpolate only across gaps under a threshold (for example <= 60 s, adjustable), flag the result as estimated, and never extrapolate beyond the first and last fix.
+- Break the polyline across long gaps. In the tunnel stretch show a labelled dashed connector or nothing.
+- Show the gap as a shaded band on the time axis and report the count as a data-quality KPI.
+- Impacts without coordinates remain in all counts and in the chart and the matrix, but are absent from the map and heat map. Always state this next to the map ("N eventos sem coordenada não aparecem no mapa").
+- Speed must not be derived from the fixes for the Wi-Fi/none cases (see the project memory: speed None is correct).
 
-CBM alarm logic operating on this CSV will compare `vib_vel_*_mm_s` against:
-- Zone A (new machines): < 0.71 mm/s RMS
-- Zone B (acceptable): 0.71–1.8 mm/s RMS
-- Zone C (alarm): 1.8–4.5 mm/s RMS
-- Zone D (danger): > 4.5 mm/s RMS (exact thresholds vary by machine class)
-
-The logger itself does not apply these thresholds, but column naming in `mm/s` (not cm/s or m/s)
-is required for downstream alarm scripts to work without unit conversion.
-
-### Sensor ID Field for Future Multi-Sensor
-
-Even though Phase 1 is single-sensor, adding `sensor_id` as a column costs nothing and
-prevents a schema migration when the second sensor is added:
-
-```
-timestamp,sensor_id,accel_x_g,...
-2026-05-19T14:32:01.123456-03:00,WTVB01_01,0.012,...
-```
-
-`sensor_id` should be configurable in `config.yaml`.
-
-### File Naming for CBM Archives
-
-Daily rotation with date stamp is the industry norm:
-```
-wtvb01_2026-05-19.csv
-wtvb01_2026-05-20.csv
-```
-This allows:
-- Easy grep/selection by date range
-- Predictable InfluxDB backfill (one file per day)
-- Prevents unbounded single-file growth during multi-week monitoring campaigns
-
----
-
-## Configuration Patterns
-
-Analysis of config approaches for the field use case (Windows notebook, possibly beginner user).
-
-### Verdict: YAML is the right choice for this project
-
-The PROJECT.md already decided this. The research confirms why it beats alternatives:
-
-| Approach | Readability | Beginner-friendly | Field-editable | Validation | Verdict |
-|----------|-------------|-------------------|----------------|------------|---------|
-| `config.yaml` | High — key: value is self-explanatory | High — no syntax to learn | High — any text editor | Requires manual or pydantic | **USE THIS** |
-| `.env` file | Medium — `KEY=VALUE` is flat | Medium | High | Minimal | Use only if 12-factor deployment is needed (not here) |
-| CLI args (`argparse`) | Low — must remember flag names | Low — not for beginners | Low — must retype every run | Built-in | Add as override layer only, never as primary |
-| `config.ini` | Medium | Medium | High | ConfigParser built-in | Legacy pattern; YAML is strictly more readable |
-| Hardcoded constants | Zero | Zero | None — requires code edit | None | Never acceptable for COM port / baud |
-
-### Recommended config.yaml Structure
-
-```yaml
-# WTVB01 Logger Configuration
-connection:
-  port: COM3               # Windows: COM3, COM4, etc. Linux: /dev/ttyUSB0
-  baud_rate: 9600
-  slave_id: 80             # 0x50 decimal
-  timeout_s: 1.0           # Modbus response timeout per request
-
-sampling:
-  interval_s: 1.0          # Seconds between polls (0.1 minimum recommended)
-
-output:
-  directory: data          # Relative to working directory; created if missing
-  filename_prefix: wtvb01  # Produces wtvb01_2026-05-19.csv
-  sensor_id: WTVB01_01     # Written to sensor_id column
-
-logging:
-  level: INFO              # DEBUG | INFO | WARNING | ERROR
-  log_file: logs/logger.log
-```
-
-### Config Loading Rules
-
-1. Load `config.yaml` from the working directory by default
-2. Accept `--config path/to/other.yaml` as an optional CLI override (for running multiple instances)
-3. Validate all required keys on startup; print human-readable error and exit with code 1 if missing
-4. Do not silently apply defaults for `port` — missing port must be an error, not a guess
-
----
-
-## Error Resilience Patterns
-
-Industrial environments generate transient RS-485 errors. The logger must distinguish:
-- **Transient noise** — single bad frame, CRC error, bit flip: retry immediately, no alarm
-- **Timeout** — sensor did not respond within timeout_s: retry with backoff, log WARNING
-- **Device gone** — N consecutive timeouts: log ERROR, pause, attempt reconnect
-- **Port lost** — USB adapter disconnected: log CRITICAL, attempt port reopen with delay
-
-### Recommended Retry Strategy
-
-```
-Poll attempt:
-  try:
-    result = client.read_holding_registers(...)
-    if result.isError():
-      consecutive_errors += 1
-      log.warning("Modbus error #%d", consecutive_errors)
-      if consecutive_errors >= MAX_CONSECUTIVE_ERRORS:
-        log.error("Sensor unresponsive — pausing %ds", PAUSE_SECONDS)
-        sleep(PAUSE_SECONDS)
-      continue  # skip this sample, write empty row or skip row
-    else:
-      consecutive_errors = 0  # reset on success
-      process_and_write(result)
-  except serial.SerialException:
-    log.critical("Serial port lost — attempting reconnect")
-    reconnect_with_backoff()
-  except Exception as e:
-    log.error("Unexpected error: %s", e)
-    consecutive_errors += 1
-```
-
-### Specific pymodbus Exceptions to Catch (HIGH confidence, from library knowledge)
-
-- `ModbusIOException` — I/O-level failure (serial timeout, framing error)
-- `ConnectionException` — connection not established or dropped
-- `ModbusException` — base class for protocol errors
-- `serial.SerialException` — from pyserial, raised when USB adapter is removed
-
-### Backoff Parameters (Recommended Defaults)
-
-| Parameter | Default | config.yaml key |
-|-----------|---------|-----------------|
-| Single request timeout | 1.0 s | `connection.timeout_s` |
-| Max consecutive errors before pause | 5 | `error_handling.max_consecutive_errors` |
-| Pause duration after max errors | 10 s | `error_handling.pause_s` |
-| Reconnect attempts before giving up | 3 | `error_handling.reconnect_attempts` |
-| Reconnect delay | 5 s | `error_handling.reconnect_delay_s` |
-
-### Data Integrity on Unexpected Shutdown
-
-The primary risk is a corrupt/incomplete last CSV row. Mitigation layers:
-
-1. **Flush after every row** — `csvfile.flush()` after `writer.writerow()`. Ensures OS buffer is written to disk even if Python crashes. Cost: ~0 ms at 1 Hz polling.
-2. **Never buffer multiple rows** — no in-memory batch writes for a 1 Hz logger; batch writes save nothing here and risk losing the batch on crash
-3. **`newline=''` on file open** — prevents Windows `\r\r\n` double-carriage-return corruption (confirmed in Python csv docs)
-4. **Append mode always** — `open(path, 'a', newline='')` — restart never truncates
-5. **No atomic rename needed** for append-mode logging — the partially-written last row is the only risk, and `flush()` eliminates it
-
-Note: True atomic writes (write-to-temp + rename) are used for configuration files and databases,
-not for append-mode sensor logs. Do not over-engineer this.
-
----
-
-## Terminal Display Patterns
-
-### What to Show (one line per sample is the right answer)
-
-```
-[14:32:01.123] AX:+0.012g AY:-0.003g AZ:+1.001g | Vx:0.45 Vy:0.12 Vz:0.33 mm/s | T:25.3°C | Err:0
-```
-
-**Rationale for each element:**
-- Timestamp (time only, not date — date is already in filename): operator confirms freshness
-- Acceleration X/Y/Z: primary diagnostic for vibration direction
-- Vibration velocity X/Y/Z: the CBM alarm channel (ISO 10816)
-- Temperature: secondary condition indicator
-- Consecutive error count: confirms communication health without scrolling log
-
-**Omit from terminal (show in log file only):**
-- Raw register hex values
-- Displacement and frequency (secondary channels, clutter the line)
-- File path on every row (show once at startup)
-- Sample counter (use timestamps to infer sample rate)
-
-### What to Show at Startup (before first sample)
-
-```
-WTVB01 Logger v0.1.0
-Port: COM3 | Baud: 9600 | Slave: 80 | Interval: 1.0s
-Output: data/wtvb01_2026-05-19.csv
-Press Ctrl+C to stop.
-```
-
-### What to Show at Shutdown
-
-```
---- Session Summary ---
-Duration:  00:45:23
-Samples:   2723
-Errors:    4 (0.15%)
-Output:    data/wtvb01_2026-05-19.csv (2723 rows)
-```
-
-### How Much is Too Much
-
-- **Too much:** Scrolling debug output during normal operation. One line per sample is the maximum.
-- **Too little:** Silent logger with no output. Operators assume it froze.
-- **Never use `\r` line overwrite** for Windows PowerShell/CMD — carriage return tricks work in Linux terminals but produce garbage in Windows CMD. Print a new line every sample.
-
----
+### Mobile use
+- Single-column layout under ~768 px with the order KPIs, then map, then top-N, then charts, then matrix. Maintenance engineers on a phone want the map and the list first.
+- Controls in a bottom-sheet or collapsible drawer. Touch targets >= 44 px. A slider needs a numeric input fallback.
+- The map is full width, with `touch-action` handled so the page can still scroll. Provide a "ver em tela cheia" option.
+- The matrix scrolls horizontally with a sticky first column, or switches to a list on narrow screens.
+- Payload budget: keep the data JSON compact (columnar arrays, rounded floats, gzip by Pages). Target < 1 MB transferred. Test on a throttled mobile profile.
+- Chart interactions: tap rather than hover. Hover sync becomes tap-to-select.
 
 ## Feature Dependencies
 
 ```
-config.yaml valid
-    -> COM port open (list_serial_ports.py helps find it)
-        -> Modbus RTU client connected
-            -> register poll success
-                -> raw-to-physical conversion
-                    -> row dict with all columns
-                        -> CSV row append + flush
-                        -> terminal print (one line)
-            -> poll failure
-                -> consecutive_error++ 
-                -> write empty-column row OR skip (configurable)
-                -> if >= max_errors: pause + reconnect
+Converter (xlsx -> JSON, treated sheet 02) -> everything below
+  Interpolated lat/lon per sample (converter) -> impact points on map -> geographic heat map
+  Trecho start/end + sentido per sample (converter) -> trecho x severidade matrix
+                                                     -> trecho filter -> per-trecho priority
 
-output directory exists (auto-create)
-    -> date-stamped CSV file (append mode)
-        -> header written once if file is new
+Shared state store (thresholds, params, filters, selection)
+  -> client-side classification engine (baseline, dynamic axes, severity, eventos, impactos, pontos)
+       -> KPI cards, time series threshold lines, matrix, top-N, map colours, heat map
+  -> URL hash state (needs a stable store schema first)
+  -> linked brushing (needs the store plus a timestamp join key)
 
-logging module configured
-    -> errors, warnings -> log file (rotating)
-    -> startup/shutdown summary -> terminal + log
+Golden-file test (JS engine at defaults == workbook) -> trust in all recomputed outputs
+Severity palette/tokens -> every view (build first)
+Heat-map weighting + min-class -> geographic heat map
+Top-N table -> map link generation (client-side) and the CSV export
+Fix-gap rule (max gap for interpolation) -> map polyline -> heat map -> data-quality card
 ```
 
----
+Dependency on existing project: none on the logger runtime. The only existing assets are the workbook (`Results_1st.Run/Final - Monitoramento de Sapata coletora - Linha 04.xlsx`) and the CSV column contract (21 columns, GPS as the last 3) for the later raw-CSV path. The converter's JSON schema should be shaped so that a raw logger CSV can produce the same structure. This is why the baseline, severity and grouping logic should live in the browser and be applied to samples, not be baked into the JSON.
 
-## MVP Prioritization
+## MVP Recommendation
 
-### Phase 1 — Must Ship (all table stakes + selected differentiators)
+Prioritize, in this order:
+1. Converter plus JSON schema (samples as columnar arrays, with an interpolated position flag, trecho, sentido and the fixes list), plus shared palette and state store.
+2. JS classification engine at the default parameters, verified against the workbook (golden test), then KPI cards and thresholds.
+3. Per-axis time series with threshold lines (decimated), then the map with track, impact points and popups.
+4. Filters and the trecho × severidade matrix with click-to-filter.
+5. Top-N table with map links and CSV export.
+6. Geographic heat map with weighting, radius and intensity controls.
+7. Analysis parameters (baseline offset, grouping rule).
+8. Differentiators in this order: URL hash state, hover sync, data-quality card, mobile polish, then range brushing.
 
-1. config.yaml loader with validation
-2. list_serial_ports.py utility
-3. Modbus RTU connection (pymodbus)
-4. Full register read with raw-to-physical conversion
-5. Timestamped CSV append with flush-per-row
-6. Terminal output (one line per sample)
-7. Graceful Ctrl+C shutdown with session summary
-8. Transient error retry + consecutive error counter
-9. Error/status log to file
-10. Column names aligned to CBM conventions (units in name, `sensor_id` column)
-11. Date-stamped output filenames + auto-create output directory
-12. Config validation with human-readable errors on startup
+Defer:
+- Range brushing (full) and sentido side-by-side comparison: valuable, but hover sync and click-to-filter cover most of the need.
+- Dark mode, PNG export and print stylesheet: nice to have, and the palette tokens make them cheap to add later.
+- Multi-run support: out of scope, keep the schema run-scoped.
 
-### Phase 2 — High Value, Low Risk (add after bench validation)
+## Open Questions / Flags for Later Research
 
-- Reconnect-on-port-loss (close + reopen Modbus client)
-- Modular exporter interface (Sink protocol/ABC) for future DB/MQTT
-- Unit tests for conversion formulas and CSV schema
-- Optional CLI `--config` override
-
-### Defer (Phase 3+)
-
-- Dashboard / TUI
-- InfluxDB / SQLite exporter
-- Multi-sensor support
-- Signal analysis (FFT, RMS window)
-
----
+- Can the converter get the trecho boundaries (start and end timestamps or coordinates) from the workbook? This is needed for the matrix, the shaded bands and the trecho labels on the map. LOW confidence until the sheets are inspected.
+- The exact "impacto" grouping rule in the Excel (gap tolerance, same axis or not) must be reverse-engineered before the JS engine can match it. Treat this as a research flag for the engine phase.
+- The per-trecho "prioridade" formula in the workbook must be read from the sheet and reproduced.
+- The renderer choice for 23k × 3 points and for the heat map, plus the basemap tile policy, goes to STACK.md.
 
 ## Sources
 
-- Project context: `C:/Users/Cliente/Documents/Accel_mro/.planning/PROJECT.md`
-- Python csv module official docs (fetched 2026-05-19): https://docs.python.org/3/library/csv.html
-- pymodbus library knowledge: exception types, RTU client patterns (HIGH confidence — well-established library, stable API)
-- ISO 10816 / ISO 20816 vibration alarm zone thresholds (MEDIUM confidence — standard is paywalled; thresholds from widely-cited secondary sources in CBM literature)
-- CBM CSV conventions: pandas `pd.read_csv()` and InfluxDB line protocol expectations (HIGH confidence — direct library knowledge)
-- Windows COM port / CH340/CP210x/FTDI USB-RS485 patterns (HIGH confidence — well-documented driver landscape)
+- Domain knowledge of rail and vibration CBM dashboards, geo-sensor explorers and Leaflet/Mapbox heat-map conventions. This is training-derived, so MEDIUM to LOW confidence, and was not verified against current docs in this pass.
+- `.planning/PROJECT.md` (milestone scope, data facts, out-of-scope list). HIGH confidence for project-specific facts.
