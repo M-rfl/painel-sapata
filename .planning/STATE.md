@@ -1,34 +1,35 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: GPS Data Integration
-status: completed
-stopped_at: Completed 08-01-PLAN.md — Phase 8 CSV Integration plan 1 complete
-last_updated: "2026-05-25T04:32:50.006Z"
+milestone: v1.3
+milestone_name: Field Run Dashboard
+status: defining_requirements
+stopped_at: Milestone v1.3 started — defining requirements
+last_updated: "2026-10-08T00:00:00.000Z"
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
-  percent: 97
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-24 after v1.2 start)
+See: .planning/PROJECT.md (updated 2026-10-08 after v1.3 start)
 
 **Core value:** O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não funcionar, nada mais importa.
-**Current focus:** v1.2 GPS Data Integration — Phase 8: CSV Logger GPS (next)
+**Current focus:** v1.3 Field Run Dashboard — defining requirements
 
 ## Current Position
 
-Phase: 8 — CSV Integration — IN PROGRESS
-Plan: 1/1 complete (08-01 executed 2026-05-25)
-Status: Phase 8 plan 01 done — CSVLogger extended to 21-column GPS-aware CSV; 95 tests GREEN
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-10-08 — Milestone v1.3 started
 
-Progress: [█████████░] 97%
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -88,8 +89,6 @@ Progress: [█████████░] 97%
 
 ## Session Continuity
 
-Stopped at: Completed 08-01-PLAN.md — Phase 8 CSV Integration plan 1 complete
+Stopped at: Milestone v1.3 Field Run Dashboard started — PROJECT.md updated
 
-Next action: v1.2 milestone verification — run end-to-end integration test and confirm GPS data flows from GPSReader through SensorReading to CSV columns 19-21
-
-Phase 8 is the final plan of v1.2. All requirements GPS-01 through GPS-07 should now be complete.
+Next action: Define REQUIREMENTS.md, then create ROADMAP.md (phases continue from 9)

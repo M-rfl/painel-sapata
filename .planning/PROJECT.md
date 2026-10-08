@@ -6,6 +6,21 @@ Aplicação Python para aquisição contínua de dados do acelerômetro industri
 
 **Status: v1.2 GPS Data Integration shipped 2026-05-25.** Acquisition loop + live visualization + GPS enrichment all functional — `python main.py` for headless CSV logging with GPS columns; `python main.py --gui` for simultaneous CSV + live animated graph. GPS runs as a 1 Hz background thread with graceful degradation when no hardware or permission.
 
+**First field campaign done (2026-10-02):** VLT Carioca · Linha 4 · Trem 102 (MRO 102), sapata coletora, 00:30–01:58, 23.383 registros (~5 Hz), both sentidos (TIG-PXV / PXV-TIG), 21 trechos. Pre-treated result in `Results_1st.Run/Final - Monitoramento de Sapata coletora - Linha 04.xlsx` (12 sheets: dados originais/tratados, eventos, picos, análise por trecho/sentido, estatísticas, GPS, critérios).
+
+## Current Milestone: v1.3 Field Run Dashboard
+
+**Goal:** Publish a public GitHub Pages dashboard (in Portuguese) that lets maintenance engineers and management explore the first field run — per-axis acceleration, GPS track, heat maps — with severity thresholds, filters, display and analysis parameters adjustable live in the browser.
+
+**Target features:**
+- Reusable Python converter: run workbook (and later raw logger CSVs) → compact JSON consumed by the site
+- Overview KPIs (registros, eventos, impactos, pontos de impacto, classes de severidade) on top — management view
+- Per-axis acceleration time series (AX longitudinal / AY lateral / AZ vertical; medido vs dinâmico)
+- Route map with GPS track (lat/lon) and impact points, plus geographic heat map of vibration/impacts
+- Trecho × severidade heat-map matrix
+- User-adjustable parameters, recomputed client-side: severity thresholds (Leve/Moderado/Severo/Crítico), filters (sentido, trecho, eixo dominante, time window, class), display options (metric/axis driving the heat map, radius/intensity), analysis parameters (rest-level offset, event grouping)
+- Static site deployed to GitHub Pages
+
 ## Core Value
 
 O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não funcionar, nada mais importa.
@@ -61,7 +76,17 @@ O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não f
 - ✓ App starts normally with no GPS hardware, import failure, or denied permission — no crash — v1.2
 - ✓ Permission-denied message: "GPS: location access denied — enable in Windows Settings › Privacy › Location" — v1.2
 
-### Deferred (v1.3+)
+### Active (v1.3 Field Run Dashboard)
+
+- [ ] Converter script produces site JSON from the run workbook (reusable for future runs)
+- [ ] GitHub Pages site shows overview KPIs for the run
+- [ ] Per-axis acceleration charts (medido / dinâmico)
+- [ ] Map with GPS track, impact points and geographic heat map
+- [ ] Trecho × severidade matrix heat map
+- [ ] Live-adjustable thresholds, filters, display and analysis parameters
+- [ ] Site deployed and reachable on GitHub Pages
+
+### Deferred (v1.4+)
 
 - [ ] Validar escala de velocidade de vibração em campo com equipamento de referência (SCALE_VEL = 1/100 confirmar mm/s)
 - [ ] Corrigir test_main.py: `mock_csv.file_path` → `mock_csv.path` (4 locations) — teste correctness fix
@@ -81,6 +106,10 @@ O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não f
 - Pause/resume button in graph — complexity without clear benefit
 - Zoom/pan in live plot — conflicts with FuncAnimation scroll mode
 - Graph-only mode (no CSV) — CSV is core value, always logged
+- Multi-run selector / run comparison on the dashboard (v1.3) — single run now; converter output kept run-scoped so it can be added later
+- Access control / private dashboard (v1.3) — user confirmed public publication of run data is fine
+- Time × trecho heat map (v1.3) — not selected; geographic + trecho×severidade only
+- Backend/server or database for the dashboard (v1.3) — static GitHub Pages only
 
 ## Context
 
@@ -102,6 +131,15 @@ O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não f
 
 **Validação de campo:** Verificado em COM10 com sensor plano — az_g ≈ 1.0 g, ax_g/ay_g ≈ 0.0 g, 10 Hz estáveis.
 
+**Field run data facts (Results_1st.Run, for v1.3):**
+- Original data had lost decimal separators (accel recovered via 1/2048 g resolution; GPS like `-2289879276454220` → `-22.8987927645422`); use the treated sheet `02 — DADOS TRATADOS` as the source of truth
+- Axes: AX = Longitudinal, AY = Lateral, AZ = Vertical (AZ includes −1 g); "dinâmico" = medido − mediana do eixo
+- Severity on |dominant-axis dynamic value|: Normal < 0,5 g ≤ Leve < 1 ≤ Moderado < 2 ≤ Severo < 4 ≤ Crítico
+- Evento = medição ≥ Leve; impacto = consecutive event measurements grouped; ponto de impacto = 1 per GPS location (max value)
+- GPS fix only every ~30 s; 2.020 registros without coordinates (tunnel / Central → Saara)
+- Velocity/displacement/frequency channels were all 0 in this run; angles None
+- Repo has no GitHub remote yet — one must be created for Pages
+
 **Known tech debt:**
 - `test_main.py` usa `mock_csv.file_path` mas `main.py` lê `csv_logger.path` — DISP-03 CSV path não assertado no teste automatizado
 - `05-VALIDATION.md` e `06-VALIDATION.md` mostram `nyquist_compliant: false` — planning artifacts não atualizados
@@ -114,6 +152,7 @@ O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não f
 - **Extensibility**: Arquitetura modular para adicionar exportadores (MQTT, InfluxDB, REST) sem reescrever sensor.py
 - **GUI Threading**: Matplotlib deve rodar na main thread (Windows Tk backend constraint) — acquisition em background thread
 - **Simplicity**: Executável com `python main.py` sem configuração adicional além do config.yaml
+- **Dashboard (v1.3)**: Static site only (GitHub Pages, no backend); UI in Portuguese; all parameter recalculation client-side; logger tech-stack constraint does not apply to the site — converter may add dev-only deps (e.g. openpyxl) kept out of the logger's runtime requirements
 
 ## Key Decisions
 
@@ -145,4 +184,4 @@ O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não f
 | gps_lat/lon/speed_mps use `field(default=None)` in SensorReading (v1.2) | All 79 existing tests construct SensorReading without GPS kwargs — backward-compatible zero-change | ✓ Good — 95/95 tests GREEN with no changes to older tests |
 
 ---
-*Last updated: 2026-05-25 after v1.2 GPS Data Integration milestone*
+*Last updated: 2026-10-08 after v1.3 Field Run Dashboard milestone start*
