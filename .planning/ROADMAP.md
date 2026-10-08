@@ -60,7 +60,15 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
   2. Engineer runs one command on `Results_1st.Run/raw/` and gets schema-versioned compact JSON from both the clean comma CSV and the pt-BR `;` CSV, with any unrecoverable mangled value reported rather than guessed
   3. Every sample carries a trecho from the station geofences (Line 4 and Line 1, both directions), sentido is detected from the station sequence, and tunnel samples without GPS inherit trecho from neighbours and are flagged "sem GPS"
   4. The converter's validation report shows class counts 21.031/1.611/512/173/56, eventos 2.352 and impactos 1.749 equal to the workbook, with pontos and per-trecho differences listed side by side with explanations
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — `.gitignore` as first v1.3 commit, repo-hygiene test, track Stations_GEO + doc generators (W1)
+- [ ] 09-02-PLAN.md — Converter package + shared contracts, mangled-value recovery, raw CSV reader, golden fixture (W2)
+- [ ] 09-03-PLAN.md — Station-file parser + geofence trecho/sentido state machine, sem GPS/edge flags (W3)
+- [ ] 09-04-PLAN.md — GPS fixes/loc ids/speed, schema v1 writer/loader, Python reference analysis (W3)
+- [ ] 09-05-PLAN.md — Validation report (golden + workbook, side by side) and one-command CLI (W4)
+- [ ] 09-06-PLAN.md — Real-data run, real + CI golden tests, commit site JSON, engineer reviews report (W5, checkpoint)
 
 ### Phase 10: Analysis Engine
 **Goal**: The browser-side rules reproduce the workbook numbers at default settings and recompute correctly for any parameter change, with no UI required to prove it
@@ -122,7 +130,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 6. main.py Integration | v1.1 | 2/2 | Complete | 2026-05-24 |
 | 7. GPS Reader & Data Model | v1.2 | 3/3 | Complete | 2026-05-24 |
 | 8. CSV Integration | v1.2 | 1/1 | Complete | 2026-05-25 |
-| 9. Repo Hygiene & Raw CSV Converter | v1.3 | 0/TBD | Not started | - |
+| 9. Repo Hygiene & Raw CSV Converter | v1.3 | 0/6 | Planned | - |
 | 10. Analysis Engine | v1.3 | 0/TBD | Not started | - |
 | 11. Public Site, Overview & Controls | v1.3 | 0/TBD | Not started | - |
 | 12. Time Series & Map | v1.3 | 0/TBD | Not started | - |
