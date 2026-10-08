@@ -39,6 +39,14 @@ O relatório vai para `Results_1st.Run/validation-<run_id>.md` (pasta ignorada p
 
 O conversor usa só a biblioteca padrão. Para `--workbook`: `pip install -r requirements-dashboard.txt`.
 
+## Motor JS e testes de paridade
+
+O motor de análise em JavaScript vive em `site/js/core/` e espelha `analysis_ref.py` (o oráculo em Python). Os testes JS rodam com `node --test` (Node >= 22.7, sem `package.json`): não passe um diretório; use `node --test` na raiz ou `node --test "tests/js/*.test.js"`.
+
+Os casos de paridade (`tests/fixtures/parity_cases.json`) são gerados pelo oráculo com parâmetros aleatórios (semente fixa) e reexecutados em JS. Depois de alterar `analysis_ref.py` ou regenerar o JSON do site, rode `python -m tools.dashboard_converter.gen_parity` e faça commit do fixture; senão `pytest` falha (`tests/test_parity_fixture.py`).
+
+O CI da Fase 11 deve usar `setup-node` 22 ou 24.
+
 ## O que vai para o git
 
 O JSON do site é versionado; os CSVs brutos, a planilha e os relatórios de validação não.
