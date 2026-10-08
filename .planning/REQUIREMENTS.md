@@ -22,7 +22,7 @@
 ### Converter (raw CSV → site JSON)
 
 - [ ] **CONV-01**: Engineer converts a run folder of raw logger CSVs into site data with one command
-- [ ] **CONV-02**: Converter reads both clean comma CSVs and pt-BR Excel re-saved `;` CSVs, recovering mangled values (accel on the 1/2048 g grid within ±16 g, GPS within the line envelope, temp/vel/disp/freq) and reporting any unrecoverable value instead of guessing
+- [x] **CONV-02**: Converter reads both clean comma CSVs and pt-BR Excel re-saved `;` CSVs, recovering mangled values (accel on the 1/2048 g grid within ±16 g, GPS within the line envelope, temp/vel/disp/freq) and reporting any unrecoverable value instead of guessing
 - [ ] **CONV-03**: Converter assigns each sample a trecho by station geofence from `Stations_GEO/*.txt` (any line, both directions)
 - [ ] **CONV-04**: Converter detects sentido automatically from the sequence of stations passed (not from the filename)
 - [ ] **CONV-05**: Samples without GPS fix (tunnel) get trecho inferred from the surrounding stations in time and are flagged "sem GPS"
@@ -114,7 +114,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | REPO-01 | Phase 9 | Complete |
 | CONV-01 | Phase 9 | Pending |
-| CONV-02 | Phase 9 | Pending |
+| CONV-02 | Phase 9 | Complete |
 | CONV-03 | Phase 9 | Pending |
 | CONV-04 | Phase 9 | Pending |
 | CONV-05 | Phase 9 | Pending |
