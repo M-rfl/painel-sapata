@@ -5,7 +5,7 @@ milestone_name: Field Run Dashboard
 current_plan: 6
 status: verifying
 stopped_at: Completed 09-06-PLAN.md
-last_updated: "2026-10-08T21:02:56.151Z"
+last_updated: "2026-10-08T21:03:19.963Z"
 last_activity: 2026-10-08
 progress:
   total_phases: 5
@@ -108,6 +108,7 @@ Progress: [██░░░░░░░░] 17%
 - [Phase 09]: [09-05] Workbook row-level mismatches are exact checks (exit 2); pontos/per-trecho side by side only
 - [Phase 09]: [09-06] Engineer approved report; known per-trecho deviations at inferred stations (CTR 210 m, EQD 159 m, SCT collapse following trecho: Vila Olimpica-Central 1 vs 2.940, Rodoviaria-Equador 1 vs 295, Gamboa-Santo Cristo 326 vs 1.468); fix via larger radius or closest-GPS-approach boundary before per-trecho views
 - [Phase 09]: [09-06] Sentido split at 11.835 vs ~10.839 in workbook (PXV 200 m terminal dwell) accepted; pontos 99 vs 101 side by side only
+- [Phase 09]: [09-06] OPEN: re-confirm 6-dp public GPS precision at Phase 11 push checkpoint
 
 ### Key Constraints for v1.2
 
