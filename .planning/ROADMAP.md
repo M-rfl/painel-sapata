@@ -45,7 +45,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 - [x] **Phase 9: Repo Hygiene & Raw CSV Converter** - `.gitignore` first, then raw logger CSVs become validated, schema-versioned site JSON with trecho/sentido assigned by station geofence
  (completed 2026-10-08)
-- [ ] **Phase 10: Analysis Engine** - Pure JS core recomputes classes, eventos, impactos, pontos and trecho priority, protected by golden and Python↔JS parity tests
+- [x] **Phase 10: Analysis Engine** - Pure JS core recomputes classes, eventos, impactos, pontos and trecho priority, protected by golden and Python↔JS parity tests (completed 2026-10-08)
 - [ ] **Phase 11: Public Site, Overview & Controls** - Public Portuguese GitHub Pages site with test-gated deploy, KPI overview, and threshold/filter/display controls
 - [ ] **Phase 12: Time Series & Map** - Zoomable synchronized charts and the OSM route/impact/heat map, linked by hover and click
 - [ ] **Phase 13: Matrix, Ranking & Shareable State** - Trecho × severidade matrix, ranking tables with CSV export, analysis parameters and shareable URLs
@@ -139,7 +139,7 @@ Plans:
 | 7. GPS Reader & Data Model | v1.2 | 3/3 | Complete | 2026-05-24 |
 | 8. CSV Integration | v1.2 | 1/1 | Complete | 2026-05-25 |
 | 9. Repo Hygiene & Raw CSV Converter | v1.3 | 0/6 | Complete | 2026-10-08 |
-| 10. Analysis Engine | v1.3 | 4/5 | In Progress | - |
+| 10. Analysis Engine | v1.3 | 5/5 | Complete | 2026-10-08 |
 | 11. Public Site, Overview & Controls | v1.3 | 0/TBD | Not started | - |
 | 12. Time Series & Map | v1.3 | 0/TBD | Not started | - |
 | 13. Matrix, Ranking & Shareable State | v1.3 | 0/TBD | Not started | - |
