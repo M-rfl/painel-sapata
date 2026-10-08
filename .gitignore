@@ -1,0 +1,19 @@
+# Field run data + treated workbook (raw CSVs and xlsx stay local)
+/Results_1st.Run/
+# Logger output CSVs from the notebook logger
+/data/
+# Logger log files (keep the tracked placeholder)
+/logs/*
+!/logs/.gitkeep
+*.log
+# Manufacturer documents and generated documents
+/WTVB01 documents/
+/WTVB01_*.docx
+*.docx
+~$*
+# Python caches / tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+*.egg-info/
