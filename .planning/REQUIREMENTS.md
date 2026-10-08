@@ -112,12 +112,57 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| REPO-01 | Phase 9 | Pending |
+| CONV-01 | Phase 9 | Pending |
+| CONV-02 | Phase 9 | Pending |
+| CONV-03 | Phase 9 | Pending |
+| CONV-04 | Phase 9 | Pending |
+| CONV-05 | Phase 9 | Pending |
+| CONV-06 | Phase 9 | Pending |
+| CONV-07 | Phase 9 | Pending |
+| CORE-01 | Phase 10 | Pending |
+| CORE-02 | Phase 10 | Pending |
+| CORE-03 | Phase 10 | Pending |
+| CORE-04 | Phase 10 | Pending |
+| CORE-05 | Phase 10 | Pending |
+| CORE-06 | Phase 10 | Pending |
+| REPO-02 | Phase 11 | Pending |
+| PUB-01 | Phase 11 | Pending |
+| PUB-02 | Phase 11 | Pending |
+| PUB-03 | Phase 11 | Pending |
+| KPI-01 | Phase 11 | Pending |
+| KPI-02 | Phase 11 | Pending |
+| KPI-03 | Phase 11 | Pending |
+| KPI-04 | Phase 11 | Pending |
+| KPI-05 | Phase 11 | Pending |
+| PARAM-01 | Phase 11 | Pending |
+| PARAM-02 | Phase 11 | Pending |
+| PARAM-03 | Phase 11 | Pending |
+| PARAM-05 | Phase 11 | Pending |
+| CHART-01 | Phase 12 | Pending |
+| CHART-02 | Phase 12 | Pending |
+| CHART-03 | Phase 12 | Pending |
+| CHART-04 | Phase 12 | Pending |
+| CHART-05 | Phase 12 | Pending |
+| MAP-01 | Phase 12 | Pending |
+| MAP-02 | Phase 12 | Pending |
+| MAP-03 | Phase 12 | Pending |
+| MAP-04 | Phase 12 | Pending |
+| MAP-05 | Phase 12 | Pending |
+| SYNC-01 | Phase 12 | Pending |
+| MTX-01 | Phase 13 | Pending |
+| MTX-02 | Phase 13 | Pending |
+| RANK-01 | Phase 13 | Pending |
+| RANK-02 | Phase 13 | Pending |
+| RANK-03 | Phase 13 | Pending |
+| PARAM-04 | Phase 13 | Pending |
+| SHARE-01 | Phase 13 | Pending |
 
 **Coverage:**
 - v1.3 requirements: 45 total
-- Mapped to phases: 0
-- Unmapped: 45 ⚠️
+- Mapped to phases: 45
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-10-08*
-*Last updated: 2026-10-08 after initial definition*
+*Last updated: 2026-10-08 after roadmap creation (phases 9-13)*

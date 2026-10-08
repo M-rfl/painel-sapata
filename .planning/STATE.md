@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Field Run Dashboard
-status: defining_requirements
-stopped_at: Milestone v1.3 started — defining requirements
+status: ready_to_plan
+stopped_at: Roadmap v1.3 created — ready to plan Phase 9
 last_updated: "2026-10-08T00:00:00.000Z"
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-08 after v1.3 start)
 
 **Core value:** O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não funcionar, nada mais importa.
-**Current focus:** v1.3 Field Run Dashboard — defining requirements
+**Current focus:** Phase 9 — Repo Hygiene & Raw CSV Converter
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 9 of 13 (Repo Hygiene & Raw CSV Converter)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-10-08 — Milestone v1.3 started
+Status: Ready to plan
+Last activity: 2026-10-08 — v1.3 roadmap created (phases 9-13)
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -80,6 +80,14 @@ Progress: [░░░░░░░░░░] 0%
 - GPS columns appended as columns 19-21 (after sensor_id at 18) — consistent with SensorReading field order and STORE-02 invariant (08-01)
 - test_header_row_columns updated to assert against GPS_CSV_HEADER (21 cols) rather than keeping a stale 18-col local constant — keeps test file self-consistent (08-01)
 
+### v1.3 Decisions
+
+- Primary data source is raw logger CSVs in Results_1st.Run/raw/; workbook only for validation (CONV-07, CORE-05)
+- Trecho by station geofence (Stations_GEO/*.txt); sentido auto-detected; tunnel samples inferred from neighbours
+- Accel stored as integer 1/2048 g counts; JS core owns rules, Python converter owns quantization/GPS validation
+- Parity: trecho-free KPIs must match workbook exactly; pontos/per-trecho side by side
+- Repo has no GitHub remote; REPO-02 needs user action
+
 ### Key Constraints for v1.2
 
 - `winsdk` is the new library required for Windows Location API access
@@ -91,4 +99,4 @@ Progress: [░░░░░░░░░░] 0%
 
 Stopped at: Milestone v1.3 Field Run Dashboard started — PROJECT.md updated
 
-Next action: Define REQUIREMENTS.md, then create ROADMAP.md (phases continue from 9)
+Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)
