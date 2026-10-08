@@ -1,6 +1,7 @@
 """Site JSON schema v1: builder, writer, loader and per-sample decoder.
 
-Phase 10's JS engine consumes exactly this schema; keys are frozen.
+Phase 10's JS engine consumes exactly this schema; Schema 1. Keys are stable; additive optional keys since Phase 10: top-level
+source_runs, meta.workbook_reference. Consumers must tolerate their absence.
 """
 from __future__ import annotations
 
@@ -15,6 +16,7 @@ from .model import (ACCEL_PER_G, FLAG_EDGE, FLAG_INFERRED_STATION, FLAG_SEM_GPS,
 
 SCHEMA_VERSION = 1
 TZ_NAME = "America/Sao_Paulo"
+WORKBOOK_THRESHOLDS_G = [0.5, 1, 2, 4]
 _US = timedelta(microseconds=1)
 
 
@@ -87,10 +89,29 @@ def _quality(run: RunData, assignment: Assignment, fixes: GpsFixes, station_warn
     }
 
 
+def workbook_reference_from_golden(golden: dict, thresholds_g: list) -> dict | None:
+    """Reference values embedded in meta.workbook_reference (None if golden has no KPIs)."""
+    exact = golden.get("exact", {})
+    ref = golden.get("reference", {})
+    kpis = ("class_counts", "eventos", "impactos", "impacts_by_class")
+    if not any(k in exact for k in kpis):
+        return None
+    out: dict = {"source": golden.get("oracle") or "golden", "thresholds_g": list(thresholds_g)}
+    for k in ("medians_lsb", *kpis):
+        if k in exact:
+            out[k] = exact[k]
+    out["sentido_basis"] = "source_file_time_order"
+    for k in ("sentido_records", "sentido_eventos"):
+        if k in ref:
+            out[k] = ref[k]
+    return out
+
+
 def build_site_json(run: RunData, assignment: Assignment, fixes: GpsFixes, *, run_id: str,
                     title: str, radius_m: float, terminal_radius_m: float,
                     station_warnings: list, line_name: str, stations: list[dict],
-                    generated_at: datetime | None = None) -> dict:
+                    generated_at: datetime | None = None,
+                    reference: dict | None = None) -> dict:
     gen = generated_at or datetime.now(ZoneInfo(TZ_NAME))
     meta = {
         "run_id": run_id, "title": title, "sensor_id": run.sensor_id,
@@ -100,13 +121,15 @@ def build_site_json(run: RunData, assignment: Assignment, fixes: GpsFixes, *, ru
         "t0": run.timestamps[0].isoformat(), "tz": TZ_NAME, "n": run.n,
         "t_quality": "sub-second logger timestamps",
         "axes": {"ax": "Longitudinal", "ay": "Lateral", "az": "Vertical"},
-        "workbook_defaults": {"thresholds_g": [0.5, 1, 2, 4], "rest": "median",
+        "workbook_defaults": {"thresholds_g": list(WORKBOOK_THRESHOLDS_G), "rest": "median",
                               "max_speed_kmh": 50, "max_fix_gap_s": 120},
         "line": {"id": assignment.line_id, "name": line_name, "ambiguous": assignment.ambiguous,
                  "scores": [{"line_id": s.line_id, "score": s.score} for s in assignment.line_scores]},
         "geofence": {"radius_m": radius_m, "terminal_radius_m": terminal_radius_m},
         "gps_decimals": 6, "converter_version": __version__, "generated_at": gen.isoformat(),
     }
+    if reference is not None:
+        meta["workbook_reference"] = reference
     ch = {
         "vel": {"unit": "mm/s", "scale": 100,
                 **{a: _quantize(run.vel[a], 100, f"vel.{a}") for a in "xyz"}},
@@ -128,6 +151,7 @@ def build_site_json(run: RunData, assignment: Assignment, fixes: GpsFixes, *, ru
         "trechos": [{"id": t.id, "name": t.name, "sentido": t.sentido, "order": t.order}
                     for t in assignment.trechos],
         "sentido_runs": [list(r) for r in assignment.sentido_runs],
+        "source_runs": rle([o[0] for o in run.origin]),
         "trecho_runs": [list(r) for r in assignment.trecho_runs],
         "flag_runs": [list(r) for r in assignment.flag_runs],
         "flag_bits": {"sem_gps": FLAG_SEM_GPS, "edge": FLAG_EDGE,
@@ -178,4 +202,5 @@ def decode_samples(obj: dict) -> dict:
         "fix": fix,
         "loc_key": [None if f < 0 else fix_key[f] for f in fix],
         "flags": flags,
+        "source": expand_runs(obj["source_runs"], n) if "source_runs" in obj else None,
     }

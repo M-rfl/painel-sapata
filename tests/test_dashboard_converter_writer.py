@@ -9,8 +9,9 @@ from tools.dashboard_converter.gps import build_fixes
 from tools.dashboard_converter.model import (Assignment, LineScore, RunData, SentidoDef,
                                              SourceFile, StationPassage, TrechoDef,
                                              Turnaround, ValueIssue)
-from tools.dashboard_converter.writer import (build_site_json, decode_samples, expand_runs,
-                                              load_site_json, rle, write_site_json)
+from tools.dashboard_converter.writer import (WORKBOOK_THRESHOLDS_G, build_site_json,
+                                              decode_samples, expand_runs, load_site_json, rle,
+                                              workbook_reference_from_golden, write_site_json)
 
 TZ = timezone(timedelta(hours=-3))
 
@@ -60,8 +61,8 @@ def build(n=12):
 def test_keys_and_quantization():
     _, o = build()
     assert set(o) == {"schema", "meta", "t", "accel", "channels", "stations", "sentidos", "trechos",
-                      "sentido_runs", "trecho_runs", "flag_runs", "flag_bits", "gps", "fix_runs",
-                      "quality"}
+                      "sentido_runs", "source_runs", "trecho_runs", "flag_runs", "flag_bits",
+                      "gps", "fix_runs", "quality"}
     assert o["schema"] == 1
     ch = o["channels"]
     assert ch["vel"]["x"][0] == 165 and ch["temp"]["v"][0] == 2171
@@ -139,3 +140,48 @@ def test_quality():
     assert q["turnarounds"][0]["terminal"] == "PXV"
     assert q["inferred_stations"] == [{"sentido": 0, "code": "B", "min_dist_m": 159.2}]
     assert q["max_gap_index"] in range(11)
+
+
+GOLDEN = {"oracle": "wb", "exact": {"rows": 5, "medians_lsb": [1, 2, 3],
+                                    "class_counts": [21031, 1611, 512, 173, 56], "eventos": 2352,
+                                    "impactos": 1749, "impacts_by_class": [0, 1112, 423, 159, 55]},
+          "reference": {"sentido_records": [10839, 12544], "sentido_eventos": [1262, 1090]}}
+
+
+def build_with(run, reference=None):
+    return build_site_json(
+        run, make_assignment(run.n), build_fixes(run), run_id="r", title="T", radius_m=100,
+        terminal_radius_m=200, station_warnings=[], line_name="Linha 4", stations=[],
+        generated_at=datetime(2026, 10, 8, tzinfo=TZ), reference=reference)
+
+
+def test_source_runs_single_and_multi():
+    _, o = build()
+    assert o["source_runs"] == [[0, 0]]
+    run = make_run()
+    run.sources = [SourceFile("a.csv", "a", 2, ",", "plain"), SourceFile("b.csv", "b", 3, ",", "plain")]
+    run.origin = [(1, 2)] * 3 + [(0, 2)] * 2 + [(0, 3)] * 7
+    assert build_with(run)["source_runs"] == [[0, 1], [3, 0]]
+
+
+def test_workbook_reference_optional():
+    run = make_run()
+    assert "workbook_reference" not in build_with(run)["meta"]
+    assert build_with(run, {"x": 1})["meta"]["workbook_reference"] == {"x": 1}
+
+
+def test_workbook_reference_from_golden():
+    r = workbook_reference_from_golden(GOLDEN, WORKBOOK_THRESHOLDS_G)
+    assert r["class_counts"] == [21031, 1611, 512, 173, 56] and r["eventos"] == 2352
+    assert r["impactos"] == 1749 and r["impacts_by_class"] == [0, 1112, 423, 159, 55]
+    assert r["sentido_records"] == [10839, 12544] and r["sentido_eventos"] == [1262, 1090]
+    assert r["sentido_basis"] == "source_file_time_order"
+    assert r["thresholds_g"] == [0.5, 1, 2, 4] and r["source"] == "wb"
+    assert workbook_reference_from_golden({"exact": {"rows": 5}}, [0.5, 1, 2, 4]) is None
+
+
+def test_decode_source():
+    _, o = build()
+    assert decode_samples(o)["source"] == [0] * 12
+    del o["source_runs"]
+    assert decode_samples(o)["source"] is None

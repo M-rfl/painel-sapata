@@ -9,6 +9,8 @@ JSON do site (`site/data/run-<id>.json`, schema 1) e gera um relatório de valid
 python -m tools.dashboard_converter Results_1st.Run/raw --run-id 2026-10-02-l4-t102 --title "VLT Carioca · Linha 4 · Trem 102 (MRO 102) · Sapata coletora" --golden tests/fixtures/golden_run1.json --workbook "Results_1st.Run/treated/Final - Monitoramento de Sapata coletora - Linha 04.xlsx"
 ```
 
+`--workbook` é opcional (lento). A regeneração exige os CSVs brutos locais (`Results_1st.Run/raw`, fora do git).
+
 O relatório vai para `Results_1st.Run/validation-<run_id>.md` (pasta ignorada pelo git).
 
 ## Opções
@@ -23,7 +25,7 @@ O relatório vai para `Results_1st.Run/validation-<run_id>.md` (pasta ignorada p
 | `--line` | detecção automática | força a linha |
 | `--radius` | 100 | raio da geocerca (m) |
 | `--terminal-radius` | 200 | raio nos terminais (m) |
-| `--golden` | — | JSON golden: verificação exata de contagens |
+| `--golden` | — | JSON golden: verificação exata de contagens; também embute `meta.workbook_reference` no JSON (selo "conforme planilha"). O JSON traz `source_runs` (arquivo de origem por linha, em ordem temporal) |
 | `--workbook` | — | planilha tratada (lenta, minutos); requer openpyxl |
 | `--report` | `<pasta da corrida>/../validation-<run_id>.md` | relatório markdown |
 

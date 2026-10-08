@@ -16,7 +16,8 @@ from .sources.logger_csv import read_run
 from .stations import display_name, geofence_overlap_warnings, load_stations
 from .validate import (golden_checks, read_workbook, render_report, workbook_checks,
                        workbook_comparison)
-from .writer import SCHEMA_VERSION, TZ_NAME, build_site_json, decode_samples, write_site_json
+from .writer import (SCHEMA_VERSION, TZ_NAME, WORKBOOK_THRESHOLDS_G, build_site_json,
+                     decode_samples, workbook_reference_from_golden, write_site_json)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -84,7 +85,9 @@ def _run(args) -> int:
     obj = build_site_json(run, assignment, fixes, run_id=run_id, title=title,
                           radius_m=args.radius, terminal_radius_m=args.terminal_radius,
                           station_warnings=st_warnings, line_name=chosen.name,
-                          stations=stations, generated_at=generated)
+                          stations=stations, generated_at=generated,
+                          reference=(workbook_reference_from_golden(golden, WORKBOOK_THRESHOLDS_G)
+                                     if golden else None))
     size = write_site_json(obj, out_path)
 
     dec = decode_samples(obj)

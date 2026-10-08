@@ -124,3 +124,26 @@ def test_module_help():
     r = subprocess.run([sys.executable, "-m", "tools.dashboard_converter", "--help"],
                        cwd=REPO, capture_output=True)
     assert r.returncode == 0
+
+
+def test_source_runs_and_no_reference_without_golden(tmp_path):
+    st, run, n = setup(tmp_path)
+    out = tmp_path / "run.json"
+    assert main(args(tmp_path, st, run, out, tmp_path / "r.md")) == 0
+    obj = load_site_json(out)
+    assert "workbook_reference" not in obj["meta"]
+    from tools.dashboard_converter.writer import expand_runs
+    assert len(expand_runs(obj["source_runs"], n)) == n
+    assert len(obj["source_runs"]) == 2
+    first = obj["source_runs"][0][1]
+    assert obj["meta"]["source"]["files"][first]["name"] == "3. first.csv"
+
+
+def test_golden_embeds_reference(tmp_path):
+    st, run, n = setup(tmp_path)
+    g = tmp_path / "g.json"
+    cc = [1, 2, 3, 4, 5]
+    g.write_text(json.dumps({"exact": {"rows": n, "class_counts": cc}}), encoding="utf-8")
+    out = tmp_path / "run.json"
+    main(args(tmp_path, st, run, out, tmp_path / "r.md", "--golden", str(g)))
+    assert load_site_json(out)["meta"]["workbook_reference"]["class_counts"] == cc
