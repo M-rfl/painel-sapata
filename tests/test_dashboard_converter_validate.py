@@ -1,3 +1,4 @@
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -101,7 +102,7 @@ def write_xlsx(path, rows, sheet="02 — DADOS TRATADOS", headers=None):
     ws = wb.active
     ws.title = sheet
     ws.append(["TÍTULO DA ABA"])
-    ws.append(headers or ["Data/Hora", "Sentido", "Trecho (padronizado)", "AX", "AY", "AZ",
+    ws.append(headers or ["Data/Hora", "Sentido", "Trecho (padronizado)", "AX — Longitudinal (g)", "AY — Lateral (g)", "AZ — Vertical (g)",
                           "AX din. (g)", "CLASSIFICAÇÃO", "Evento (1/0)", "Latitude", "Longitude",
                           "Local (chave)"])
     for r in rows:
@@ -196,3 +197,36 @@ def test_report_falha_and_mismatch_counts(tmp_path):
         "radius_m": 100.0, "terminal_radius_m": 200.0, "checks": checks, "ref": ref, "assignment": a,
         "counts": COUNTS})
     assert "FALHA" in text
+
+
+WORKBOOK = Path("Results_1st.Run/treated/Final - Monitoramento de Sapata coletora - Linha 04.xlsx")
+RAW_DIR = Path("Results_1st.Run/raw")
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not WORKBOOK.exists() or not RAW_DIR.exists(), reason="real workbook/raw data not available")
+def test_real_workbook_comparison():
+    from tools.dashboard_converter.geofence import assign
+    from tools.dashboard_converter.gps import build_fixes
+    from tools.dashboard_converter.sources.logger_csv import read_run
+    from tools.dashboard_converter.stations import load_stations
+    from tools.dashboard_converter.writer import build_site_json, decode_samples
+
+    lines, warns = load_stations("Stations_GEO")
+    run = read_run(RAW_DIR)
+    lat = [float(x) if x is not None else None for x in run.lat]
+    lon = [float(x) if x is not None else None for x in run.lon]
+    a = assign(lat, lon, lines, timestamps=run.timestamps)
+    chosen = next(l for l in lines if l.line_id == a.line_id)
+    fixes = build_fixes(run)
+    obj = build_site_json(run, a, fixes, run_id="t", title="t", radius_m=100.0,
+                          terminal_radius_m=200.0, station_warnings=warns,
+                          line_name=chosen.name, stations=[])
+    dec = decode_samples(obj)
+    ref = reference_analysis(dec["ax"], dec["ay"], dec["az"], dec["loc_key"], dec["trecho_name"])
+    wb = read_workbook(WORKBOOK)
+    cmp = workbook_comparison(run, a, dec, ref, wb)
+    assert cmp["accel_mismatch"] == {"ax": 0, "ay": 0, "az": 0}
+    assert cmp["gps_mismatch"] == 0
+    assert cmp["class_mismatch"] == 0
+    assert cmp["wb_pontos"] == 101

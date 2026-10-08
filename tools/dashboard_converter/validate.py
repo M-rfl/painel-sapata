@@ -113,9 +113,9 @@ def _col_matchers():
 
     return {
         "time": starts("data/hora"),
-        "ax": starts("ax", not_in=("din", "media")),
-        "ay": starts("ay", not_in=("din", "media")),
-        "az": starts("az", not_in=("din", "media")),
+        "ax": starts("ax", not_in=("din.", "media")),
+        "ay": starts("ay", not_in=("din.", "media")),
+        "az": starts("az", not_in=("din.", "media")),
         "lat": starts("latitude"),
         "lon": starts("longitude"),
         "local": starts("local (chave"),
