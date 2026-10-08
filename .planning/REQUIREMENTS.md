@@ -26,7 +26,7 @@
 - [ ] **CONV-03**: Converter assigns each sample a trecho by station geofence from `Stations_GEO/*.txt` (any line, both directions)
 - [ ] **CONV-04**: Converter detects sentido automatically from the sequence of stations passed (not from the filename)
 - [ ] **CONV-05**: Samples without GPS fix (tunnel) get trecho inferred from the surrounding stations in time and are flagged "sem GPS"
-- [ ] **CONV-06**: Converter emits compact, schema-versioned JSON: sub-second time, accel as integer 1/2048 g counts, GPS fixes with location ids, estimated speed between fixes, vel/disp/freq/temp channels
+- [x] **CONV-06**: Converter emits compact, schema-versioned JSON: sub-second time, accel as integer 1/2048 g counts, GPS fixes with location ids, estimated speed between fixes, vel/disp/freq/temp channels
 - [ ] **CONV-07**: Converter validates against the treated workbook: class counts (21.031/1.611/512/173/56), eventos (2.352) and impactos (1.749) match exactly; pontos and per-trecho numbers are reported side by side with explained differences
 
 ### Analysis Engine (browser)
@@ -118,7 +118,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONV-03 | Phase 9 | Pending |
 | CONV-04 | Phase 9 | Pending |
 | CONV-05 | Phase 9 | Pending |
-| CONV-06 | Phase 9 | Pending |
+| CONV-06 | Phase 9 | Complete |
 | CONV-07 | Phase 9 | Pending |
 | CORE-01 | Phase 10 | Pending |
 | CORE-02 | Phase 10 | Pending |
