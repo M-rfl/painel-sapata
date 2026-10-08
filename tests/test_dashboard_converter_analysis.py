@@ -184,3 +184,93 @@ def test_run1_with_time_jump_split_unchanged():
     assert r["class_counts"] == GOLDEN["class_counts"]
     assert r["eventos"] == GOLDEN["eventos"]
     assert r["impacts_by_class"] == GOLDEN["impacts_by_class"]
+
+
+# ---------------------------------------------------------------- Phase 10 outputs
+from tools.dashboard_converter.analysis_ref import class_digest
+
+
+def _prio(ax, tr, order=None, **kw):
+    n = len(ax)
+    r = reference_analysis(ax, [0] * n, [0] * n, [None] * n, tr, trecho_order=order, **kw)
+    return {p["trecho"]: p for p in r["priority"]}, r
+
+
+def test_priority_levels():
+    # median 0 (many zeros); classes: 1100 Leve(1), 2200 Moderado(2), 4500 Severo(3), 9000 Critico(4)
+    ax = [0] * 20
+    tr = ["Z"] * 20
+    ax[1], tr[1] = 9000, "A"
+    ax[3], tr[3] = 4500, "B"
+    ax[5], tr[5] = 2200, "C"
+    ax[7], tr[7] = 1100, "D"
+    p, r = _prio(ax, tr, order=["A", "B", "C", "D", "E", "Z"])
+    assert (p["A"]["level"], p["B"]["level"], p["C"]["level"], p["D"]["level"]) == (1, 2, 3, 4)
+    assert p["E"] == {"trecho": "E", "level": 4, "max_cls": 0, "top_count": 0, "peak_dom2": 0}
+    assert [x["trecho"] for x in r["priority"]][:4] == ["A", "B", "C", "D"]
+
+
+def test_priority_ordering_within_level():
+    ax = [0] * 30
+    tr = ["Z"] * 30
+    # A: one Critico (peak 18000 >> 16384); B: two Critico; C: one Critico, higher peak
+    for i, nm, v in ((1, "A", 9000), (4, "B", 9000), (6, "B", 9000), (9, "C", 9500)):
+        ax[i], tr[i] = v, nm
+    p, r = _prio(ax, tr, order=["A", "B", "C"])
+    assert [x["trecho"] for x in r["priority"]][:3] == ["B", "C", "A"]
+    # tie on top_count and peak -> order index
+    ax = [0] * 20
+    tr = ["Z"] * 20
+    ax[1], tr[1], ax[3], tr[3] = 9000, "A", 9000, "B"
+    p, r = _prio(ax, tr, order=["B", "A"])
+    assert [x["trecho"] for x in r["priority"]][:2] == ["B", "A"]
+
+
+def test_priority_uses_peak_row_trecho_and_event_peak():
+    ax = [0] * 20
+    tr = ["Z"] * 20
+    ax[1], tr[1] = 1100, "A"
+    ax[2], tr[2] = 9000, "B"   # impact rows 1-2 peaks in B
+    ax[6], tr[6] = 1100, "A"   # separate Leve impact in A
+    p, _ = _prio(ax, tr, order=["A", "B"])
+    assert p["B"]["level"] == 1 and p["B"]["top_count"] == 1
+    assert p["A"]["level"] == 4 and p["A"]["max_cls"] == 1
+    assert p["A"]["peak_dom2"] == 2200  # over event rows, not only peaks
+
+
+def test_priority_custom_thresholds():
+    ax = [0] * 10 + [1500, 0, 3000]
+    tr = ["A"] * 11 + ["B"] * 2
+    p, _ = _prio(ax, tr, thresholds=(0.5, 1.0))
+    assert p["B"]["level"] == 1 and p["A"]["level"] == 2
+
+
+def test_region_split():
+    ax = [0, 1100, 0, 0, 1100, 0]
+    n = 6
+    r = reference_analysis(ax, [0] * n, [0] * n, [None] * n, ["T"] * n, region=[1, 1, 1, 0, 0, 0])
+    assert r["region_records"] == [3, 3] and r["region_eventos"] == [1, 1]
+    r = run(ax)
+    assert r["region_records"] is None and r["region_eventos"] is None
+
+
+def test_class_digest():
+    h = 0x811C9DC5
+    for b in (0x00, 0x01, 0xFF, 0x04):
+        h = ((h ^ b) * 0x01000193) & 0xFFFFFFFF
+    assert class_digest([0, 1, None, 4]) == f"{h:08x}"
+    assert class_digest([]) == "811c9dc5"
+    assert run([0, 0, 0])["class_digest"] == class_digest([0, 0, 0])
+
+
+def test_run1_priority_sanity():
+    # Sanity of the impact basis, NOT a workbook parity assertion.
+    obj = load_site_json(SITE)
+    dec = decode_samples(obj)
+    names = [t["name"] for t in obj["trechos"]]
+    r = reference_analysis(dec["ax"], dec["ay"], dec["az"], dec["loc_key"], dec["trecho_name"],
+                           trecho_order=names)
+    by = {p["trecho"]: p["max_cls"] for p in r["priority"]}
+    assert [by[nm] for nm in names] == [4, 0, 4, 4, 0, 4, 4, 3, 4, 4, 4, 4, 4, 4, 3, 4, 3, 4, 4, 4]
+    levels = [p["level"] for p in r["priority"]]
+    assert (levels.count(1), levels.count(2), levels.count(4)) == (15, 3, 2)

@@ -40,9 +40,22 @@ def thresholds2(thresholds) -> list[int]:
     return [math.ceil(t * 4096) for t in thresholds]
 
 
+def class_digest(cls_per_row) -> str:
+    """FNV-1a 32-bit over class bytes (None -> 0xFF), 8 lowercase hex chars.
+
+    JS must use h = Math.imul(h ^ b, 0x01000193) >>> 0 with the same byte mapping.
+    """
+    h = 0x811C9DC5
+    for c in cls_per_row:
+        b = (-1 if c is None else c) & 0xFF
+        h ^= b
+        h = (h * 0x01000193) & 0xFFFFFFFF
+    return f"{h:08x}"
+
+
 def reference_analysis(ax, ay, az, loc_key, trecho_name, *,
                        thresholds=(0.5, 1.0, 2.0, 4.0), offset=None, gap=0,
-                       t_ms=None, max_jump_ms=2000) -> dict:
+                       t_ms=None, max_jump_ms=2000, trecho_order=None, region=None) -> dict:
     n = len(ax)
     axes = (ax, ay, az)
     med2 = [_median2([v for v in a if v is not None]) for a in axes]
@@ -127,7 +140,52 @@ def reference_analysis(ax, ay, az, loc_key, trecho_name, *,
     for r in point_rows:
         per_trecho[trecho_name[r]]["pontos"] += 1
 
+    # Priority (impact basis): the impact PEAK row's trecho owns the impact.
+    order = list(trecho_order) if trecho_order is not None else []
+    seen = set(order)
+    for name in trecho_name:
+        if name not in seen:
+            seen.add(name)
+            order.append(name)
+    max_cls = {nm: 0 for nm in order}
+    top_count = {nm: 0 for nm in order}
+    peak_dom2 = {nm: 0 for nm in order}
+    for m in impacts:
+        nm = trecho_name[m["peak"]]
+        if m["cls"] > max_cls[nm]:
+            max_cls[nm] = m["cls"]
+        if m["cls"] == ncls - 1:
+            top_count[nm] += 1
+    for i in range(n):
+        if cls[i] is not None and cls[i] >= 1 and dom_abs[i] > peak_dom2[trecho_name[i]]:
+            peak_dom2[trecho_name[i]] = dom_abs[i]
+    priority = []
+    for idx, nm in enumerate(order):
+        m = max_cls[nm]
+        level = 1 if m == ncls - 1 else 2 if m == ncls - 2 else 3 if m == ncls - 3 else 4
+        priority.append(((level, -top_count[nm], -peak_dom2[nm], idx),
+                         {"trecho": nm, "level": level, "max_cls": m,
+                          "top_count": top_count[nm], "peak_dom2": peak_dom2[nm]}))
+    priority.sort(key=lambda x: x[0])
+
+    region_records = region_eventos = None
+    if region is not None:
+        ridx: dict = {}
+        region_records, region_eventos = [], []
+        for i in range(n):
+            r = ridx.setdefault(region[i], len(ridx))
+            if r == len(region_records):
+                region_records.append(0)
+                region_eventos.append(0)
+            region_records[r] += 1
+            if cls[i] is not None and cls[i] >= 1:
+                region_eventos[r] += 1
+
     return {
+        "class_digest": class_digest(cls),
+        "priority": [p for _, p in priority],
+        "region_records": region_records,
+        "region_eventos": region_eventos,
         "medians_lsb": [m / 2 for m in med2],
         "offsets2": off2,
         "dom_axis_per_row": dom_axis,
