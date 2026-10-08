@@ -77,3 +77,110 @@ def test_unclassified_breaks_impacts():
     ax = [0] * 6 + [1100, None, 1100]
     r = run(ax)
     assert r["unclassified"] == 1 and r["impactos"] == 2 and r["eventos"] == 2
+
+
+# ---------------------------------------------------------------- Phase 10 parameters
+import json
+from pathlib import Path
+
+import pytest
+
+from tools.dashboard_converter.analysis_ref import half_up, thresholds2
+from tools.dashboard_converter.writer import decode_samples, load_site_json
+
+
+def ra(ax, **kw):
+    n = len(ax)
+    return reference_analysis(ax, [0] * n, [0] * n, [None] * n, ["T"] * n, **kw)
+
+
+def test_thresholds2_ceil():
+    assert thresholds2((0.5, 1, 2, 4)) == [2048, 4096, 8192, 16384]
+    assert thresholds2((0.7,)) == [2868]
+
+
+def test_custom_threshold_boundary():
+    ax = [0] * 10 + [1434, 1433]
+    r = ra(ax, thresholds=(0.7,))
+    assert r["class_per_row"][10] == 1
+    assert r["class_per_row"][11] == 0
+
+
+def test_half_up():
+    assert half_up(2.5) == 3
+    assert half_up(-2.5) == -2
+    assert half_up(-4035.5) == -4035
+
+
+def test_manual_offset_equals_median():
+    n = 6
+    ax, ay, az = [94] * n, [-38] * n, [-2018] * n
+    a = reference_analysis(ax, ay, az, [None] * n, ["T"] * n)
+    b = reference_analysis(ax, ay, az, [None] * n, ["T"] * n,
+                           offset={"mode": "manual",
+                                   "g": [0.0458984375, -0.0185546875, -0.9853515625]})
+    assert a["offsets2"] == [188, -76, -4036]
+    assert b["offsets2"] == [188, -76, -4036]
+    assert b["medians_lsb"] == [94, -38, -2018]
+
+
+def test_manual_offset_shifts_classification():
+    ax = [0] * 4 + [1024]
+    assert ra(ax)["class_per_row"][4] == 1
+    r = ra(ax, offset={"mode": "manual", "g": [4 / 4096, 0, 0]})
+    assert r["offsets2"][0] == 4
+    assert r["class_per_row"][4] == 0  # dom2 = 2048 - 4 < 2048
+    assert ra(ax, offset={"mode": "median"})["offsets2"] == [0, 0, 0]
+
+
+def test_bad_offset_mode():
+    with pytest.raises(ValueError):
+        ra([0, 0], offset={"mode": "x"})
+
+
+def test_gap_normal_rows():
+    ax = [0] * 10
+    ax[2] = ax[4] = 1100
+    assert ra(ax, gap=0)["impactos"] == 2
+    assert ra(ax, gap=1)["impactos"] == 1
+    ax = [0] * 10
+    ax[2] = ax[5] = 1100
+    assert ra(ax, gap=1)["impactos"] == 2
+    assert ra(ax, gap=2)["impactos"] == 1
+
+
+def test_gap_counts_unclassified():
+    ax = [0] * 6 + [1100, None, 1100]
+    assert ra(ax, gap=0)["impactos"] == 2
+    r = ra(ax, gap=1)
+    assert r["impactos"] == 1 and r["eventos"] == 2 and r["unclassified"] == 1
+
+
+def test_time_jump_split():
+    ax = [0] * 6 + [1100, 1100]
+    base = [0, 1, 2, 3, 4, 5, 6]
+    assert ra(ax, t_ms=base + [6 + 2000], max_jump_ms=2000)["impactos"] == 1
+    assert ra(ax, t_ms=base + [6 + 2001], max_jump_ms=2000)["impactos"] == 2
+    assert ra(ax, t_ms=None)["impactos"] == 1
+
+
+def test_gap_impact_peak_and_class():
+    ax = [0] * 6 + [1100, 0, 3000, 0, 3000]
+    r = ra(ax, gap=1)
+    assert r["impactos"] == 1
+    assert r["impact_peaks"] == [8]  # first maximum
+    assert r["impacts_by_class"][2] == 1
+
+
+SITE = Path("site/data/run-2026-10-02-l4-t102.json")
+GOLDEN = json.loads(Path("tests/fixtures/golden_run1.json").read_text(encoding="utf-8"))["exact"]
+
+
+def test_run1_with_time_jump_split_unchanged():
+    dec = decode_samples(load_site_json(SITE))
+    r = reference_analysis(dec["ax"], dec["ay"], dec["az"], dec["loc_key"],
+                           dec["trecho_name"], t_ms=dec["t_ms"], max_jump_ms=2000)
+    assert r["impactos"] == 1749 == GOLDEN["impactos"]
+    assert r["class_counts"] == GOLDEN["class_counts"]
+    assert r["eventos"] == GOLDEN["eventos"]
+    assert r["impacts_by_class"] == GOLDEN["impacts_by_class"]
