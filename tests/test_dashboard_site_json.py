@@ -58,3 +58,37 @@ def test_file_size():
     size = SITE.stat().st_size
     print("site JSON bytes:", size)
     assert size < 2_500_000
+
+
+FULL = json.loads(Path("tests/fixtures/golden_run1.json").read_text(encoding="utf-8"))
+
+
+def test_source_runs_file_boundary():
+    assert OBJ["source_runs"] == [[0, 1], [10839, 0]]
+    assert OBJ["meta"]["source"]["files"][1]["name"] == "3. TIG-PXV.csv"
+    assert len(expand_runs(OBJ["source_runs"], N)) == N
+
+
+def test_workbook_reference_embedded():
+    wr = OBJ["meta"]["workbook_reference"]
+    for k in ("class_counts", "eventos", "impactos", "impacts_by_class"):
+        assert wr[k] == FULL["exact"][k]
+    assert wr["sentido_records"] == FULL["reference"]["sentido_records"]
+    assert wr["sentido_eventos"] == FULL["reference"]["sentido_eventos"]
+
+
+def test_file_boundary_sentido_split():
+    src = expand_runs(OBJ["source_runs"], N)
+    order: list[int] = []
+    for s in src:
+        if s not in order:
+            order.append(s)
+    region = [order.index(s) for s in src]
+    recs = [0] * len(order)
+    evs = [0] * len(order)
+    for r, c in zip(region, REF["class_per_row"]):
+        recs[r] += 1
+        if c is not None and c >= 1:
+            evs[r] += 1
+    assert recs == [10839, 12544]
+    assert evs == [1262, 1090]
