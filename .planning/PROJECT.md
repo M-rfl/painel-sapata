@@ -137,7 +137,8 @@ O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não f
 - Severity on |dominant-axis dynamic value|: Normal < 0,5 g ≤ Leve < 1 ≤ Moderado < 2 ≤ Severo < 4 ≤ Crítico
 - Evento = medição ≥ Leve; impacto = consecutive event measurements grouped; ponto de impacto = 1 per GPS location (max value)
 - GPS fix only every ~30 s; 2.020 registros without coordinates (tunnel / Central → Saara)
-- Velocity/displacement/frequency channels were all 0 in this run; angles None
+- Raw logger CSVs in `Results_1st.Run/raw/` (`2. PXV-TIG.csv` 12.544 rows, clean comma CSV; `3. TIG-PXV.csv` 10.839 rows, re-saved by pt-BR Excel: `;` delimiter and thousands-dot mangling of lat/lon/accel/temp/vel/freq — recoverable with the aba 11 rules). 12.544 + 10.839 = 23.383 = workbook rows. Raw has sub-second ISO timestamps (~5.5 Hz, median Δt 0.18 s) that the workbook lacks; no trecho/sentido columns (sentido from filename); gps_speed_mps always empty
+- Vibration velocity (≤ ~4.7 mm/s), displacement (≤ ~3.570 µm), frequency (≤ ~6.9 Hz) and temperature (~21–22 °C) are populated in ~80% of samples in the raw CSVs — dropped from the workbook's treated sheet; angles None
 - Repo has no GitHub remote yet — one must be created for Pages
 
 **Known tech debt:**
