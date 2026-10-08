@@ -43,7 +43,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 ### 🚧 v1.3 Field Run Dashboard (Phases 9-13)
 
-- [ ] **Phase 9: Repo Hygiene & Raw CSV Converter** - `.gitignore` first, then raw logger CSVs become validated, schema-versioned site JSON with trecho/sentido assigned by station geofence
+- [x] **Phase 9: Repo Hygiene & Raw CSV Converter** - `.gitignore` first, then raw logger CSVs become validated, schema-versioned site JSON with trecho/sentido assigned by station geofence (completed 2026-10-08)
 - [ ] **Phase 10: Analysis Engine** - Pure JS core recomputes classes, eventos, impactos, pontos and trecho priority, protected by golden and Python↔JS parity tests
 - [ ] **Phase 11: Public Site, Overview & Controls** - Public Portuguese GitHub Pages site with test-gated deploy, KPI overview, and threshold/filter/display controls
 - [ ] **Phase 12: Time Series & Map** - Zoomable synchronized charts and the OSM route/impact/heat map, linked by hover and click
@@ -130,7 +130,7 @@ Plans:
 | 6. main.py Integration | v1.1 | 2/2 | Complete | 2026-05-24 |
 | 7. GPS Reader & Data Model | v1.2 | 3/3 | Complete | 2026-05-24 |
 | 8. CSV Integration | v1.2 | 1/1 | Complete | 2026-05-25 |
-| 9. Repo Hygiene & Raw CSV Converter | v1.3 | 0/6 | Planned | - |
+| 9. Repo Hygiene & Raw CSV Converter | v1.3 | 0/6 | Complete | 2026-10-08 |
 | 10. Analysis Engine | v1.3 | 0/TBD | Not started | - |
 | 11. Public Site, Overview & Controls | v1.3 | 0/TBD | Not started | - |
 | 12. Time Series & Map | v1.3 | 0/TBD | Not started | - |
