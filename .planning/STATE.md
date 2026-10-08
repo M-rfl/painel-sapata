@@ -27,11 +27,12 @@ See: .planning/PROJECT.md (updated 2026-10-08 after v1.3 start)
 ## Current Position
 
 Phase: 9 of 13 (Repo Hygiene & Raw CSV Converter)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-10-08 — v1.3 roadmap created (phases 9-13)
+**Current Plan:** 2
+**Total Plans in Phase:** 6
+**Status:** Executing
+**Last Activity:** 2026-10-08 — Completed 09-01 (repo hygiene)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 17%
 
 ## Performance Metrics
 
@@ -90,6 +91,10 @@ Progress: [░░░░░░░░░░] 0%
 - Accel stored as integer 1/2048 g counts; JS core owns rules, Python converter owns quantization/GPS validation
 - Parity: trecho-free KPIs must match workbook exactly; pontos/per-trecho side by side
 - Repo has no GitHub remote; REPO-02 needs user action
+
+### Decisions
+
+- [09-01] `.gitignore` is the first v1.3 code commit; run data, workbook, logs, generated docs and caches are excluded, `logs/.gitkeep` kept via negation rule
 
 ### Key Constraints for v1.2
 
