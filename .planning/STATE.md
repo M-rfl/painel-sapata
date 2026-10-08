@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Field Run Dashboard
-current_plan: 4
+current_plan: 5
 status: executing
-stopped_at: Completed 09-04-PLAN.md
-last_updated: "2026-10-08T20:40:46.623Z"
+stopped_at: Completed 09-03-PLAN.md
+last_updated: "2026-10-08T20:44:05.450Z"
 last_activity: 2026-10-08
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 6
-  completed_plans: 3
+  completed_plans: 4
   percent: 17
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-10-08 after v1.3 start)
 ## Current Position
 
 Phase: 9 of 13 (Repo Hygiene & Raw CSV Converter)
-**Current Plan:** 4
+**Current Plan:** 5
 **Total Plans in Phase:** 6
 **Status:** Ready to execute
 **Last Activity:** 2026-10-08
@@ -51,6 +51,7 @@ Progress: [██░░░░░░░░] 17%
 | Phase 09 P01 | 5min | 2 tasks | 9 files |
 | Phase 09 P02 | 25min | 3 tasks | 14 files |
 | Phase 09 P04 | 20min | 3 tasks | 6 files |
+| Phase 09 P03 | 40min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -101,6 +102,7 @@ Progress: [██░░░░░░░░] 17%
 - [09-01] `.gitignore` is the first v1.3 code commit; run data, workbook, logs, generated docs and caches are excluded, `logs/.gitkeep` kept via negation rule
 - [Phase 09]: [09-02] Ambiguous accel readings reported as ValueIssue but never changed (workbook rule parity); slow pytest marker deselected by default
 - [Phase 09]: [09-04] Public JSON GPS precision 6 dp (half-up keys); re-confirm at Phase 11 push checkpoint
+- [Phase 09]: [09-03] Forward-only station progress state machine; dwell stays in arriving trecho; terminal radius 200 m
 
 ### Key Constraints for v1.2
 
@@ -111,6 +113,6 @@ Progress: [██░░░░░░░░] 17%
 
 ## Session Continuity
 
-Stopped at: Completed 09-04-PLAN.md
+Stopped at: Completed 09-03-PLAN.md
 
 Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)
