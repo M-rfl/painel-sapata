@@ -6,7 +6,7 @@
 # macOS:   /dev/tty.usbserial-* or /dev/tty.wchusbserial*
 
 # REQUIRED — identify your port by running: python list_serial_ports.py
-serial_port: "COM3"
+serial_port: "COM10"
 
 # Connection parameters (defaults shown — change only if reconfigured on sensor)
 baudrate: 9600          # WTVB01-485 factory default; valid: 1200/2400/4800/9600/19200/38400/57600/115200
