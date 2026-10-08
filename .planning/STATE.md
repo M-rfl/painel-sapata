@@ -4,14 +4,14 @@ milestone: v1.3
 milestone_name: Field Run Dashboard
 current_plan: Not started
 status: planning
-stopped_at: Completed 10-02-PLAN.md
-last_updated: "2026-10-08T23:32:49.101Z"
+stopped_at: Completed 10-01-PLAN.md
+last_updated: "2026-10-08T23:33:17.908Z"
 last_activity: 2026-10-08
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 11
-  completed_plans: 8
+  completed_plans: 9
   percent: 17
 ---
 
@@ -56,6 +56,7 @@ Progress: [██░░░░░░░░] 17%
 | Phase 09 P06 | ~1h | 3 tasks | 5 files |
 | Phase 10 P03 | 15min | 3 tasks | 10 files |
 | Phase 10 P02 | 15min | 2 tasks | 7 files |
+| Phase 10 P01 | 20min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -113,6 +114,7 @@ Progress: [██░░░░░░░░] 17%
 - [Phase 09]: [09-06] OPEN: re-confirm 6-dp public GPS precision at Phase 11 push checkpoint
 - [Phase 10]: [10-03] JS core location identity = toFixed(6) coordinate key; pontos 99 on run 1
 - [Phase 10]: [10-02] source_runs top-level RLE + meta.workbook_reference (only with --golden); schema stays 1
+- [Phase 10]: [10-01] Oracle rules: th2=ceil(t*4096), manual off2=floor(g*4096+0.5), gap counts unclassified rows, time jump event-to-event strict >2000ms, impact-basis priority
 
 ### Key Constraints for v1.2
 
@@ -123,6 +125,6 @@ Progress: [██░░░░░░░░] 17%
 
 ## Session Continuity
 
-Stopped at: Completed 10-02-PLAN.md
+Stopped at: Completed 10-01-PLAN.md
 
 Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)
