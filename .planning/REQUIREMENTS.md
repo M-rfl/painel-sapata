@@ -40,8 +40,8 @@
 
 ### Overview
 
-- [ ] **KPI-01**: User sees cards for registros, eventos, impactos, pontos and trecho with most events, reacting to filters and parameters
-- [ ] **KPI-02**: User sees class counts and % for medições, impactos and pontos, with dominant-axis breakdown
+- [x] **KPI-01**: User sees cards for registros, eventos, impactos, pontos and trecho with most events, reacting to filters and parameters
+- [x] **KPI-02**: User sees class counts and % for medições, impactos and pontos, with dominant-axis breakdown
 - [x] **KPI-03**: User sees means and maxima per axis and for the resultant (medido and dinâmico)
 - [x] **KPI-04**: User sees a per-axis statistics table (mean, median, std, P0.5/P99.5)
 - [x] **KPI-05**: User sees a data-quality card: GPS coverage, samples without position, empty channels, turnaround gap, station-file warnings
@@ -73,7 +73,7 @@
 ### User Parameters
 
 - [x] **PARAM-01**: User can edit the 4 severity thresholds; order is enforced; `,` or `.` accepted as decimal separator
-- [ ] **PARAM-02**: User can filter by sentido, trecho, eixo dominante, time window and severity class
+- [x] **PARAM-02**: User can filter by sentido, trecho, eixo dominante, time window and severity class
 - [x] **PARAM-03**: User can set display options: heat-map metric (eixo dominante / AX / AY / AZ / resultante dinâmica), radius, intensity; medido vs dinâmico
 - [ ] **PARAM-04**: User can set analysis parameters: rest-level offset per axis (median default or manual), event-grouping gap, GPS max speed and max fix interval
 - [x] **PARAM-05**: User can reset all parameters to defaults
@@ -130,13 +130,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PUB-01 | Phase 11 | Pending |
 | PUB-02 | Phase 11 | Pending |
 | PUB-03 | Phase 11 | Complete |
-| KPI-01 | Phase 11 | Pending |
-| KPI-02 | Phase 11 | Pending |
+| KPI-01 | Phase 11 | Complete |
+| KPI-02 | Phase 11 | Complete |
 | KPI-03 | Phase 11 | Complete |
 | KPI-04 | Phase 11 | Complete |
 | KPI-05 | Phase 11 | Complete |
 | PARAM-01 | Phase 11 | Complete |
-| PARAM-02 | Phase 11 | Pending |
+| PARAM-02 | Phase 11 | Complete |
 | PARAM-03 | Phase 11 | Complete |
 | PARAM-05 | Phase 11 | Complete |
 | CHART-01 | Phase 12 | Pending |
