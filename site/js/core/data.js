@@ -97,5 +97,8 @@ export function decodeRun(json) {
   run.sentidos = json.sentidos;
   run.stations = json.stations;
   run.reference = json.meta.workbook_reference ?? null;
+  run.channels = json.channels ?? null;
+  run.quality = json.quality ?? null;
+  run.flagBits = json.flag_bits ?? null;
   return run;
 }
