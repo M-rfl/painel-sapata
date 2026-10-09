@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Field Run Dashboard
-current_plan: Not started
-status: planning
-stopped_at: Completed 11-04-PLAN.md
-last_updated: "2026-10-09T11:16:19.559Z"
-last_activity: 2026-10-08
+current_plan: 6
+status: executing
+stopped_at: Completed 11-05-PLAN.md
+last_updated: "2026-10-09T12:51:41.216Z"
+last_activity: 2026-10-09
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 18
-  completed_plans: 15
+  completed_plans: 16
   percent: 40
 ---
 
@@ -27,9 +27,9 @@ See: .planning/PROJECT.md (updated 2026-10-08 after v1.3 start)
 ## Current Position
 
 Phase: 11 of 13 (Public Site — Overview & Controls)
-**Current Plan:** 5
+**Current Plan:** 6
 **Total Plans in Phase:** 7
-**Status:** In progress
+**Status:** Ready to execute
 **Last Activity:** 2026-10-09
 
 Progress: [████░░░░░░] 40%
@@ -61,6 +61,7 @@ Progress: [████░░░░░░] 40%
 | Phase 11 P03 | 15min | 2 tasks | 5 files |
 | Phase 11 P02 | 15min | 2 tasks | 2 files |
 | Phase 11 P04 | 25min | 2 tasks | 2 files |
+| Phase 11 P05 | 25min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -125,6 +126,7 @@ Progress: [████░░░░░░] 40%
 - [Phase 11]: [11-03] Percentiles use Excel PERCENTILE.INC; Maior = max abs with sign preserved; quality summary is full-run
 - [Phase 11]: [11-02] classPct denominator = classified masked rows; no sentido field = sentido 0; unclassified rows dropped by eixo/classe filters
 - [Phase 11]: [11-04] CI runs full non-slow pytest under xvfb on ubuntu-latest; confirm on first Actions run in 11-07
+- [Phase 11]: [11-05] analyze memoized on paramsKey; buildView/stats per state change; quality computed once; badge rendered by overview panel
 
 ### Key Constraints for v1.2
 
@@ -135,6 +137,6 @@ Progress: [████░░░░░░] 40%
 
 ## Session Continuity
 
-Stopped at: Completed 11-04-PLAN.md
+Stopped at: Completed 11-05-PLAN.md
 
 Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)
