@@ -17,7 +17,7 @@
 - [ ] **REPO-02**: Project has a public GitHub remote with Pages enabled
 - [ ] **PUB-01**: Anyone can open the dashboard at a public GitHub Pages URL, deployed by a GitHub Actions workflow
 - [ ] **PUB-02**: Deploy only happens when converter (pytest) and JS engine (`node --test`) tests pass
-- [ ] **PUB-03**: All UI text is Portuguese, with pt-BR number/date formatting (America/Sao_Paulo)
+- [x] **PUB-03**: All UI text is Portuguese, with pt-BR number/date formatting (America/Sao_Paulo)
 
 ### Converter (raw CSV → site JSON)
 
@@ -72,11 +72,11 @@
 
 ### User Parameters
 
-- [ ] **PARAM-01**: User can edit the 4 severity thresholds; order is enforced; `,` or `.` accepted as decimal separator
+- [x] **PARAM-01**: User can edit the 4 severity thresholds; order is enforced; `,` or `.` accepted as decimal separator
 - [ ] **PARAM-02**: User can filter by sentido, trecho, eixo dominante, time window and severity class
-- [ ] **PARAM-03**: User can set display options: heat-map metric (eixo dominante / AX / AY / AZ / resultante dinâmica), radius, intensity; medido vs dinâmico
+- [x] **PARAM-03**: User can set display options: heat-map metric (eixo dominante / AX / AY / AZ / resultante dinâmica), radius, intensity; medido vs dinâmico
 - [ ] **PARAM-04**: User can set analysis parameters: rest-level offset per axis (median default or manual), event-grouping gap, GPS max speed and max fix interval
-- [ ] **PARAM-05**: User can reset all parameters to defaults
+- [x] **PARAM-05**: User can reset all parameters to defaults
 - [ ] **SHARE-01**: Page URL encodes all parameters and filters; opening the link restores the same view
 - [ ] **SYNC-01**: Hovering a chart highlights the position on the map; clicking a map point moves the chart cursor to that time
 
@@ -129,16 +129,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | REPO-02 | Phase 11 | Pending |
 | PUB-01 | Phase 11 | Pending |
 | PUB-02 | Phase 11 | Pending |
-| PUB-03 | Phase 11 | Pending |
+| PUB-03 | Phase 11 | Complete |
 | KPI-01 | Phase 11 | Pending |
 | KPI-02 | Phase 11 | Pending |
 | KPI-03 | Phase 11 | Pending |
 | KPI-04 | Phase 11 | Pending |
 | KPI-05 | Phase 11 | Pending |
-| PARAM-01 | Phase 11 | Pending |
+| PARAM-01 | Phase 11 | Complete |
 | PARAM-02 | Phase 11 | Pending |
-| PARAM-03 | Phase 11 | Pending |
-| PARAM-05 | Phase 11 | Pending |
+| PARAM-03 | Phase 11 | Complete |
+| PARAM-05 | Phase 11 | Complete |
 | CHART-01 | Phase 12 | Pending |
 | CHART-02 | Phase 12 | Pending |
 | CHART-03 | Phase 12 | Pending |

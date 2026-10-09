@@ -4,14 +4,14 @@ milestone: v1.3
 milestone_name: Field Run Dashboard
 current_plan: Not started
 status: planning
-stopped_at: Completed 10-05-PLAN.md
-last_updated: "2026-10-08T23:47:41.994Z"
+stopped_at: Completed 11-01-PLAN.md
+last_updated: "2026-10-09T11:03:21.156Z"
 last_activity: 2026-10-08
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 18
+  completed_plans: 13
   percent: 40
 ---
 
@@ -57,6 +57,7 @@ Progress: [████░░░░░░] 40%
 | Phase 10 P01 | 20min | 2 tasks | 2 files |
 | Phase 10 P04 | 15min | 2 tasks | 6 files |
 | Phase 10 P05 | 25min | 2 tasks | 5 files |
+| Phase 11 P01 | 15min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -117,6 +118,7 @@ Progress: [████░░░░░░] 40%
 - [Phase 10]: [10-01] Oracle rules: th2=ceil(t*4096), manual off2=floor(g*4096+0.5), gap counts unclassified rows, time jump event-to-event strict >2000ms, impact-basis priority
 - [Phase 10]: [10-04] Priority impact-basis by class index (peak trecho); conforme driven by JSON workbook_reference, full-run only
 - [Phase 10]: [10-05] Parity fixture: 10 synthetic + 8 run-1 seeded cases; inputs_sha256 over analysis inputs only; pytest guards freshness
+- [Phase 11]: [11-01] Invalid threshold sets never reach params; last valid kept with Portuguese error; dates composed from explicit formatters in America/Sao_Paulo
 
 ### Key Constraints for v1.2
 
@@ -127,6 +129,6 @@ Progress: [████░░░░░░] 40%
 
 ## Session Continuity
 
-Stopped at: Completed 10-05-PLAN.md
+Stopped at: Completed 11-01-PLAN.md
 
 Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)
