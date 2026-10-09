@@ -1,0 +1,57 @@
+# Deploy dashboard (site/) to GitHub Pages. Deploy runs only after the test job passes.
+# CI test selection: full non-slow pytest suite under xvfb (src/visualizer.py forces
+# matplotlib TkAgg at import, so Linux needs python3-tk + a virtual display). A clean
+# clone passes locally (Windows); Linux confirmation is the first Actions run.
+name: Publicar painel
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dashboard.txt
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Instalar dependências de teste
+        run: |
+          sudo apt-get update && sudo apt-get install -y python3-tk xvfb
+          python -m pip install -r requirements.txt -r requirements-dashboard.txt
+      - name: Testes Python
+        run: xvfb-run -a python -m pytest
+      - name: Testes do motor JS
+        run: node --test "tests/js/*.test.js"
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v5
