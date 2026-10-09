@@ -1,8 +1,8 @@
 ---
 phase: 11
 slug: public-site-overview-controls
-status: draft
-nyquist_compliant: false
+status: planned
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-10-08
 ---
@@ -38,13 +38,23 @@ created: 2026-10-08
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| TBD | — | — | PUB-02 | pytest | `pytest tests/test_pages_workflow.py -x` | ❌ W0 | ⬜ pending |
-| TBD | — | — | PUB-01 | pytest | `pytest tests/test_site_static.py -x` | ❌ W0 | ⬜ pending |
-| TBD | — | — | PUB-03, PARAM-01 | node | `node --test tests/js/format.test.js` | ❌ W0 | ⬜ pending |
-| TBD | — | — | PARAM-01, PARAM-03, PARAM-05 | node | `node --test tests/js/state.test.js` | ❌ W0 | ⬜ pending |
-| TBD | — | — | KPI-01, KPI-02, PARAM-02 | node | `node --test tests/js/view.test.js` | ❌ W0 | ⬜ pending |
-| TBD | — | — | KPI-03, KPI-04 | node | `node --test tests/js/stats.test.js` | ❌ W0 | ⬜ pending |
-| TBD | — | — | KPI-05 | node | `node --test tests/js/quality.test.js` | ❌ W0 | ⬜ pending |
+| 11-01-T1 | 11-01 | 1 | PUB-03, PARAM-01 | node | `node --test tests/js/format.test.js` | ❌ W0 (created in task) | ⬜ pending |
+| 11-01-T2 | 11-01 | 1 | PARAM-01, PARAM-03, PARAM-05 | node | `node --test tests/js/state.test.js tests/js/format.test.js` | ❌ W0 (created in task) | ⬜ pending |
+| 11-02-T1 | 11-02 | 1 | PARAM-02, KPI-01, KPI-02 | node | `node --test tests/js/view.test.js` | ❌ W0 (created in task) | ⬜ pending |
+| 11-02-T2 | 11-02 | 1 | KPI-01, KPI-02 | node (run-1 golden) | `node --test "tests/js/*.test.js"` | ❌ W0 | ⬜ pending |
+| 11-03-T1 | 11-03 | 1 | KPI-03, KPI-04 | node | `node --test tests/js/stats.test.js` | ❌ W0 (created in task) | ⬜ pending |
+| 11-03-T2 | 11-03 | 1 | KPI-05 | node | `node --test "tests/js/*.test.js"` (quality.test.js) | ❌ W0 (created in task) | ⬜ pending |
+| 11-04-T1 | 11-04 | 1 | PUB-02 | pytest + node (clean clone) | `python -m pytest -q && node --test "tests/js/*.test.js"` | ✅ | ⬜ pending |
+| 11-04-T2 | 11-04 | 1 | PUB-01, PUB-02 | pytest | `python -m pytest tests/test_pages_workflow.py -x -q` | ❌ W0 (created in task) | ⬜ pending |
+| 11-05-T1 | 11-05 | 2 | PUB-01, PUB-03 | pytest | `python -m pytest tests/test_site_static.py -x -q` | ❌ W0 (created in task) | ⬜ pending |
+| 11-05-T2 | 11-05 | 2 | KPI-01..05, PUB-03 | pytest + node import smoke | `python -m pytest tests/test_site_static.py -q && node --test "tests/js/*.test.js"` | ✅ after T1 | ⬜ pending |
+| 11-06-T1 | 11-06 | 3 | PARAM-01, PARAM-02, PARAM-03, PARAM-05 | pytest + node | `python -m pytest tests/test_site_static.py -q && node --test "tests/js/*.test.js"` | ✅ | ⬜ pending |
+| 11-06-T2 | 11-06 | 3 | PUB-03 (docs) | pytest | `python -m pytest tests/test_docs.py -q` | ✅ | ⬜ pending |
+| 11-06-T3 | 11-06 | 3 | PARAM-01..05, KPI-01..05 | manual (human-verify, local) | `curl -sI http://localhost:8000/data/run-2026-10-02-l4-t102.json` | n/a | ⬜ pending |
+| 11-07-T1 | 11-07 | 4 | REPO-02 (pre-push review) | pytest + node + git | `python -m pytest -q && node --test "tests/js/*.test.js" && git status --short` | ✅ | ⬜ pending |
+| 11-07-T2 | 11-07 | 4 | REPO-02 | manual (human-action: remote, push, Pages source, GPS precision) | n/a | n/a | ⬜ pending |
+| 11-07-T3 | 11-07 | 4 | REPO-02, PUB-01, PUB-02 | gh (read-only) + curl + pytest | `gh run list --workflow pages.yml --limit 1 --json conclusion` + `python -m pytest tests/test_docs.py tests/test_pages_workflow.py -q` | ✅ | ⬜ pending |
+| 11-07-T4 | 11-07 | 4 | PUB-01 | manual (human-verify, public URL) | `curl -sSI <pages url>` | n/a | ⬜ pending |
 
 *Task IDs are filled in by the planner. Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -74,11 +84,11 @@ created: 2026-10-08
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 30s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references (each test file is created in the same task as its code, TDD)
+- [x] No watch-mode flags
+- [x] Feedback latency < 30s
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending

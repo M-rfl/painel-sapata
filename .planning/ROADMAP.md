@@ -45,7 +45,8 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 - [x] **Phase 9: Repo Hygiene & Raw CSV Converter** - `.gitignore` first, then raw logger CSVs become validated, schema-versioned site JSON with trecho/sentido assigned by station geofence
  (completed 2026-10-08)
-- [x] **Phase 10: Analysis Engine** - Pure JS core recomputes classes, eventos, impactos, pontos and trecho priority, protected by golden and Python↔JS parity tests (completed 2026-10-08)
+- [x] **Phase 10: Analysis Engine** - Pure JS core recomputes classes, eventos, impactos, pontos and trecho priority, protected by golden and Python↔JS parity tests
+ (completed 2026-10-08)
 - [ ] **Phase 11: Public Site, Overview & Controls** - Public Portuguese GitHub Pages site with test-gated deploy, KPI overview, and threshold/filter/display controls
 - [ ] **Phase 12: Time Series & Map** - Zoomable synchronized charts and the OSM route/impact/heat map, linked by hover and click
 - [ ] **Phase 13: Matrix, Ranking & Shareable State** - Trecho × severidade matrix, ranking tables with CSV export, analysis parameters and shareable URLs
@@ -98,8 +99,17 @@ Plans:
   2. All text is Portuguese with pt-BR numbers and America/Sao_Paulo dates, and the overview shows KPI cards, class counts and % for medições/impactos/pontos with dominant-axis breakdown, means/maxima, the per-axis statistics table and the data-quality card
   3. User edits the four severity thresholds (`,` or `.` decimal, order enforced) and every KPI updates immediately; at defaults the "conforme planilha" badge appears
   4. User filters by sentido, trecho, eixo dominante, time window and severity class, sets display options (heat metric, radius, intensity, medido/dinâmico), and resets everything to defaults in one action
-**Plans**: TBD
+**Plans**: 7 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 11-01-PLAN.md — pt-BR format/parseDecimal/threshold validation, PT strings, state model + reset (W1)
+- [ ] 11-02-PLAN.md — Filter mask + filtered KPI view (cards, class %, axis breakdown, top trecho) (W1)
+- [ ] 11-03-PLAN.md — Stats (means/maxima, per-axis table, PERCENTILE.INC) + data-quality summary (W1)
+- [ ] 11-04-PLAN.md — Clean-clone CI check + test-gated Pages workflow + workflow guard test (W1)
+- [ ] 11-05-PLAN.md — Page shell + overview panels (KPIs/badge, classes, stats, quality) + static site test (W2)
+- [ ] 11-06-PLAN.md — Controls (thresholds, filters, display, reset), README, local human check (W3, checkpoint)
+- [ ] 11-07-PLAN.md — Pre-publication review, user creates remote/pushes/enables Pages, verify gate + public URL (W4, checkpoints)
 
 ### Phase 12: Time Series & Map
 **Goal**: User can inspect the run over time and over the route, with both views linked
@@ -140,6 +150,6 @@ Plans:
 | 8. CSV Integration | v1.2 | 1/1 | Complete | 2026-05-25 |
 | 9. Repo Hygiene & Raw CSV Converter | v1.3 | 0/6 | Complete | 2026-10-08 |
 | 10. Analysis Engine | v1.3 | 5/5 | Complete | 2026-10-08 |
-| 11. Public Site, Overview & Controls | v1.3 | 0/TBD | Not started | - |
+| 11. Public Site, Overview & Controls | v1.3 | 0/7 | Planned | - |
 | 12. Time Series & Map | v1.3 | 0/TBD | Not started | - |
 | 13. Matrix, Ranking & Shareable State | v1.3 | 0/TBD | Not started | - |
