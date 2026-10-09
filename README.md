@@ -278,3 +278,38 @@ https://github.com/WITMOTION/WitStandardProtocol_JY61/tree/master
 2. Select the COM port and baud rate 9600.
 3. If sensor register values appear in the software, the hardware chain is confirmed good.
 4. If no values appear, check wiring, driver, and slave ID settings before debugging the Python logger.
+
+## Painel da corrida (site/)
+
+O painel é um site estático em português (`site/`) que mostra a visão geral de uma corrida de campo: indicadores, classes de severidade, médias e máximos, estatísticas por eixo e qualidade dos dados, com limiares, filtros e opções de exibição editáveis no navegador.
+
+### Prévia local
+
+```
+python -m http.server 8000 -d site
+```
+
+Abra http://localhost:8000/. Abrir `site/index.html` direto (`file://`) não funciona, pois a página carrega o JSON da corrida por `fetch`.
+
+### Regenerar os dados
+
+```
+python -m tools.dashboard_converter Results_1st.Run/raw --run-id 2026-10-02-l4-t102 --title "VLT Carioca · Linha 4 · Trem 102 (MRO 102) · Sapata coletora" --golden tests/fixtures/golden_run1.json --workbook "Results_1st.Run/treated/Final - Monitoramento de Sapata coletora - Linha 04.xlsx"
+```
+
+Exige os CSVs brutos locais (fora do git). Detalhes em `tools/dashboard_converter/README.md`.
+
+### Testes
+
+```
+python -m pytest
+node --test "tests/js/*.test.js"
+```
+
+Node >= 22.7, sem npm.
+
+### Publicação
+
+O workflow `.github/workflows/pages.yml` publica apenas `site/` no GitHub Pages, e somente quando as duas suítes de testes passam.
+
+URL pública: (definida após a criação do repositório)
