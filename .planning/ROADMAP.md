@@ -150,6 +150,6 @@ Plans:
 | 8. CSV Integration | v1.2 | 1/1 | Complete | 2026-05-25 |
 | 9. Repo Hygiene & Raw CSV Converter | v1.3 | 0/6 | Complete | 2026-10-08 |
 | 10. Analysis Engine | v1.3 | 5/5 | Complete | 2026-10-08 |
-| 11. Public Site, Overview & Controls | v1.3 | 3/7 | In Progress | - |
+| 11. Public Site, Overview & Controls | v1.3 | 4/7 | In Progress | - |
 | 12. Time Series & Map | v1.3 | 0/TBD | Not started | - |
 | 13. Matrix, Ranking & Shareable State | v1.3 | 0/TBD | Not started | - |

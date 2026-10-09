@@ -4,14 +4,14 @@ milestone: v1.3
 milestone_name: Field Run Dashboard
 current_plan: Not started
 status: planning
-stopped_at: Completed 11-02-PLAN.md
-last_updated: "2026-10-09T11:04:12.305Z"
+stopped_at: Completed 11-04-PLAN.md
+last_updated: "2026-10-09T11:16:19.559Z"
 last_activity: 2026-10-08
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 18
-  completed_plans: 14
+  completed_plans: 15
   percent: 40
 ---
 
@@ -60,6 +60,7 @@ Progress: [████░░░░░░] 40%
 | Phase 11 P01 | 15min | 2 tasks | 5 files |
 | Phase 11 P03 | 15min | 2 tasks | 5 files |
 | Phase 11 P02 | 15min | 2 tasks | 2 files |
+| Phase 11 P04 | 25min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -123,6 +124,7 @@ Progress: [████░░░░░░] 40%
 - [Phase 11]: [11-01] Invalid threshold sets never reach params; last valid kept with Portuguese error; dates composed from explicit formatters in America/Sao_Paulo
 - [Phase 11]: [11-03] Percentiles use Excel PERCENTILE.INC; Maior = max abs with sign preserved; quality summary is full-run
 - [Phase 11]: [11-02] classPct denominator = classified masked rows; no sentido field = sentido 0; unclassified rows dropped by eixo/classe filters
+- [Phase 11]: [11-04] CI runs full non-slow pytest under xvfb on ubuntu-latest; confirm on first Actions run in 11-07
 
 ### Key Constraints for v1.2
 
@@ -133,6 +135,6 @@ Progress: [████░░░░░░] 40%
 
 ## Session Continuity
 
-Stopped at: Completed 11-02-PLAN.md
+Stopped at: Completed 11-04-PLAN.md
 
 Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)

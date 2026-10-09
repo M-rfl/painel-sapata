@@ -15,8 +15,8 @@
 
 - [x] **REPO-01**: Run data, workbook, logs, docs and caches are excluded from git (`.gitignore`) before anything is pushed
 - [ ] **REPO-02**: Project has a public GitHub remote with Pages enabled
-- [ ] **PUB-01**: Anyone can open the dashboard at a public GitHub Pages URL, deployed by a GitHub Actions workflow
-- [ ] **PUB-02**: Deploy only happens when converter (pytest) and JS engine (`node --test`) tests pass
+- [x] **PUB-01**: Anyone can open the dashboard at a public GitHub Pages URL, deployed by a GitHub Actions workflow
+- [x] **PUB-02**: Deploy only happens when converter (pytest) and JS engine (`node --test`) tests pass
 - [x] **PUB-03**: All UI text is Portuguese, with pt-BR number/date formatting (America/Sao_Paulo)
 
 ### Converter (raw CSV → site JSON)
@@ -127,8 +127,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CORE-05 | Phase 10 | Complete |
 | CORE-06 | Phase 10 | Complete |
 | REPO-02 | Phase 11 | Pending |
-| PUB-01 | Phase 11 | Pending |
-| PUB-02 | Phase 11 | Pending |
+| PUB-01 | Phase 11 | Complete |
+| PUB-02 | Phase 11 | Complete |
 | PUB-03 | Phase 11 | Complete |
 | KPI-01 | Phase 11 | Complete |
 | KPI-02 | Phase 11 | Complete |
