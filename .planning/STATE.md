@@ -4,14 +4,14 @@ milestone: v1.3
 milestone_name: Field Run Dashboard
 current_plan: Not started
 status: planning
-stopped_at: Completed 11-01-PLAN.md
-last_updated: "2026-10-09T11:03:21.156Z"
+stopped_at: Completed 11-03-PLAN.md
+last_updated: "2026-10-09T11:03:51.025Z"
 last_activity: 2026-10-08
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 18
-  completed_plans: 13
+  completed_plans: 14
   percent: 40
 ---
 
@@ -58,6 +58,7 @@ Progress: [████░░░░░░] 40%
 | Phase 10 P04 | 15min | 2 tasks | 6 files |
 | Phase 10 P05 | 25min | 2 tasks | 5 files |
 | Phase 11 P01 | 15min | 2 tasks | 5 files |
+| Phase 11 P03 | 15min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,7 @@ Progress: [████░░░░░░] 40%
 - [Phase 10]: [10-04] Priority impact-basis by class index (peak trecho); conforme driven by JSON workbook_reference, full-run only
 - [Phase 10]: [10-05] Parity fixture: 10 synthetic + 8 run-1 seeded cases; inputs_sha256 over analysis inputs only; pytest guards freshness
 - [Phase 11]: [11-01] Invalid threshold sets never reach params; last valid kept with Portuguese error; dates composed from explicit formatters in America/Sao_Paulo
+- [Phase 11]: [11-03] Percentiles use Excel PERCENTILE.INC; Maior = max abs with sign preserved; quality summary is full-run
 
 ### Key Constraints for v1.2
 
@@ -129,6 +131,6 @@ Progress: [████░░░░░░] 40%
 
 ## Session Continuity
 
-Stopped at: Completed 11-01-PLAN.md
+Stopped at: Completed 11-03-PLAN.md
 
 Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)

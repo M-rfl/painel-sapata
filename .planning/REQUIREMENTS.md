@@ -42,9 +42,9 @@
 
 - [ ] **KPI-01**: User sees cards for registros, eventos, impactos, pontos and trecho with most events, reacting to filters and parameters
 - [ ] **KPI-02**: User sees class counts and % for medições, impactos and pontos, with dominant-axis breakdown
-- [ ] **KPI-03**: User sees means and maxima per axis and for the resultant (medido and dinâmico)
-- [ ] **KPI-04**: User sees a per-axis statistics table (mean, median, std, P0.5/P99.5)
-- [ ] **KPI-05**: User sees a data-quality card: GPS coverage, samples without position, empty channels, turnaround gap, station-file warnings
+- [x] **KPI-03**: User sees means and maxima per axis and for the resultant (medido and dinâmico)
+- [x] **KPI-04**: User sees a per-axis statistics table (mean, median, std, P0.5/P99.5)
+- [x] **KPI-05**: User sees a data-quality card: GPS coverage, samples without position, empty channels, turnaround gap, station-file warnings
 
 ### Charts
 
@@ -132,9 +132,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PUB-03 | Phase 11 | Complete |
 | KPI-01 | Phase 11 | Pending |
 | KPI-02 | Phase 11 | Pending |
-| KPI-03 | Phase 11 | Pending |
-| KPI-04 | Phase 11 | Pending |
-| KPI-05 | Phase 11 | Pending |
+| KPI-03 | Phase 11 | Complete |
+| KPI-04 | Phase 11 | Complete |
+| KPI-05 | Phase 11 | Complete |
 | PARAM-01 | Phase 11 | Complete |
 | PARAM-02 | Phase 11 | Pending |
 | PARAM-03 | Phase 11 | Complete |
