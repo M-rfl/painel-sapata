@@ -7,10 +7,19 @@ import { qualitySummary } from '../core/quality.js';
 import { createStore, defaultState, paramsKey } from './state.js';
 import { fmtDateTime } from './format.js';
 import { T } from './i18n.js';
+import { render as renderOverview } from './panels/overview.js';
+import { render as renderClasses } from './panels/classes.js';
+import { render as renderStats } from './panels/stats.js';
+import { render as renderQuality } from './panels/quality.js';
 
 const DATA_URL = 'data/run-2026-10-02-l4-t102.json';
 
-const PANELS = [];
+const PANELS = [
+  ['overview', renderOverview],
+  ['classes', renderClasses],
+  ['stats', renderStats],
+  ['quality', renderQuality],
+];
 
 function setStatus(text) {
   document.getElementById('status').textContent = text;
