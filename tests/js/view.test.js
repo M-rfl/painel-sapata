@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { fromArrays, analyze } from '../../site/js/core/index.js';
 import { normalizeFilters, rowMask, buildView } from '../../site/js/core/view.js';
+import { loadRun1, golden, arr } from './helpers.js';
 
 // Synthetic run: manual zero offset, thresholds 0.5/1/2/4 g -> class edges at 1024/2048/4096/8192 LSB.
 const ZERO = { offset: { mode: 'manual', g: [0, 0, 0] } };
@@ -122,4 +123,89 @@ test('buildView does not mutate analysis', () => {
   buildView(run, an, { trechos: [0], classes: [1, 2] });
   buildView(run, an, undefined);
   assert.equal(snap(), before);
+});
+
+// ---- run-1 golden and invariance ----
+let r1 = null;
+function run1() {
+  if (!r1) { const run = loadRun1(); r1 = { run, an: analyze(run) }; }
+  return r1;
+}
+const sumArr = (a) => a.reduce((x, y) => x + y, 0);
+
+test('run1 unfiltered view reproduces engine totals', (t) => {
+  const { run, an } = run1();
+  const g = golden().exact;
+  const v = buildView(run, an, undefined);
+  assert.equal(v.registros, 23383);
+  assert.equal(v.eventos, 2352);
+  assert.equal(v.impactos, 1749);
+  assert.deepEqual(v.classCounts, g.class_counts);
+  assert.deepEqual(v.impactsByClass, g.impacts_by_class);
+  assert.equal(v.pontos, an.pontos);
+  assert.deepEqual(arr(v.pointRows), arr(an.pointRows));
+  assert.equal(v.naoClassificadas, 0);
+  assert.ok(Math.abs(sumArr(v.classPct) - 1) < 1e-12);
+  assert.equal(v.topTrecho.name, 'Pereira Reis – Vila Olímpica');
+  assert.equal(v.topTrecho.eventos, 427);
+  t.diagnostic("workbook says 'Vila Olímpica – Central' 304; known Phase 9 per-trecho deviation (inferred stations, CTR 210 m)");
+});
+
+test('run1 axisByClass row sums equal class totals', () => {
+  const { run, an } = run1();
+  const v = buildView(run, an, undefined);
+  const rs = (m) => m.map(sumArr);
+  assert.deepEqual(rs(v.axisByClass.medicoes), v.classCounts);
+  assert.deepEqual(rs(v.axisByClass.impactos), v.impactsByClass);
+  assert.deepEqual(rs(v.axisByClass.pontos), v.pointsByClass);
+});
+
+test('run1 sentido and trecho partitions', () => {
+  const { run, an } = run1();
+  const s0 = buildView(run, an, { sentidos: [0] });
+  const s1 = buildView(run, an, { sentidos: [1] });
+  assert.equal(s0.registros, 11835);
+  assert.equal(s0.registros + s1.registros, 23383);
+  assert.equal(s0.eventos + s1.eventos, 2352);
+  assert.equal(s0.impactos + s1.impactos, 1749);
+  let imp = 0;
+  let ev = 0;
+  for (let k = 0; k < run.trechoNames.length; k++) {
+    const v = buildView(run, an, { trechos: [k] });
+    imp += v.impactos;
+    ev += v.eventos;
+  }
+  assert.equal(imp, 1749);
+  assert.equal(ev, 2352);
+});
+
+test('run1 class and eixo filters', () => {
+  const { run, an } = run1();
+  const c4 = buildView(run, an, { classes: [4] });
+  assert.deepEqual(c4.classCounts, [0, 0, 0, 0, 56]);
+  for (const im of c4.impacts) assert.equal(c4.mask[im.peak], 1);
+  let reg = 0;
+  for (const k of [0, 1, 2]) reg += buildView(run, an, { eixos: [k] }).registros;
+  assert.equal(reg, 23383 - an.naoClassificadas);
+});
+
+test('run1 time window', () => {
+  const { run, an } = run1();
+  const full = buildView(run, an, { tFrom: run.tMs[0], tTo: run.tMs[run.n - 1] });
+  assert.equal(full.registros, 23383);
+  assert.equal(full.eventos, 2352);
+  const half = buildView(run, an, { tTo: run.tMs[run.n >> 1] });
+  assert.ok(half.registros < 23383 && half.registros > 0);
+});
+
+test('run1 conforme and priority stay full-run', () => {
+  const { run, an } = run1();
+  const before = JSON.stringify(an.conforme);
+  const pri = JSON.stringify(an.priority);
+  buildView(run, an, { sentidos: [1] });
+  buildView(run, an, { classes: [3, 4], tTo: run.tMs[1000] });
+  buildView(run, an, { trechos: [0], eixos: [1] });
+  assert.equal(JSON.stringify(an.conforme), before);
+  assert.equal(JSON.stringify(an.priority), pri);
+  assert.equal(an.conforme.ok, true);
 });
