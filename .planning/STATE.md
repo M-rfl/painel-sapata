@@ -22,15 +22,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-08 after v1.3 start)
 
 **Core value:** O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não funcionar, nada mais importa.
-**Current focus:** Phase 10 complete (all 5 plans) — next: Phase 11
+**Current focus:** Phase 11 executing — Wave 1 (11-01..11-04) complete, next: 11-05
 
 ## Current Position
 
-Phase: 10 of 13 (Analysis Engine)
-**Current Plan:** Not started
-**Total Plans in Phase:** 5
-**Status:** Ready to plan
-**Last Activity:** 2026-10-08
+Phase: 11 of 13 (Public Site — Overview & Controls)
+**Current Plan:** 5
+**Total Plans in Phase:** 7
+**Status:** In progress
+**Last Activity:** 2026-10-09
 
 Progress: [████░░░░░░] 40%
 
