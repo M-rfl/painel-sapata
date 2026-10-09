@@ -42,5 +42,24 @@ td.num, th.num { text-align: right; }
 .badge.ok { background: var(--normal); }
 .badge.warn { background: #b26a00; }
 .field-error { border-color: var(--severo) !important; outline-color: var(--severo); }
+.ctl-group { border: 1px solid var(--border); border-radius: 6px; margin: 0 0 0.75rem; padding: 0.5rem 0.75rem; }
+.ctl-group legend { font-weight: 600; font-size: 0.9rem; padding: 0 0.3rem; }
+.ctl-group h4 { margin: 0.5rem 0 0.2rem; font-size: 0.8rem; color: var(--muted); }
+.ctl-thr { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.ctl-thr label { display: flex; flex-direction: column; font-size: 0.8rem; gap: 0.15rem; }
+.ctl-thr input, aside select { padding: 0.3rem 0.4rem; border: 1px solid var(--border); border-radius: 4px; font: inherit; width: 100%; }
+.ctl-error { color: var(--severo); font-size: 0.8rem; margin: 0.4rem 0 0; min-height: 0; }
+.ctl-error:empty { display: none; }
+.ctl-check { display: block; font-size: 0.85rem; margin: 0.15rem 0; }
+.ctl-check.chip { display: inline-block; border: 1px solid var(--border); border-radius: 999px; padding: 0.1rem 0.6rem; margin: 0.15rem 0.25rem 0.15rem 0; cursor: pointer; }
+.ctl-check.chip:has(input:checked) { background: #e0e7ff; border-color: #3730a3; }
+.ctl-check.chip-class { border-left: 0.5rem solid var(--chip); }
+.ctl-clear { background: none; border: 0; color: #3730a3; cursor: pointer; font-size: 0.8rem; padding: 0.2rem 0; text-decoration: underline; }
+.ctl-range { display: grid; grid-template-columns: 3.5rem 1fr; gap: 0.2rem 0.5rem; align-items: center; font-size: 0.8rem; margin: 0.3rem 0; }
+.ctl-range .ctl-val { grid-column: 1 / -1; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ctl-row { display: flex; flex-direction: column; gap: 0.15rem; font-size: 0.8rem; margin: 0.4rem 0; }
+.ctl-sub { font-size: 0.8rem; margin-right: 0.5rem; }
+.ctl-reset { width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; background: #fff; cursor: pointer; font: inherit; font-weight: 600; }
+.ctl-reset:hover { background: #eef0f4; }
 #status { color: var(--muted); margin-bottom: 0.5rem; }
 #status:empty { display: none; }

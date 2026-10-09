@@ -11,6 +11,7 @@ import { render as renderOverview } from './panels/overview.js';
 import { render as renderClasses } from './panels/classes.js';
 import { render as renderStats } from './panels/stats.js';
 import { render as renderQuality } from './panels/quality.js';
+import { mountControls, renderControls } from './panels/controls.js';
 
 const DATA_URL = 'data/run-2026-10-02-l4-t102.json';
 
@@ -63,9 +64,10 @@ async function start() {
     };
     const ctx = { run, analysis, view, state, stats, quality: { ...quality, naoClassificadas: analysis.naoClassificadas } };
     for (const [id, render] of PANELS) render(document.getElementById(id), ctx);
+    renderControls(state);
   }
 
-  // Plan 11-06: controls mount here (mountControls).
+  mountControls(document.getElementById('controls'), store, run);
   store.subscribe(update);
   // Debug handle for manual inspection in the console.
   window.__painel = { store, run };
