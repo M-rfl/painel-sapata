@@ -41,7 +41,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 </details>
 
-### 🚧 v1.3 Field Run Dashboard (Phases 9-13)
+### 🚧 v1.3 Field Run Dashboard (Phases 9-14)
 
 - [x] **Phase 9: Repo Hygiene & Raw CSV Converter** - `.gitignore` first, then raw logger CSVs become validated, schema-versioned site JSON with trecho/sentido assigned by station geofence
  (completed 2026-10-08)
@@ -50,6 +50,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 - [ ] **Phase 11: Public Site, Overview & Controls** - Public Portuguese GitHub Pages site with test-gated deploy, KPI overview, and threshold/filter/display controls
 - [ ] **Phase 12: Time Series & Map** - Zoomable synchronized charts and the OSM route/impact/heat map, linked by hover and click
 - [ ] **Phase 13: Matrix, Ranking & Shareable State** - Trecho × severidade matrix, ranking tables with CSV export, analysis parameters and shareable URLs
+- [ ] **Phase 14: CSV Upload** - User uploads any raw logger CSV in the browser and the whole dashboard re-renders from it (JS port of the converter, no backend)
 
 ## Phase Details
 
@@ -114,13 +115,14 @@ Plans:
 ### Phase 12: Time Series & Map
 **Goal**: User can inspect the run over time and over the route, with both views linked
 **Depends on**: Phase 11
-**Requirements**: CHART-01, CHART-02, CHART-03, CHART-04, CHART-05, MAP-01, MAP-02, MAP-03, MAP-04, MAP-05, SYNC-01
+**Requirements**: CHART-01, CHART-02, CHART-03, CHART-04, CHART-05, MAP-01, MAP-02, MAP-03, MAP-04, MAP-05, MAP-06, SYNC-01
 **Success Criteria** (what must be TRUE):
   1. User sees AX/AY/AZ time series with zoom and a medido/dinâmico toggle, threshold lines, every peak visible at any zoom, and data gaps drawn as gaps; zoom and cursor stay in sync across all charts including expandable velocity, displacement, frequency and temperature
   2. User sees the GPS track on an OSM map coloured by sentido and broken at gaps, with station markers and trecho segments
   3. User sees severity-coloured impact markers whose popup shows hora, trecho, sentido, AX/AY/AZ dinâmicos, classe and a Google Maps link, and a note of how many events cannot be placed (no GPS)
   4. User toggles a severity-weighted geographic heat map on a fixed scale (one point per GPS fix)
   5. Hovering a chart highlights the position on the map, and clicking a map point moves the chart cursor to that time
+  6. Every filter and threshold change from the Phase 11 controls updates the map (markers, track highlight, heat map) immediately
 **Plans**: TBD
 **UI hint**: yes
 
@@ -134,6 +136,17 @@ Plans:
   3. User sets rest-level offset per axis (median default or manual), event-grouping gap, GPS max speed and max fix interval, and all views recompute
   4. Copying the page URL and opening it elsewhere restores the same thresholds, filters, display and analysis parameters
 **Plans**: TBD
+**UI hint**: yes
+
+### Phase 14: CSV Upload
+**Goal**: User can upload any raw logger CSV in the browser and the whole dashboard (overview, charts, map, matrix, ranking) re-renders from it, with no backend
+**Depends on**: Phase 13
+**Requirements**: UPLOAD-01
+**Success Criteria** (what must be TRUE):
+  1. User picks or drops a raw logger CSV (comma or pt-BR `;`) and every view recomputes from it; the bundled run stays the default
+  2. Parsing, mangled-value recovery and station-geofence trecho/sentido assignment run in JS and match the Python converter on the run-1 CSVs (parity test)
+  3. Invalid or unrecognised files show a Portuguese error and leave the current view intact; nothing is uploaded to any server
+**Plans**: TBD (run /gsd:plan-phase 14)
 **UI hint**: yes
 
 ## Progress
@@ -153,3 +166,4 @@ Plans:
 | 11. Public Site, Overview & Controls | v1.3 | 5/7 | In Progress | - |
 | 12. Time Series & Map | v1.3 | 0/TBD | Not started | - |
 | 13. Matrix, Ranking & Shareable State | v1.3 | 0/TBD | Not started | - |
+| 14. CSV Upload | v1.3 | 0/TBD | Not started | - |

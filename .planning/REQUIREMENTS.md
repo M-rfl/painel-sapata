@@ -61,6 +61,7 @@
 - [ ] **MAP-03**: User sees impact points as severity-coloured markers with a popup (hora, trecho, sentido, AX/AY/AZ din., classe, Google Maps link)
 - [ ] **MAP-04**: User can toggle a geographic heat map weighted by severity on a fixed scale (one point per GPS fix)
 - [ ] **MAP-05**: User sees how many events cannot be placed on the map (no GPS)
+- [ ] **MAP-06**: Every filter (sentido, trecho, eixo, classe, time window) and threshold change updates the map markers, track highlight and heat map, from the same state store as the KPI panels
 
 ### Matrix & Ranking
 
@@ -78,6 +79,10 @@
 - [ ] **PARAM-04**: User can set analysis parameters: rest-level offset per axis (median default or manual), event-grouping gap, GPS max speed and max fix interval
 - [x] **PARAM-05**: User can reset all parameters to defaults
 - [ ] **SHARE-01**: Page URL encodes all parameters and filters; opening the link restores the same view
+
+### Upload
+
+- [ ] **UPLOAD-01**: User uploads any raw logger CSV (comma or pt-BR `;`) in the browser and every view recomputes from it, processed client-side with no server
 - [ ] **SYNC-01**: Hovering a chart highlights the position on the map; clicking a map point moves the chart cursor to that time
 
 ## Future Requirements
@@ -149,6 +154,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MAP-03 | Phase 12 | Pending |
 | MAP-04 | Phase 12 | Pending |
 | MAP-05 | Phase 12 | Pending |
+| MAP-06 | Phase 12 | Pending |
 | SYNC-01 | Phase 12 | Pending |
 | MTX-01 | Phase 13 | Pending |
 | MTX-02 | Phase 13 | Pending |
@@ -157,12 +163,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RANK-03 | Phase 13 | Pending |
 | PARAM-04 | Phase 13 | Pending |
 | SHARE-01 | Phase 13 | Pending |
+| UPLOAD-01 | Phase 14 | Pending |
 
 **Coverage:**
-- v1.3 requirements: 45 total
-- Mapped to phases: 45
+- v1.3 requirements: 47 total
+- Mapped to phases: 47
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-10-08*
-*Last updated: 2026-10-08 after roadmap creation (phases 9-13)*
+*Last updated: 2026-10-13 after 11-06 review (added MAP-06, UPLOAD-01, Phase 14)*
