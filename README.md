@@ -286,10 +286,10 @@ O painel é um site estático em português (`site/`) que mostra a visão geral 
 ### Prévia local
 
 ```
-python -m http.server 8000 -d site
+python -m tools.serve_site
 ```
 
-Abra http://localhost:8000/. Abrir `site/index.html` direto (`file://`) não funciona, pois a página carrega o JSON da corrida por `fetch`.
+Abra http://localhost:8000/. O servidor desativa o cache do navegador, então cada recarga já mostra a versão atual dos scripts (com `python -m http.server` o navegador pode manter módulos antigos — nesse caso use Ctrl+Shift+R). Abrir `site/index.html` direto (`file://`) não funciona, pois a página carrega o JSON da corrida por `fetch`.
 
 ### Regenerar os dados
 
