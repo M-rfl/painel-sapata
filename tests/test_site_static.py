@@ -72,6 +72,14 @@ def test_core_is_pure():
         assert not re.search(r"\b(document|window)\b", src), js
 
 
+def test_info_button_is_accessible_and_dependency_free():
+    src = (SITE / "js" / "app" / "info.js").read_text(encoding="utf-8")
+    assert "aria-expanded" in src and "aria-controls" in src
+    assert "Escape" in src
+    assert 'type: \'button\'' in src
+    assert not re.search(r"innerHTML", src)
+
+
 def test_no_english_ui_words_in_html():
     html = INDEX.read_text(encoding="utf-8")
     html = re.sub(r"<script.*?</script>|<style.*?</style>", "", html, flags=re.S)

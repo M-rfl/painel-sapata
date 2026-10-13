@@ -2,6 +2,7 @@
 import { h, clear } from '../dom.js';
 import { T } from '../i18n.js';
 import { fmtG } from '../format.js';
+import { infoBtn } from '../info.js';
 
 const num = (v, n) => (n === 0 || !Number.isFinite(v) ? '—' : fmtG(v, 4) + ' g');
 const plain = (v, n) => (n === 0 || !Number.isFinite(v) ? '—' : fmtG(v, 4));
@@ -11,7 +12,7 @@ export function render(el, ctx) {
   const { stats, state } = ctx;
   const { medido, dinamico } = stats.mm;
   clear(el);
-  el.appendChild(h('h2', null, T.secMeans));
+  el.appendChild(h('h2', null, T.secMeans, infoBtn('means', T.secMeans)));
 
   const rows = [
     ['AX', 0], ['AY', 1], ['AZ', 2],
@@ -44,7 +45,7 @@ export function render(el, ctx) {
     h('td', { class: 'num' }, plain(r.p005, r.n)),
     h('td', { class: 'num' }, plain(r.p995, r.n))));
   el.appendChild(h('div', { class: 'panel' },
-    h('h3', null, `${T.secAxisStats} (${modeLabel})`),
+    h('h3', null, `${T.secAxisStats} (${modeLabel})`, infoBtn('axisStats', T.secAxisStats)),
     h('table', null,
       h('thead', null, h('tr', null, th('Eixo', ''), th(T.sMedia), th(T.sMediana), th(T.sDesvio), th(T.sP05), th(T.sP995))),
       h('tbody', null, trs))));

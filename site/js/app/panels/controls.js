@@ -4,6 +4,7 @@
 import { CLASS_NAMES } from '../../core/defaults.js';
 import { h } from '../dom.js';
 import { T } from '../i18n.js';
+import { infoBtn } from '../info.js';
 import { fmtTime, fmtDate } from '../format.js';
 import {
   setThresholdText, setFilter, setDisplay,
@@ -32,8 +33,13 @@ function clockLabel(run, tMs) {
   return fmtDate(d) + ' ' + fmtTime(d);
 }
 
-function group(title, ...children) {
-  return h('fieldset', { class: 'ctl-group' }, h('legend', null, title), ...children);
+function group(title, infoKey, ...children) {
+  return h('fieldset', { class: 'ctl-group' }, h('legend', null, title, infoBtn(infoKey, title)), ...children);
+}
+
+// Info button kept outside <label> so activating it never toggles the control.
+function line(control, infoKey, name) {
+  return h('div', { class: 'ctl-line' }, control, infoBtn(infoKey, name));
 }
 
 function checkbox(label, onChange, extra) {
@@ -69,10 +75,10 @@ export function mountControls(el, store, run) {
     thrRow.appendChild(h('label', null, h('span', null, label + ' (g)'), input));
   });
   r.thrError = h('p', { class: 'ctl-error', role: 'alert' });
-  const gThr = group(T.secThresholds, thrRow, r.thrError);
+  const gThr = group(T.secThresholds, 'thresholds', thrRow, r.thrError);
 
   // Sentido
-  const gSent = group(T.fSentido);
+  const gSent = group(T.fSentido, 'fSentido');
   run.sentidos.forEach((s, i) => {
     const c = checkbox(s.name, (ev) => toggleList('sentidos', i, ev.target.checked));
     r.sentido.push(c.input);
@@ -82,7 +88,7 @@ export function mountControls(el, store, run) {
   gSent.appendChild(h('p', { class: 'muted' }, NOTE_SENTIDO));
 
   // Trecho grouped by sentido, route order
-  const gTrecho = group(T.fTrecho);
+  const gTrecho = group(T.fTrecho, 'fTrecho');
   run.sentidos.forEach((s, si) => {
     const list = run.trechos
       .map((t, idx) => ({ ...t, idx }))
@@ -99,7 +105,7 @@ export function mountControls(el, store, run) {
   gTrecho.appendChild(clearLink(() => clearList('trechos')));
 
   // Eixo dominante
-  const gEixo = group(T.fEixo);
+  const gEixo = group(T.fEixo, 'fEixo');
   AXIS_LABELS.forEach((label, i) => {
     const c = checkbox(label, (ev) => toggleList('eixos', i, ev.target.checked));
     c.lab.classList.add('chip');
@@ -109,7 +115,7 @@ export function mountControls(el, store, run) {
   gEixo.appendChild(clearLink(() => clearList('eixos')));
 
   // Classe
-  const gClasse = group(T.fClasse);
+  const gClasse = group(T.fClasse, 'fClasse');
   CLASS_NAMES.forEach((name, i) => {
     const c = checkbox(name, (ev) => toggleList('classes', i, ev.target.checked), `var(${CLASS_COLORS[i]})`);
     c.lab.classList.add('chip', 'chip-class');
@@ -142,7 +148,7 @@ export function mountControls(el, store, run) {
   r.tFromLabel = h('span', { class: 'ctl-val' });
   r.tToLabel = h('span', { class: 'ctl-val' });
   const gTempo = group(
-    T.fTempo,
+    T.fTempo, 'fTempo',
     h('label', { class: 'ctl-range' }, h('span', null, FROM), r.tFrom, r.tFromLabel),
     h('label', { class: 'ctl-range' }, h('span', null, TO), r.tTo, r.tToLabel),
     h('p', { class: 'muted' }, 'Horário de Brasília (America/Sao_Paulo).'),
@@ -173,11 +179,11 @@ export function mountControls(el, store, run) {
   r.radiusLabel = h('span', { class: 'ctl-val' });
   r.intensityLabel = h('span', { class: 'ctl-val' });
   const gDisp = group(
-    T.secDisplay,
-    h('div', null, h('span', { class: 'ctl-sub' }, T.dValores), modeRow),
-    h('label', { class: 'ctl-row' }, h('span', null, T.dMetrica), r.metric),
-    h('label', { class: 'ctl-range' }, h('span', null, T.dRaio), r.radius, r.radiusLabel),
-    h('label', { class: 'ctl-range' }, h('span', null, T.dIntensidade), r.intensity, r.intensityLabel),
+    T.secDisplay, 'display',
+    h('div', null, h('span', { class: 'ctl-sub' }, T.dValores), infoBtn('dValores', T.dValores), modeRow),
+    line(h('label', { class: 'ctl-row' }, h('span', null, T.dMetrica), r.metric), 'dMetrica', T.dMetrica),
+    line(h('label', { class: 'ctl-range' }, h('span', null, T.dRaio), r.radius, r.radiusLabel), 'dRaio', T.dRaio),
+    line(h('label', { class: 'ctl-range' }, h('span', null, T.dIntensidade), r.intensity, r.intensityLabel), 'dIntensidade', T.dIntensidade),
     h('p', { class: 'muted' }, T.dNota),
   );
 

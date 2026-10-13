@@ -61,5 +61,18 @@ td.num, th.num { text-align: right; }
 .ctl-sub { font-size: 0.8rem; margin-right: 0.5rem; }
 .ctl-reset { width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; background: #fff; cursor: pointer; font: inherit; font-weight: 600; }
 .ctl-reset:hover { background: #eef0f4; }
+.info { position: relative; display: inline-block; margin-left: 0.35rem; vertical-align: middle; text-transform: none; font-weight: 400; }
+.card, .panel, .ctl-group { position: relative; }
+.card .info, .panel .info, .ctl-group .info { position: static; }
+.info-btn { width: 1.15rem; height: 1.15rem; padding: 0; border: 1px solid var(--muted); border-radius: 50%; background: #fff; color: var(--muted); font: italic 700 0.7rem/1 Georgia, serif; cursor: pointer; }
+.info-btn:hover, .info-btn[aria-expanded="true"] { background: #e0e7ff; border-color: #3730a3; color: #3730a3; }
+.info-btn:focus-visible { outline: 2px solid #3730a3; outline-offset: 2px; }
+.info-pop { position: absolute; z-index: 20; left: 0; top: 1.6rem; width: min(20rem, 80vw); padding: 0.6rem 0.75rem; background: #1f2933; color: #fff; border-radius: 6px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); font-size: 0.8rem; font-weight: 400; line-height: 1.35; text-align: left; font-style: normal; }
+.info-pop[hidden] { display: none; }
+.card .info-pop, .panel .info-pop, .ctl-group .info-pop { left: 0.5rem; right: 0.5rem; top: 2rem; width: auto; }
+.ctl-line { display: flex; align-items: center; gap: 0.25rem; }
+.ctl-line > label { flex: 1; }
+.ctl-line > .info { margin-left: 0; }
+#badge { display: inline-flex; align-items: center; }
 #status { color: var(--muted); margin-bottom: 0.5rem; }
 #status:empty { display: none; }
