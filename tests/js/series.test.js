@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  SYNC_KEY, epochMs, chartFrame, axisSeries, thresholdLines, channelSeries, CHANNELS, zoomWindow,
+  SYNC_KEY, epochMs, chartFrame, axisSeries, thresholdLines, channelSeries, CHANNELS, zoomWindow, stationMarks, trechoNameAt,
 } from '../../site/js/core/series.js';
 import { analyze } from '../../site/js/core/engine.js';
 import { buildView } from '../../site/js/core/view.js';
@@ -139,4 +139,66 @@ test('run1 channels aligned', () => {
     assert.ok(cs);
     for (const s of cs.series) assert.equal(s.values.length, frame.x.length);
   }
+});
+
+function synthStations() {
+  const run = fromArrays({
+    ax: [1, 2, 3, 4, 5, 6], ay: [0, 0, 0, 0, 0, 0], az: [0, 0, 0, 0, 0, 0],
+    tMs: [0, 100, 200, 300, 400, 500], trecho: [0, 0, 1, 1, 2, 2],
+  });
+  run.t0Ms = 1000000;
+  run.trechos = [
+    { id: 'A-B', name: 'A to B' }, { id: 'B-C', name: 'B to C' }, { id: 'C-B', name: 'C to B' },
+  ];
+  run.sentido = Uint8Array.from([0, 0, 0, 0, 1, 1]);
+  return run;
+}
+
+test('stationMarks synthetic', () => {
+  const run = synthStations();
+  const f = chartFrame(run, 2000);
+  const { marks, spans } = stationMarks(run, f);
+  assert.deepEqual(marks.map((m) => m.label), ['A', 'B', 'C', 'B']);
+  assert.deepEqual(marks.map((m) => m.x), [0, 2, 4, 5].map((r) => f.x[f.idxOfRow[r]]));
+  assert.deepEqual(marks.map((m) => m.sentidoChange), [false, false, true, false]);
+  assert.equal(spans.length, 3);
+  assert.equal(spans[0].x1, spans[1].x0);
+  assert.equal(spans[2].x1, f.x[f.idxOfRow[5]]);
+  assert.equal(spans[1].name, 'B to C');
+});
+
+test('stationMarks no trechos / invalid trecho', () => {
+  const run = synthStations();
+  const f = chartFrame(run, 2000);
+  delete run.trechos;
+  assert.deepEqual(stationMarks(run, f), { marks: [], spans: [] });
+  const r2 = synthStations();
+  r2.trecho[0] = -1; r2.trecho[1] = -1;
+  const m = stationMarks(r2, f);
+  assert.deepEqual(m.marks.map((x) => x.label), ['B', 'C', 'B']);
+});
+
+test('stationMarks run1', () => {
+  const { run, frame } = run1();
+  const { marks } = stationMarks(run, frame);
+  assert.equal(marks[0].label, 'TIG');
+  assert.ok(marks.length <= 21);
+  assert.ok(marks.map((m) => m.label).includes('PXV'));
+  for (let i = 1; i < marks.length; i++) assert.ok(marks[i].x > marks[i - 1].x);
+  const sc = marks.filter((m) => m.sentidoChange);
+  assert.equal(sc.length, 1);
+  assert.equal(sc[0].x, frame.x[frame.idxOfRow[11835]]);
+});
+
+test('trechoNameAt', () => {
+  const run = synthStations();
+  assert.equal(trechoNameAt(run, 2), 'B to C');
+  assert.equal(trechoNameAt(run, null), null);
+  assert.equal(trechoNameAt(run, -1), null);
+  assert.equal(trechoNameAt(run, 99), null);
+  run.trecho[0] = -1;
+  assert.equal(trechoNameAt(run, 0), null);
+  delete run.trechos;
+  run.trechoNames = ['x', 'y', 'z'];
+  assert.equal(trechoNameAt(run, 2), 'y');
 });

@@ -96,3 +96,69 @@ export function channelSeries(run, key, frame) {
 export function zoomWindow(xSec, half = 30) {
   return { min: xSec - half, max: xSec + half };
 }
+
+function stationCodes(t) {
+  if (!t) return null;
+  let parts = typeof t.id === 'string' ? t.id.split('-').map((s) => s.trim()).filter(Boolean) : [];
+  if (parts.length < 2 && typeof t.name === 'string') {
+    parts = t.name.split(' \u2013 ');
+    if (parts.length < 2) parts = t.name.split('-');
+    parts = parts.map((s) => s.trim()).filter(Boolean);
+  }
+  if (parts.length < 2) return null;
+  return [parts[0], parts[parts.length - 1]];
+}
+
+/** Station boundary marks and per-trecho spans on the chart x axis (epoch seconds). */
+export function stationMarks(run, frame) {
+  const out = { marks: [], spans: [] };
+  const trechos = run.trechos;
+  if (!trechos || !run.trecho) return out;
+  const valid = (v) => v >= 0 && v < trechos.length;
+  const n = run.n;
+  const starts = []; // { mark index, trecho }
+  let lastTrecho = -1;
+  for (let i = 0; i < n; i++) {
+    const tr = run.trecho[i];
+    if (!(i === 0 || tr !== run.trecho[i - 1]) || !valid(tr)) continue;
+    const codes = stationCodes(trechos[tr]);
+    if (!codes) continue;
+    const x = frame.x[frame.idxOfRow[i]];
+    const sc = i > 0 && !!run.sentido && run.sentido[i] !== run.sentido[i - 1];
+    const prev = out.marks[out.marks.length - 1];
+    if (prev && x <= prev.x) {
+      prev.label = codes[0]; prev.row = i; prev.sentidoChange = prev.sentidoChange || sc;
+      starts[starts.length - 1] = tr;
+    } else {
+      out.marks.push({ x, label: codes[0], row: i, sentidoChange: sc });
+      starts.push(tr);
+    }
+    lastTrecho = tr;
+  }
+  if (!out.marks.length) return out;
+  const endCodes = stationCodes(trechos[lastTrecho]);
+  const endX = frame.x[frame.idxOfRow[n - 1]];
+  const last = out.marks[out.marks.length - 1];
+  if (endX > last.x) out.marks.push({ x: endX, label: endCodes[1], row: n - 1, sentidoChange: false });
+  else last.label = endCodes[1];
+  for (let j = 0; j < starts.length; j++) {
+    const tr = starts[j];
+    const next = out.marks[j + 1];
+    out.spans.push({
+      x0: out.marks[j].x, x1: next ? next.x : out.marks[j].x, trecho: tr,
+      name: trechos[tr].name ?? (run.trechoNames && run.trechoNames[tr]) ?? '',
+    });
+  }
+  return out;
+}
+
+/** Name of the trecho at a row, or null. */
+export function trechoNameAt(run, row) {
+  if (row == null || row < 0 || row >= run.n || !run.trecho) return null;
+  const tr = run.trecho[row];
+  if (tr < 0) return null;
+  const t = run.trechos && run.trechos[tr];
+  if (t && t.name) return t.name;
+  const nm = run.trechoNames && run.trechoNames[tr];
+  return nm || null;
+}
