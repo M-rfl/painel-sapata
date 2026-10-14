@@ -49,10 +49,10 @@
 ### Charts
 
 - [x] **CHART-01**: User sees AX/AY/AZ time series with zoom and a medido/dinâmico toggle
-- [ ] **CHART-02**: Charts show threshold lines and keep every peak visible at any zoom level
-- [ ] **CHART-03**: Data gaps (turnaround, missing samples) are drawn as gaps, not bridged
+- [x] **CHART-02**: Charts show threshold lines and keep every peak visible at any zoom level
+- [x] **CHART-03**: Data gaps (turnaround, missing samples) are drawn as gaps, not bridged
 - [x] **CHART-04**: User can expand secondary charts for vibration velocity, displacement, frequency and temperature
-- [ ] **CHART-05**: Zoom and time cursor are synchronized across all charts
+- [x] **CHART-05**: Zoom and time cursor are synchronized across all charts
 
 ### Map
 
@@ -145,10 +145,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PARAM-03 | Phase 11 | Complete |
 | PARAM-05 | Phase 11 | Complete |
 | CHART-01 | Phase 12 | Complete |
-| CHART-02 | Phase 12 | Pending |
-| CHART-03 | Phase 12 | Pending |
+| CHART-02 | Phase 12 | Complete |
+| CHART-03 | Phase 12 | Complete |
 | CHART-04 | Phase 12 | Complete |
-| CHART-05 | Phase 12 | Pending |
+| CHART-05 | Phase 12 | Complete |
 | MAP-01 | Phase 12 | Complete |
 | MAP-02 | Phase 12 | Pending |
 | MAP-03 | Phase 12 | Pending |

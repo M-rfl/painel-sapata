@@ -4,14 +4,14 @@ milestone: v1.3
 milestone_name: Field Run Dashboard
 current_plan: Not started
 status: planning
-stopped_at: Completed 12-01-PLAN.md
-last_updated: "2026-10-14T01:40:38.146Z"
+stopped_at: Completed 12-02-PLAN.md
+last_updated: "2026-10-14T01:40:53.986Z"
 last_activity: 2026-10-14
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 24
-  completed_plans: 19
+  completed_plans: 20
   percent: 50
 ---
 
@@ -65,6 +65,7 @@ Progress: [█████░░░░░] 50%
 | Phase 11 P06 | checkpoint-driven | 3 tasks | 7 files |
 | Phase 11 P07 | checkpoint-driven | 4 tasks | 1 files |
 | Phase 12 P01 | 8min | 2 tasks | 13 files |
+| Phase 12 P02 | 15min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -134,6 +135,7 @@ Progress: [█████░░░░░] 50%
 - [Phase 11]: [11-06] Map + filter-driven map routed to Phase 12 (MAP-06); CSV upload to new Phase 14 (UPLOAD-01)
 - [Phase 11]: [11-07] Published to M-rfl/painel-sapata (Pages via Actions); 6 dp GPS confirmed public by user 2026-10-13; CI full pytest passes on Linux/xvfb
 - [Phase 12]: [12-01] Vendored uPlot 1.6.32/Leaflet 1.9.4/leaflet.heat 0.2.0 without Leaflet images/
+- [Phase 12]: [12-02] Threshold lines from th2/off2 (medido offset by off2); gap rows only for dt > maxJumpMs; no decimation
 
 ### Key Constraints for v1.2
 
@@ -144,6 +146,6 @@ Progress: [█████░░░░░] 50%
 
 ## Session Continuity
 
-Stopped at: Completed 12-01-PLAN.md
+Stopped at: Completed 12-02-PLAN.md
 
 Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)
