@@ -216,4 +216,4 @@ Plans:
 | 12. Time Series & Map | v1.3 | 6/6 | Complete | 2026-10-14 |
 | 13. Matrix, Ranking & Shareable State | v1.3 | 7/7 | Complete | 2026-10-14 |
 | 14. CSV Upload | v1.3 | 7/7 | Complete | 2026-10-14 |
-| 15. PDF Report Generation | v1.3 | 1/6 | In Progress | - |
+| 15. PDF Report Generation | v1.3 | 2/6 | In Progress | - |
