@@ -53,6 +53,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
  (completed 2026-10-14)
 - [x] **Phase 13: Matrix, Ranking & Shareable State** - Trecho × severidade matrix, ranking tables with CSV export, analysis parameters and shareable URLs (completed 2026-10-14)
 - [x] **Phase 14: CSV Upload** - User uploads any raw logger CSV in the browser and the whole dashboard re-renders from it (JS port of the converter, no backend) (completed 2026-10-14)
+- [ ] **Phase 15: PDF Report Generation** - "Gerar PDF" button builds a report of the currently loaded run (bundled or uploaded) with the tables and heatmap exactly as shown on the page
 
 ## Phase Details
 
@@ -178,6 +179,17 @@ Plans:
 - [ ] 14-06-PLAN.md — Upload UI: .csv-only selection, caps, UTF-8, pt-BR errors, busy, banner, return to example, no-network guard (W4)
 - [ ] 14-07-PLAN.md — Full gates, local run-1 parity, validation record, engineer browser checkpoint (W5, checkpoint)
 
+### Phase 15: PDF Report Generation
+**Goal**: User clicks a button and gets a PDF report of the currently displayed run (bundled run 1 or an uploaded CSV), containing the page's tables and the heatmap exactly as they appear on screen
+**Depends on**: Phase 14
+**Requirements**: TBD
+**Success Criteria** (what must be TRUE):
+  1. A "Gerar PDF" button produces a PDF of the run currently on screen; after a CSV upload the report reflects the uploaded data
+  2. The PDF contains the dashboard tables (matrix and ranking) and a heatmap screenshot that look the same as on the page, with the current filters and parameters
+  3. The PDF is generated in the browser with no backend, and text is in Portuguese (pt-BR)
+**Plans**: TBD (run /gsd:plan-phase 15)
+**UI hint**: yes
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -196,3 +208,4 @@ Plans:
 | 12. Time Series & Map | v1.3 | 6/6 | Complete | 2026-10-14 |
 | 13. Matrix, Ranking & Shareable State | v1.3 | 7/7 | Complete | 2026-10-14 |
 | 14. CSV Upload | v1.3 | 7/7 | Complete | 2026-10-14 |
+| 15. PDF Report Generation | v1.3 | 0/TBD | Not started | - |

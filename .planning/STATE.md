@@ -180,6 +180,10 @@ Progress: [███████░░░] 67%
 - GPS columns appear as the last 3 columns in the CSV (after the existing 18)
 - None → "" serialization already established in CSVLogger — reused the same pattern
 
+### Roadmap Evolution
+
+- Phase 15 added: PDF report generation button — PDF of the current run's results, with the tables and heatmap screenshot exactly as displayed on the page
+
 ## Session Continuity
 
 Stopped at: Completed 14-07-PLAN.md
