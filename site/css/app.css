@@ -98,6 +98,8 @@ td.num, th.num { text-align: right; }
 .map-legend span.swatch { display: inline-block; width: 14px; height: 4px; margin-right: 0.3rem; vertical-align: middle; }
 .map-legend span.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 0.3rem; vertical-align: middle; }
 .map-popup dl { display: grid; grid-template-columns: auto 1fr; gap: 0.1rem 0.6rem; margin: 0; }
+#charts .chart-trecho { font-size: 0.85rem; color: var(--muted, #666); margin-left: 0.75rem; font-weight: 400; }
+#charts .chart-head-left { display: flex; align-items: baseline; flex-wrap: wrap; }
 #charts .chart-head { display: flex; align-items: center; gap: 0.5rem; justify-content: space-between; }
 #charts .chart { width: 100%; margin-bottom: 0.25rem; }
 #charts .chart-title { font-weight: 600; font-size: 0.9rem; margin: 0.25rem 0 0; }

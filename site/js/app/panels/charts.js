@@ -7,6 +7,7 @@ import { fmtTime } from '../format.js';
 import { paramsKey } from '../state.js';
 import {
   SYNC_KEY, CHANNELS, chartFrame, axisSeries, thresholdLines, channelSeries, zoomWindow,
+  stationMarks, trechoNameAt,
 } from '../../core/series.js';
 
 const TZ = 'America/Sao_Paulo';
@@ -33,6 +34,8 @@ export function mountCharts(el, link, run) {
   };
 
   let frame = null;
+  let marks = { marks: [], spans: [] };
+  let markByX = new Map();
   let frameKey = null;
   let dataKey = null;
   let channelKey = null;
@@ -43,12 +46,15 @@ export function mountCharts(el, link, run) {
   const channelCharts = [];
   let channelsBuilt = false;
 
+  const trechoEl = h('span', { class: 'chart-trecho' });
   const resetBtn = h('button', { type: 'button', class: 'ctl-reset chart-reset', onClick: resetZoom }, T.resetZoom);
   const channelBody = h('div', { class: 'channel-body' });
   const details = h('details', { class: 'more-channels' }, h('summary', null, T.maisCanais), infoBtn('maisCanais', T.maisCanais), channelBody);
   el.appendChild(h('div', { class: 'panel' },
     h('div', { class: 'chart-head' },
-      h('h2', null, T.secCharts, infoBtn('charts', T.secCharts)),
+      h('div', { class: 'chart-head-left' },
+        h('h2', null, T.secCharts, infoBtn('charts', T.secCharts)),
+        trechoEl),
       h('span', null, resetBtn, infoBtn('resetZoom', T.resetZoom))),
     axisBlocks.map((b) => b.el),
     details));
@@ -66,6 +72,23 @@ export function mountCharts(el, link, run) {
       axes: [
         { values: (u, ticks) => ticks.map((t) => fmtTime(new Date(t * 1000))) },
         { size: 60 },
+        {
+          scale: 'x', side: 2, size: 22, grid: { show: false }, ticks: { show: true, size: 4 },
+          splits: (u) => {
+            const { min, max } = u.scales.x;
+            return marks.marks.filter((m) => m.x >= min && m.x <= max).map((m) => m.x);
+          },
+          values: (u, splits) => {
+            let last = -Infinity;
+            return splits.map((x) => {
+              const m = markByX.get(x);
+              const px = u.valToPos(x, 'x');
+              if (!m || px - last < 28) return '';
+              last = px;
+              return m.label;
+            });
+          },
+        },
       ],
       cursor: { sync: { key: SYNC_KEY, scales: ['x', null] }, drag: { x: true, y: false } },
       legend: { show: false },
@@ -75,11 +98,50 @@ export function mountCharts(el, link, run) {
           const i = u.cursor.idx;
           const row = i == null || !frame ? null : frame.rowOfIdx[i];
           link.hover(row == null || row < 0 ? null : row);
+          const name = row == null || row < 0 ? null : trechoNameAt(run, row);
+          const txt = name ? `${T.chTrecho}: ${name}` : '';
+          if (trechoEl.textContent !== txt) trechoEl.textContent = txt;
         }],
-        draw: [],
+        draw: [drawStations],
       },
     };
     return opts;
+  }
+
+  function drawStations(u) {
+    const { ctx } = u;
+    const { left, top, width, height } = u.bbox;
+    const dpr = devicePixelRatio;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(left, top, width, height);
+    ctx.clip();
+    ctx.fillStyle = 'rgba(0,0,0,0.025)';
+    marks.spans.forEach((sp, i) => {
+      if (i % 2) return;
+      const a = u.valToPos(sp.x0, 'x', true);
+      const b = u.valToPos(sp.x1, 'x', true);
+      if (b < left || a > left + width) return;
+      ctx.fillRect(a, top, b - a, height);
+    });
+    for (const m of marks.marks) {
+      const px = u.valToPos(m.x, 'x', true);
+      if (px < left || px > left + width) continue;
+      if (m.sentidoChange) {
+        ctx.setLineDash([]);
+        ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+        ctx.lineWidth = 2 * dpr;
+      } else {
+        ctx.setLineDash([3, 4]);
+        ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+        ctx.lineWidth = dpr;
+      }
+      ctx.beginPath();
+      ctx.moveTo(px, top);
+      ctx.lineTo(px, top + height);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   function drawThresholds(u, k) {
@@ -205,6 +267,8 @@ export function mountCharts(el, link, run) {
       frame = chartFrame(run, state.params.maxJumpMs);
       frameKey = state.params.maxJumpMs;
       dataKey = null;
+      marks = stationMarks(run, frame);
+      markByX = new Map(marks.marks.map((m) => [m.x, m]));
     }
     const key = paramsKey(state.params) + '|' + JSON.stringify(state.filters) + '|' + mode;
     if (key !== dataKey) {
