@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Field Run Dashboard
-current_plan: 6
+current_plan: 7
 status: executing
-stopped_at: Completed 14-05-PLAN.md
-last_updated: "2026-10-14T13:22:21.843Z"
+stopped_at: Completed 14-06-PLAN.md
+last_updated: "2026-10-14T13:25:56.202Z"
 last_activity: 2026-10-14
 progress:
   total_phases: 6
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-10-08 after v1.3 start)
 ## Current Position
 
 Phase: 14 of 14 (CSV Upload)
-**Current Plan:** 6
+**Current Plan:** 7
 **Total Plans in Phase:** 7
 **Status:** Ready to execute
 **Last Activity:** 2026-10-14
@@ -81,6 +81,7 @@ Progress: [███████░░░] 67%
 | Phase 14 P04 | 15min | 2 tasks | 4 files |
 | Phase 14 P03 | 75min | 2 tasks | 8 files |
 | Phase 14 P05 | 35min | 2 tasks | 8 files |
+| Phase 14 P06 | 20min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -169,6 +170,7 @@ Progress: [███████░░░] 67%
 - [Phase 14]: [14-04] Geofence ported line-by-line; float tolerance only on min_dist_m/gap_s; no-gps emits no 'no station hit' note (as Python)
 - [Phase 14]: [14-03] log10 round-up uses fixture-derived boundary table (V8 Math.log10 differs); fromisoformat ported from CPython C implementation, fuzz-verified vs Python
 - [Phase 14]: [14-05] unknown_line is the only JS-only rejection (no station of any line hit); run-1 parity strict, 1-ulp min_dist_m diff (EQD) recorded for 14-07
+- [Phase 14]: Upload failure notice wraps reason with uploadFailed/uploadKept (failureNotice); stations fetched lazily and cached, failure -> stations_unavailable
 
 ### Key Constraints for v1.2
 
@@ -179,6 +181,6 @@ Progress: [███████░░░] 67%
 
 ## Session Continuity
 
-Stopped at: Completed 14-05-PLAN.md
+Stopped at: Completed 14-06-PLAN.md
 
 Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)
