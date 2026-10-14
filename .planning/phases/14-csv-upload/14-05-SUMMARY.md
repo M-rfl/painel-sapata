@@ -58,3 +58,7 @@ None in behavior. Note: the run-1 test fails locally by the single ulp above (re
 `unknown_line` (requireKnownLine, default true): rejects when no station of any line was hit. Python has no equivalent.
 
 ## Self-Check: PASSED
+
+## Post-execution fix (orchestrator)
+
+The one-ulp run-1 diff in `quality.inferred_stations[0].min_dist_m` was not a libm difference: `haversineM` computed `cos(p1)*cos(p2)*sb*sb` left-to-right, while `geo.py` rounds `sin(dlmb/2)**2` before the product. Fixed in `site/js/core/convert/geo.js` (`* (sb * sb)`). Local run-1 parity now passes with zero differences; full JS suite 231/231.
