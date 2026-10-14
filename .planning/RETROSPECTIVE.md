@@ -152,15 +152,69 @@
 
 ---
 
+## Milestone: v1.3 Field Run Dashboard
+
+**Shipped:** 2026-10-14
+**Phases:** 8 (9-16) | **Plans:** 47 (all executed) | **Commits:** 210
+
+### What Was Built
+
+- `tools/dashboard_converter/` — raw logger CSVs → schema-1 compact site JSON. It recovers the pt-BR Excel mangling, assigns trecho by station geofence, detects sentido from the station sequence and flags "sem GPS" tunnel samples. Validated against the workbook (classes, eventos, impactos exact).
+- `site/js/core/` — pure JS analysis engine (dynamics, classes, eventos/impactos/pontos, priority, conforme), plus series, geo, matrix, ranking, quality index, GPS filter and the JS converter port (`core/convert/`)
+- `site/js/app/` — the public pt-BR dashboard: state store with URL hash, overview/stats/quality panels, controls, uPlot charts, Leaflet map with heat layer, matrix, ranking with CSV export, upload session controller, PDF report (jsPDF), axis popup
+- `.github/workflows/pages.yml` — Pages deploy gated on pytest + `node --test`, with Python pinned to 3.13.14
+- Tests: pytest 95 → 289, plus 296 `node --test` (golden, Python↔JS parity, upload oracle parity, static/no-network guards, PDF smoke)
+
+### What Worked
+
+- **Golden values from the workbook as the contract.** Phase 9 locked exact class/eventos/impactos parity before any UI existed. That gave Phases 10-16 a fixed target, and the "conforme planilha" badge is the same contract shown to users.
+- **Python↔JS parity via oracle fixtures.** Python generates the fixtures and JS replays them, with a pytest freshness guard. This caught real cross-runtime differences: V8 `Math.log10` vs CPython (fixed with a boundary table) and `fromisoformat` edge cases (ported from the C implementation and fuzz-verified). The JS upload converter reproduces run 1 almost exactly; the only difference is a recorded 1-ulp gap on one diagnostic field.
+- **Pure core / thin app split.** `site/js/core/` has no DOM, so most behaviour is testable under `node --test`. The integration audit found no orphaned exports and no listener leaks across re-mounts.
+- **Engineer browser checkpoints changed the product, for the better.** 12-06 replaced the GPS-fix track with OSM routes, 13-07 set the IQ bands to 98/90 and approved the 98-pontos GPS baseline, and 11-07 confirmed public 6-dp GPS. Unlike the v1.2 formality checkpoint, these were decisions only a human could make.
+- **Test-gated deploy from day one.** Every push to `master` was guarded by both suites, so all 8 phases shipped live without a broken deploy.
+
+### What Was Inefficient
+
+- **A flagged data issue was never closed.** The Phase 9 verification said to fix the inferred-station trecho collapse (CTR/EQD/SCT) "before per-trecho views". Phases 11-15 then built the matrix, ranking, priority, per-trecho IQ and the PDF on top of it, and tests now assert the deviating values (for example the top trecho, 427). The fix is more expensive now: converter, JS port, data and fixtures.
+- **Requirement text drifted after approved deviations.** MAP-01 and MAP-02 still describe a GPS track and trecho segments after the 12-06 change. The verifier suggested new wording, but nobody applied it.
+- **Scope grew without bookkeeping.** The milestone went from Phases 9-13 to 9-16 (upload, PDF and axis popup were added), but the ROADMAP header ranges, the Phase 9 progress row (0/6) and the plan checkboxes were left stale until the audit.
+- **SUMMARY frontmatter lacked `one_liner` and task counts**, so `milestone complete` recorded "1 task" and no accomplishments, and these had to be rebuilt by hand.
+- **Local preview cached stale ES modules** under `http.server`, which cost a debugging round before `tools.serve_site` (no-cache) existed.
+
+### Patterns Established
+
+- **Oracle fixture + freshness guard** for every cross-language port: Python is the source of truth, JS replays committed fixtures, and pytest fails if the inputs change without regeneration. Pin the oracle's Python version in CI whenever the fixture depends on libm or float formatting.
+- **Derived run outside the engine** (GPS jump filter): parameter-driven data cleaning wraps `analyze()` instead of changing it, so workbook parity is preserved.
+- **Mount/destroy lifecycle with a generation token and disposer stack** for swapping the whole dashboard on upload, with rollback on failure.
+- **Vendored, pinned, licence-checked third-party JS** (sha256 + LICENSE + `.gitattributes`), lazy-loaded when heavy (jsPDF).
+- **Static guard tests** (`tests/test_site_static.py`) for no-network uploads, sections present and wiring, which cheaply complement code-level tests.
+
+### Key Lessons
+
+1. **A "fix before X" note in a verification needs a tracked task, not prose.** If it isn't a phase, a plan or a todo, it will be built on top of. Either insert a decimal phase immediately or downgrade it to accepted debt explicitly.
+2. **When an approved deviation changes what a requirement means, update REQUIREMENTS.md in the same commit.** Otherwise the audit has to re-litigate it.
+3. **Treat added phases as scope changes.** Update the milestone header range, progress table and traceability right away, in the same commit as `/gsd:add-phase`.
+4. **Write machine-readable SUMMARY frontmatter** (`one_liner`, task count), so milestone tooling can produce accurate stats.
+5. **Cross-runtime numerical parity is achievable but needs an oracle.** Don't trust "same algorithm" across Python and JS; generate fixtures from the reference implementation and replay them.
+
+### Cost Observations
+
+- Model profile: balanced (subagents per GSD defaults); the exact model mix was not tracked
+- Timeline: 7 days, 47 plans (about 7 plans/day); most plans took 10-40 min, with checkpoint plans driven by engineer availability
+- Notable: the largest milestone so far (8 phases vs 2-4 before), and it stayed coherent because the core engine contract (Phase 10) came before any UI
+
+---
+
 ## Cross-Milestone Trends
 
-| Metric | v1.0 MVP | v1.1 Real-Time Viz | v1.2 GPS Integration |
-|--------|----------|--------------------|----------------------|
-| Phases | 4 | 2 | 2 |
-| Plans executed | 8/9 | 4/4 | 4/4 |
-| Python LOC (added net) | 2,064 | ~707 | ~1,661 |
-| Tests (cumulative) | 64 | 79 (+15) | 95 (+16) |
-| Timeline (days) | 3 | 1 | 1 |
-| Hardware verified | Yes (COM10) | Pending (--gui) | Pending (real GPS fix) |
-| Known debt at ship | 3 items | 3 items | 2 items |
-| New external deps | pymodbus, pyserial, PyYAML, tzdata, matplotlib | — | winsdk |
+| Metric | v1.0 MVP | v1.1 Real-Time Viz | v1.2 GPS Integration | v1.3 Field Run Dashboard |
+|--------|----------|--------------------|----------------------|--------------------------|
+| Phases | 4 | 2 | 2 | 8 |
+| Plans executed | 8/9 | 4/4 | 4/4 | 47/47 |
+| LOC (added net) | 2,064 Py | ~707 Py | ~1,661 Py | ~6,600 JS + ~3,550 Py (tools) |
+| Tests (cumulative) | 64 | 79 (+15) | 95 (+16) | pytest 289 + node 296 |
+| Timeline (days) | 3 | 1 | 1 | 7 |
+| Hardware verified | Yes (COM10) | Pending (--gui) | Pending (real GPS fix) | n/a (post-run analysis; live site approved) |
+| Known debt at ship | 3 items | 3 items | 2 items | ~16 items (1 significant) |
+| Nyquist compliant phases | partial | 0/2 | — | 7/8 |
+| New external deps | pymodbus, pyserial, PyYAML, tzdata, matplotlib | — | winsdk | uPlot, Leaflet, leaflet.heat, jsPDF, jspdf-autotable (vendored); Pillow (dev); winsdk → winrt-* |
