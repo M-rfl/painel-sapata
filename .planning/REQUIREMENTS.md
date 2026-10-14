@@ -45,6 +45,7 @@
 - [x] **KPI-03**: User sees means and maxima per axis and for the resultant (medido and dinâmico)
 - [x] **KPI-04**: User sees a per-axis statistics table (mean, median, std, P0.5/P99.5)
 - [x] **KPI-05**: User sees a data-quality card: GPS coverage, samples without position, empty channels, turnaround gap, station-file warnings
+- [ ] **KPI-06**: User sees a track quality index card (0–100 %, linear class penalty over classified medições, Bom/Regular/Ruim band) first in the KPI row, reacting to filters and parameters, plus the same index per trecho in the trecho table
 
 ### Charts
 
@@ -156,6 +157,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MAP-05 | Phase 12 | Complete |
 | MAP-06 | Phase 12 | Complete |
 | SYNC-01 | Phase 12 | Complete |
+| KPI-06 | Phase 13 | Pending |
 | MTX-01 | Phase 13 | Pending |
 | MTX-02 | Phase 13 | Pending |
 | RANK-01 | Phase 13 | Pending |
@@ -166,10 +168,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UPLOAD-01 | Phase 14 | Pending |
 
 **Coverage:**
-- v1.3 requirements: 47 total
-- Mapped to phases: 47
+- v1.3 requirements: 48 total
+- Mapped to phases: 48
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-10-08*
-*Last updated: 2026-10-13 after 11-06 review (added MAP-06, UPLOAD-01, Phase 14)*
+*Last updated: 2026-10-14 after Phase 13 discussion (added KPI-06 quality index)*

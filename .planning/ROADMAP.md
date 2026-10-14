@@ -137,12 +137,13 @@ Plans:
 ### Phase 13: Matrix, Ranking & Shareable State
 **Goal**: User can find the worst trechos and pontos, tune analysis parameters, and share the exact view by link
 **Depends on**: Phase 11 (matrix/ranking independent of Phase 12; share link covers all views once Phase 12 is done)
-**Requirements**: MTX-01, MTX-02, RANK-01, RANK-02, RANK-03, PARAM-04, SHARE-01
+**Requirements**: MTX-01, MTX-02, RANK-01, RANK-02, RANK-03, PARAM-04, SHARE-01, KPI-06
 **Success Criteria** (what must be TRUE):
   1. User sees a trecho × severidade heat-map matrix in route order per sentido, and clicking a cell filters every other view
   2. User sees a sortable top-50 pontos de impacto table with Google Maps links and a trecho table with priority and "sem Crítico" highlight, and can export the filtered ranking as CSV
   3. User sets rest-level offset per axis (median default or manual), event-grouping gap, GPS max speed and max fix interval, and all views recompute
   4. Copying the page URL and opening it elsewhere restores the same thresholds, filters, display and analysis parameters
+  5. User sees a track quality index card (0–100 %, Bom/Regular/Ruim) first in the KPI row that reacts to filters and parameters (96,4 % on run 1 at defaults), and the same index per trecho in the trecho table
 **Plans**: TBD
 **UI hint**: yes
 
