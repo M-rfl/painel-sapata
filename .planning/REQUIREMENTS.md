@@ -57,11 +57,11 @@
 ### Map
 
 - [x] **MAP-01**: User sees the GPS track on an OSM map, coloured by sentido and broken at gaps
-- [ ] **MAP-02**: User sees station markers and trecho segments on the map
-- [ ] **MAP-03**: User sees impact points as severity-coloured markers with a popup (hora, trecho, sentido, AX/AY/AZ din., classe, Google Maps link)
-- [ ] **MAP-04**: User can toggle a geographic heat map weighted by severity on a fixed scale (one point per GPS fix)
-- [ ] **MAP-05**: User sees how many events cannot be placed on the map (no GPS)
-- [ ] **MAP-06**: Every filter (sentido, trecho, eixo, classe, time window) and threshold change updates the map markers, track highlight and heat map, from the same state store as the KPI panels
+- [x] **MAP-02**: User sees station markers and trecho segments on the map
+- [x] **MAP-03**: User sees impact points as severity-coloured markers with a popup (hora, trecho, sentido, AX/AY/AZ din., classe, Google Maps link)
+- [x] **MAP-04**: User can toggle a geographic heat map weighted by severity on a fixed scale (one point per GPS fix)
+- [x] **MAP-05**: User sees how many events cannot be placed on the map (no GPS)
+- [x] **MAP-06**: Every filter (sentido, trecho, eixo, classe, time window) and threshold change updates the map markers, track highlight and heat map, from the same state store as the KPI panels
 
 ### Matrix & Ranking
 
@@ -83,7 +83,7 @@
 ### Upload
 
 - [ ] **UPLOAD-01**: User uploads any raw logger CSV (comma or pt-BR `;`) in the browser and every view recomputes from it, processed client-side with no server
-- [ ] **SYNC-01**: Hovering a chart highlights the position on the map; clicking a map point moves the chart cursor to that time
+- [x] **SYNC-01**: Hovering a chart highlights the position on the map; clicking a map point moves the chart cursor to that time
 
 ## Future Requirements
 
@@ -150,12 +150,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CHART-04 | Phase 12 | Complete |
 | CHART-05 | Phase 12 | Complete |
 | MAP-01 | Phase 12 | Complete |
-| MAP-02 | Phase 12 | Pending |
-| MAP-03 | Phase 12 | Pending |
-| MAP-04 | Phase 12 | Pending |
-| MAP-05 | Phase 12 | Pending |
-| MAP-06 | Phase 12 | Pending |
-| SYNC-01 | Phase 12 | Pending |
+| MAP-02 | Phase 12 | Complete |
+| MAP-03 | Phase 12 | Complete |
+| MAP-04 | Phase 12 | Complete |
+| MAP-05 | Phase 12 | Complete |
+| MAP-06 | Phase 12 | Complete |
+| SYNC-01 | Phase 12 | Complete |
 | MTX-01 | Phase 13 | Pending |
 | MTX-02 | Phase 13 | Pending |
 | RANK-01 | Phase 13 | Pending |

@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Field Run Dashboard
-current_plan: 5
+current_plan: 6
 status: executing
-stopped_at: Completed 12-04-PLAN.md
-last_updated: "2026-10-14T01:43:30.836Z"
+stopped_at: Completed 12-05-PLAN.md
+last_updated: "2026-10-14T01:46:43.420Z"
 last_activity: 2026-10-14
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 24
-  completed_plans: 22
+  completed_plans: 23
   percent: 50
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-10-08 after v1.3 start)
 ## Current Position
 
 Phase: 12 of 14 (Time Series & Map)
-**Current Plan:** 5
+**Current Plan:** 6
 **Total Plans in Phase:** 6
 **Status:** Ready to execute
 **Last Activity:** 2026-10-14
@@ -68,6 +68,7 @@ Progress: [█████░░░░░] 50%
 | Phase 12 P02 | 15min | 2 tasks | 5 files |
 | Phase 12 P03 | 10min | 2 tasks | 2 files |
 | Phase 12 P04 | 20min | 2 tasks | 7 files |
+| Phase 12 P05 | 20min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -140,6 +141,7 @@ Progress: [█████░░░░░] 50%
 - [Phase 12]: [12-02] Threshold lines from th2/off2 (medido offset by off2); gap rows only for dt > maxJumpMs; no decimation
 - [Phase 12]: [12-03] Track breaks at sentido change or fix gap >120s; heat scale fixed at Critico threshold; unplacedCounts returns pontos and eventos
 - [Phase 12]: [12-04] Charts mount once outside PANELS; axis charts built on first render, channels on first details toggle; link hover deduped
+- [Phase 12]: [12-05] Map view fitted once at mount; heat toggle local to panel, fixed scale via maxZoom 0
 
 ### Key Constraints for v1.2
 
@@ -150,6 +152,6 @@ Progress: [█████░░░░░] 50%
 
 ## Session Continuity
 
-Stopped at: Completed 12-04-PLAN.md
+Stopped at: Completed 12-05-PLAN.md
 
 Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)
