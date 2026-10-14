@@ -12,7 +12,7 @@ const REQUIRED = [
   'classes', 'classesMedicoes', 'classesImpactos', 'classesPontos', 'means', 'axisStats',
   'quality', 'qCobertura', 'qSemPosicao', 'qCanaisVazios', 'qRetorno', 'qInferidas',
   'qNaoClassificadas', 'qIrrecuperaveis', 'qAmbiguos', 'qAvisos', 'qCanais',
-  'thresholds', 'fSentido', 'fTrecho', 'fEixo', 'fClasse', 'fTempo', 'display',
+  'thresholds', 'analise', 'pOffset', 'pGap', 'pSalto', 'pGpsVel', 'pGpsFix', 'fSentido', 'fTrecho', 'fEixo', 'fClasse', 'fTempo', 'display',
   'dValores', 'dMetrica', 'dRaio', 'dIntensidade',
   'charts', 'maisCanais', 'resetZoom', 'map', 'mapCalor',
 ];

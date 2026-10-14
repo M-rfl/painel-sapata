@@ -2,12 +2,14 @@
 // Built once by mountControls; renderControls only syncs values/checked/error states from state.
 // Controls only change state; main.js recomputes.
 import { CLASS_NAMES } from '../../core/defaults.js';
+import { restOffset2 } from '../../core/dynamics.js';
 import { h } from '../dom.js';
 import { T } from '../i18n.js';
 import { infoBtn } from '../info.js';
 import { fmtTime, fmtDate } from '../format.js';
 import {
   setThresholdText, setFilter, setDisplay,
+  setOffsetMode, setOffsetText, setAnalysisText, offsetPrefill,
   HEAT_METRICS, RADIUS_RANGE, INTENSITY_RANGE,
 } from '../state.js';
 
@@ -20,6 +22,13 @@ const CLEAR = 'limpar';
 const FROM = 'De';
 const TO = 'Até';
 const GAP_MS = 1000;
+const OFFSET_AXES = ['AX', 'AY', 'AZ'];
+const ANALYSIS_FIELDS = [
+  { key: 'gap', textKey: 'gapText', label: 'pGap', info: 'pGap' },
+  { key: 'salto', textKey: 'saltoText', label: 'pSalto', info: 'pSalto' },
+  { key: 'vmax', textKey: 'vmaxText', label: 'pGpsVel', info: 'pGpsVel' },
+  { key: 'fixmax', textKey: 'fixmaxText', label: 'pGpsFix', info: 'pGpsFix' },
+];
 
 let refs = null;
 
@@ -76,6 +85,41 @@ export function mountControls(el, store, run) {
   });
   r.thrError = h('p', { class: 'ctl-error', role: 'alert' });
   const gThr = group(T.secThresholds, 'thresholds', thrRow, r.thrError);
+
+  // Analysis parameters (collapsed by default)
+  const prefill = offsetPrefill(restOffset2(run).med2);
+  r.offsetMode = {};
+  const offsetModes = h('div', { class: 'ctl-modes' });
+  for (const [val, label] of [['median', T.pMediana], ['manual', T.pManual]]) {
+    const input = h('input', {
+      type: 'radio', name: 'offsetMode', value: val,
+      onChange: () => store.set((s) => setOffsetMode(s, val, prefill)),
+    });
+    r.offsetMode[val] = input;
+    offsetModes.appendChild(h('label', { class: 'ctl-check' }, input, ' ', label));
+  }
+  r.offsetInputs = OFFSET_AXES.map((ax, k) => h('input', {
+    type: 'text', inputmode: 'decimal', autocomplete: 'off', 'aria-label': `${ax} (g)`,
+    onInput: (ev) => store.set((s) => setOffsetText(s, k, ev.target.value)),
+  }));
+  const offsetGrid = h('div', { class: 'ctl-offset' },
+    ...r.offsetInputs.map((input, k) => h('label', null, h('span', null, OFFSET_AXES[k] + ' (g)'), input)));
+  r.offsetError = h('p', { class: 'ctl-error', role: 'alert' });
+  const gAnalise = h('details', { class: 'ctl-group ctl-details' },
+    h('summary', null, T.secAnalise, infoBtn('analise', T.secAnalise)),
+    line(h('div', null, h('span', { class: 'ctl-sub' }, T.pOffset), offsetModes,
+      h('p', { class: 'muted' }, 'Mediana da corrida: ' + OFFSET_AXES.map((ax, k) => `${ax} ${prefill[k]}`).join(' · ') + ' g'),
+      offsetGrid, r.offsetError), 'pOffset', T.pOffset));
+  r.analysis = ANALYSIS_FIELDS.map((f) => {
+    const input = h('input', {
+      type: 'text', inputmode: 'decimal', autocomplete: 'off', 'aria-label': T[f.label],
+      onInput: (ev) => store.set((s) => setAnalysisText(s, f.key, ev.target.value)),
+    });
+    const error = h('p', { class: 'ctl-error', role: 'alert' });
+    gAnalise.appendChild(line(h('div', null,
+      h('label', { class: 'ctl-field' }, h('span', null, T[f.label]), input), error), f.info, T[f.label]));
+    return { ...f, input, error };
+  });
 
   // Sentido
   const gSent = group(T.fSentido, 'fSentido');
@@ -192,6 +236,7 @@ export function mountControls(el, store, run) {
   }, T.reset);
 
   el.appendChild(gThr);
+  el.appendChild(gAnalise);
   el.appendChild(gSent);
   el.appendChild(gTrecho);
   el.appendChild(gEixo);
@@ -217,6 +262,23 @@ export function renderControls(state) {
     if (bad) input.setAttribute('aria-invalid', 'true'); else input.removeAttribute('aria-invalid');
   });
   r.thrError.textContent = inputs.thresholdError || '';
+
+  for (const [val, c] of Object.entries(r.offsetMode)) c.checked = inputs.offsetMode === val;
+  const manual = inputs.offsetMode === 'manual';
+  r.offsetInputs.forEach((input, k) => {
+    if (input.value !== inputs.offsetText[k]) input.value = inputs.offsetText[k];
+    input.disabled = !manual;
+    input.classList.toggle('field-error', manual && !!inputs.offsetError);
+    if (manual && inputs.offsetError) input.setAttribute('aria-invalid', 'true'); else input.removeAttribute('aria-invalid');
+  });
+  r.offsetError.textContent = (manual && inputs.offsetError) || '';
+  for (const f of r.analysis) {
+    if (f.input.value !== inputs[f.textKey]) f.input.value = inputs[f.textKey];
+    const err = inputs.analysisErrors[f.key];
+    f.input.classList.toggle('field-error', !!err);
+    if (err) f.input.setAttribute('aria-invalid', 'true'); else f.input.removeAttribute('aria-invalid');
+    f.error.textContent = err || '';
+  }
 
   r.sentido.forEach((c, i) => { c.checked = filters.sentidos.includes(i); });
   for (const [idx, c] of r.trecho) c.checked = filters.trechos.includes(idx);
