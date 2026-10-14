@@ -202,17 +202,19 @@ Plans:
 ### Phase 16: Axis Orientation Popup
 **Goal**: User clicks an icon in the page header and sees a popup with the "Orientação dos eixos" image, which shows the X/Y/Z sensor axes on the vehicle. The image is embedded in the page as base64.
 **Depends on**: Phase 15
-**Requirements**: TBD
+**Requirements**: HELP-01
 **Success Criteria** (what must be TRUE):
   1. The page header has an icon next to the existing header buttons. Clicking it opens a popup titled "Orientação dos eixos" that shows the image: X along the track (red), Y lateral (green), Z vertical (blue)
   2. The image is embedded inline as a base64 data URI, with no separate image request
   3. The popup closes with a close button, the Esc key, or a click on the backdrop. It is keyboard accessible, the text is in Portuguese, and it works at phone width
 **Source asset**: `.planning/phases/16-axis-orientation-popup/orientacao-eixos.png` (1536×1024 PNG, 2.6 MB). Re-encode it smaller (for example WebP or JPEG at popup size, ~100–200 KB) before base64 so the page stays light
-**Plans**: 0 plans
+**Plans**: 3 plans
 **UI hint**: yes
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 16 to break down)
+- [ ] 16-01-PLAN.md — Generator: PNG -> 1024px WebP base64 module (axisimage.js), generator + embed tests, Pillow pin, HELP-01 registered (W1)
+- [ ] 16-02-PLAN.md — pt-BR strings, header icon + native <dialog> panel, #axes slot, main.js mount, CSS, wiring guard (W2)
+- [ ] 16-03-PLAN.md — Full gates, validation record, browser checkpoint (W3)
 
 ## Progress
 
