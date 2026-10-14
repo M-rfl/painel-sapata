@@ -34,8 +34,36 @@ def test_stations_json_fresh():
     assert dumps_stations(build_stations()) == _text(STATIONS), f"stations.json stale: {HINT}"
 
 
-def test_upload_fixture_fresh(fresh):
-    assert dumps_fixture(fresh) == _text(FIXTURE), f"upload_parity.json stale: {HINT}"
+def _first_diff(a, b, path="$"):
+    """Path of the first difference, or None. Floats may differ in the last
+    ulps: the oracle runs libm trig (haversine), and glibc (CI) and the
+    Windows CRT that generated the committed file round differently."""
+    if isinstance(a, float) and isinstance(b, float):
+        return None if a == b or abs(a - b) <= 1e-12 * max(abs(a), abs(b)) else f"{path}: {a!r} != {b!r}"
+    if type(a) is not type(b):
+        return f"{path}: {a!r} != {b!r}"
+    if isinstance(a, dict):
+        if a.keys() != b.keys():
+            return f"{path}: keys {sorted(a.keys() ^ b.keys())}"
+        for k in a:
+            d = _first_diff(a[k], b[k], f"{path}.{k}")
+            if d:
+                return d
+        return None
+    if isinstance(a, list):
+        if len(a) != len(b):
+            return f"{path}: len {len(a)} != {len(b)}"
+        for i, (x, y) in enumerate(zip(a, b)):
+            d = _first_diff(x, y, f"{path}[{i}]")
+            if d:
+                return d
+        return None
+    return None if a == b else f"{path}: {a!r} != {b!r}"
+
+
+def test_upload_fixture_fresh(fresh, committed):
+    diff = _first_diff(json.loads(dumps_fixture(fresh)), committed)
+    assert diff is None, f"upload_parity.json stale at {diff}: {HINT}"
 
 
 def test_stations_cover_all_lines():
