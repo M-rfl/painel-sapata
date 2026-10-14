@@ -35,7 +35,7 @@ Covers MTX-01, MTX-02, RANK-01, RANK-02, RANK-03, PARAM-04, SHARE-01 and KPI-06.
   `IQ = 100 % × (1 − (0,25·Leve + 0,5·Moderado + 0,75·Severo + 1·Crítico) / N)`
   Weights follow the class index (`w = cls / (ncls − 1)`), so edited thresholds carry through. Run 1 at defaults = **96,4 %** (test anchor: 1 − 844,5 / 23.383).
 - Follows every filter and every parameter change.
-- The card shows the value plus a coloured band: **≥ 95 % Bom** (green), **85–95 % Regular** (amber), **< 85 % Ruim** (red). 95 % itself counts as Bom. An (i) button explains the formula.
+- The card shows the value plus a coloured band: **≥ 98 % Bom** (green), **90–98 % Regular** (amber), **< 90 % Ruim** (red). 98 % itself counts as Bom, 90 % as Regular. (Bands revised 2026-10-14 at the 13-07 checkpoint; were 95/85.) An (i) button explains the formula.
 - Per-trecho IQ is a column in the trecho table, using the same formula on that trecho's filtered classified medições.
 - N = 0 (everything filtered out) shows "—", not 0 % or NaN.
 - KPI-06 must be added to REQUIREMENTS.md and to the Phase 13 success criteria in ROADMAP.md (done along with this context).
