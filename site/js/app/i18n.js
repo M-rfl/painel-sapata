@@ -184,6 +184,11 @@ export const T = Object.freeze({
   reportMapFail: 'Mapa base indisponível; rota, calor e pontos desenhados sem fundo.',
   reportMapMissing: 'Mapa indisponível neste relatório.',
   reportAttribution: '© colaboradores do OpenStreetMap',
+  // Axis orientation popup
+  axes: 'Orientação dos eixos',
+  axesClose: 'Fechar',
+  axesAlt: 'Bonde (VLT) visto de frente e de lado com os eixos do sensor: X em vermelho ao longo da via, Y em verde lateral, Z em azul vertical.',
+  axesLegend: 'X (vermelho): ao longo da via. Y (verde): lateral. Z (azul): vertical.',
   uploadErrors: Object.freeze({
     no_files: 'Nenhum arquivo selecionado.',
     no_csv: 'Nenhum arquivo .csv na seleção. Envie o CSV bruto do logger.',
