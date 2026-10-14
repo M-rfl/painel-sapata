@@ -1,9 +1,9 @@
 ---
 phase: 14
 slug: csv-upload
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-10-14
 ---
 
@@ -51,21 +51,21 @@ Float tolerance is allowed ONLY on geofence `min_dist_m` / unrounded turnaround 
 
 | Task ID | Plan | Wave | Requirement | Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|----------|-----------|-------------------|-------------|--------|
-| 14-01-T1 | 01 | 1 | UPLOAD-01 | stations.json + recover/log10k/timestamps/pyround/geofence fixture generated from Python | generator + smoke | `python -m tools.dashboard_converter.gen_upload_parity` (+ inline JSON asserts) | ❌ W0 | ⬜ pending |
-| 14-01-T2 | 01 | 1 | UPLOAD-01 | whole-file cases (run_mini, synthetic-l4 incl. 2.25 s / 1.25 s gap ties, single-ptbr); freshness + coverage | pytest | `python -m pytest tests/test_upload_fixture.py tests/test_parity_fixture.py -q` | ❌ W0 | ⬜ pending |
-| 14-02-T1 | 02 | 1 | UPLOAD-01 (SC3b) | swap only on success, generation token (stale A-then-B, A-then-restore), disposer stack, partial-mount cleanup + rollback, isShareable | unit | `node --test tests/js/upload_controller.test.js` | ❌ W0 | ⬜ pending |
-| 14-02-T2 | 02 | 1 | UPLOAD-01 (SC1, share) | mountDashboard/destroy lifecycle, charts/map destroy, share enable/disable | static + full JS | `python -m pytest tests/test_site_static.py -q && node --test "tests/js/*.test.js"` | extend | ⬜ pending |
-| 14-03-T1 | 03 | 2 | UPLOAD-01 (SC2a) | recover port: log10 round-up k, nearest-integer grid test, off_grid before out_of_range, key6, pyRound ties, ratToFloat | parity (fixture) | `node --test tests/js/convert_recover.test.js` | ❌ W0 | ⬜ pending |
-| 14-03-T2 | 03 | 2 | UPLOAD-01 (SC1, SC2a) | fromisoformat port (accept/reject parity, calendar validation), reader merge/BOM/delimiter/issues | parity (fixture) | `node --test tests/js/convert_reader.test.js tests/js/convert_recover.test.js && python -m pytest tests/test_site_static.py -q` | ❌ W0 | ⬜ pending |
-| 14-04-T1 | 04 | 2 | UPLOAD-01 (SC2b) | haversine (x*(pi/180)), stations.js, scoreLines | parity (fixture) | `node --test tests/js/convert_geofence.test.js` | ❌ W0 | ⬜ pending |
-| 14-04-T2 | 04 | 2 | UPLOAD-01 (SC2b) | full assign() port on every synthetic route | parity (fixture) | `node --test tests/js/convert_geofence.test.js && python -m pytest tests/test_site_static.py -q` | ❌ W0 | ⬜ pending |
-| 14-05-T1 | 05 | 3 | UPLOAD-01 (SC2c) | gps/build/index; whole JSON = Python minus UPLOAD_ONLY_META; max_gap_s/gap_s ties | parity (CI) | `node --test tests/js/convert_parity.test.js` | ❌ W0 | ⬜ pending |
-| 14-05-T2 | 05 | 3 | UPLOAD-01 (SC2d, SC3a, SC1) | known-line guard (all in_line 0 only), error catalogue, decodeRun/analyze integration, run-1 parity minus RUN1_IGNORED_META | unit + parity (local) | `node --test tests/js/convert_errors.test.js tests/js/convert_build.test.js tests/js/convert_parity.test.js tests/js/convert_run1.test.js && node --test "tests/js/*.test.js" && python -m pytest tests/test_site_static.py tests/test_upload_fixture.py -q` | ❌ W0 | ⬜ pending |
-| 14-06-T1 | 06 | 4 | UPLOAD-01 (SC3a app) | .csv-only selection, file-count + byte caps, fatal UTF-8, sha256, pt-BR message per error code | unit | `node --test tests/js/upload_io.test.js tests/js/info.test.js` | ❌ W0 | ⬜ pending |
-| 14-06-T2 | 06 | 4 | UPLOAD-01 (SC1) | button, hidden input, drop overlay, notices, banner, page shell | static + info | `node --test tests/js/info.test.js && python -m pytest tests/test_site_static.py -q` | extend | ⬜ pending |
-| 14-06-T3 | 06 | 4 | UPLOAD-01 (SC1, SC3c) | main.js wiring (tryLoad ok/error/stale/fatal, stations fetch, restore); no-network static guard | static + full JS | `python -m pytest tests/test_site_static.py tests/test_upload_fixture.py -q && node --test "tests/js/*.test.js"` | extend | ⬜ pending |
-| 14-07-T1 | 07 | 5 | UPLOAD-01 | full gates + local run-1 parity (`# skipped 0`) + record | full suites | `python -m pytest -q && node --test "tests/js/*.test.js" && node --test --test-reporter=tap tests/js/convert_run1.test.js` | — | ⬜ pending |
-| 14-07-T2 | 07 | 5 | UPLOAD-01 | browser checklist | manual | n/a (checkpoint) | — | ⬜ pending |
+| 14-01-T1 | 01 | 1 | UPLOAD-01 | stations.json + recover/log10k/timestamps/pyround/geofence fixture generated from Python | generator + smoke | `python -m tools.dashboard_converter.gen_upload_parity` (+ inline JSON asserts) | ❌ W0 | ✅ green |
+| 14-01-T2 | 01 | 1 | UPLOAD-01 | whole-file cases (run_mini, synthetic-l4 incl. 2.25 s / 1.25 s gap ties, single-ptbr); freshness + coverage | pytest | `python -m pytest tests/test_upload_fixture.py tests/test_parity_fixture.py -q` | ❌ W0 | ✅ green |
+| 14-02-T1 | 02 | 1 | UPLOAD-01 (SC3b) | swap only on success, generation token (stale A-then-B, A-then-restore), disposer stack, partial-mount cleanup + rollback, isShareable | unit | `node --test tests/js/upload_controller.test.js` | ❌ W0 | ✅ green |
+| 14-02-T2 | 02 | 1 | UPLOAD-01 (SC1, share) | mountDashboard/destroy lifecycle, charts/map destroy, share enable/disable | static + full JS | `python -m pytest tests/test_site_static.py -q && node --test "tests/js/*.test.js"` | extend | ✅ green |
+| 14-03-T1 | 03 | 2 | UPLOAD-01 (SC2a) | recover port: log10 round-up k, nearest-integer grid test, off_grid before out_of_range, key6, pyRound ties, ratToFloat | parity (fixture) | `node --test tests/js/convert_recover.test.js` | ❌ W0 | ✅ green |
+| 14-03-T2 | 03 | 2 | UPLOAD-01 (SC1, SC2a) | fromisoformat port (accept/reject parity, calendar validation), reader merge/BOM/delimiter/issues | parity (fixture) | `node --test tests/js/convert_reader.test.js tests/js/convert_recover.test.js && python -m pytest tests/test_site_static.py -q` | ❌ W0 | ✅ green |
+| 14-04-T1 | 04 | 2 | UPLOAD-01 (SC2b) | haversine (x*(pi/180)), stations.js, scoreLines | parity (fixture) | `node --test tests/js/convert_geofence.test.js` | ❌ W0 | ✅ green |
+| 14-04-T2 | 04 | 2 | UPLOAD-01 (SC2b) | full assign() port on every synthetic route | parity (fixture) | `node --test tests/js/convert_geofence.test.js && python -m pytest tests/test_site_static.py -q` | ❌ W0 | ✅ green |
+| 14-05-T1 | 05 | 3 | UPLOAD-01 (SC2c) | gps/build/index; whole JSON = Python minus UPLOAD_ONLY_META; max_gap_s/gap_s ties | parity (CI) | `node --test tests/js/convert_parity.test.js` | ❌ W0 | ✅ green |
+| 14-05-T2 | 05 | 3 | UPLOAD-01 (SC2d, SC3a, SC1) | known-line guard (all in_line 0 only), error catalogue, decodeRun/analyze integration, run-1 parity minus RUN1_IGNORED_META | unit + parity (local) | `node --test tests/js/convert_errors.test.js tests/js/convert_build.test.js tests/js/convert_parity.test.js tests/js/convert_run1.test.js && node --test "tests/js/*.test.js" && python -m pytest tests/test_site_static.py tests/test_upload_fixture.py -q` | ❌ W0 | ✅ green |
+| 14-06-T1 | 06 | 4 | UPLOAD-01 (SC3a app) | .csv-only selection, file-count + byte caps, fatal UTF-8, sha256, pt-BR message per error code | unit | `node --test tests/js/upload_io.test.js tests/js/info.test.js` | ❌ W0 | ✅ green |
+| 14-06-T2 | 06 | 4 | UPLOAD-01 (SC1) | button, hidden input, drop overlay, notices, banner, page shell | static + info | `node --test tests/js/info.test.js && python -m pytest tests/test_site_static.py -q` | extend | ✅ green |
+| 14-06-T3 | 06 | 4 | UPLOAD-01 (SC1, SC3c) | main.js wiring (tryLoad ok/error/stale/fatal, stations fetch, restore); no-network static guard | static + full JS | `python -m pytest tests/test_site_static.py tests/test_upload_fixture.py -q && node --test "tests/js/*.test.js"` | extend | ✅ green |
+| 14-07-T1 | 07 | 5 | UPLOAD-01 | full gates + local run-1 parity (`# skipped 0`) + record | full suites | `python -m pytest -q && node --test "tests/js/*.test.js" && node --test --test-reporter=tap tests/js/convert_run1.test.js` | — | ✅ green |
+| 14-07-T2 | 07 | 5 | UPLOAD-01 | browser checklist | manual | n/a (checkpoint) | — | ⬜ pending (manual) |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -73,25 +73,25 @@ Float tolerance is allowed ONLY on geofence `min_dist_m` / unrounded turnaround 
 
 | Behavior | Requirement | Test Type | Automated Command | File Exists | Status |
 |----------|-------------|-----------|-------------------|-------------|--------|
-| Comma and `;` files accepted; multi-file merge; output decodes and `analyze()` runs | UPLOAD-01 (SC1) | unit + integration | `node --test tests/js/convert_reader.test.js tests/js/convert_build.test.js` | ❌ W0 | ⬜ pending |
-| Cell recovery (incl. log10 round-up, upper-integer grid), timestamp accept/reject (fromisoformat port) and pyRound ties equal Python on generated cases | UPLOAD-01 (SC2a) | parity (fixture) | `node --test tests/js/convert_recover.test.js tests/js/convert_reader.test.js` | ❌ W0 | ⬜ pending |
-| Geofence trecho/sentido/flag equals Python on synthetic routes | UPLOAD-01 (SC2b) | parity (fixture) | `node --test tests/js/convert_geofence.test.js` | ❌ W0 | ⬜ pending |
-| JS schema-v1 JSON deep-equals Python (default CLI args) for fixture file cases, ignoring only `UPLOAD_ONLY_META` | UPLOAD-01 (SC2c) | parity (CI) | `node --test tests/js/convert_parity.test.js` | ❌ W0 | ⬜ pending |
-| Run-1 raw CSVs → JS JSON deep-equals the committed `site/data/run-2026-10-02-l4-t102.json` ignoring only `RUN1_IGNORED_META` (`run_id, title, workbook_reference, uploaded, generated_at, converter_version`) | UPLOAD-01 (SC2d) | parity (local-only) | `node --test tests/js/convert_run1.test.js` | ❌ W0 | ⬜ pending |
-| Invalid files → `ConvertError` code → pt-BR message (core + app layer: no_csv, caps, bad UTF-8) | UPLOAD-01 (SC3a) | unit | `node --test tests/js/convert_errors.test.js tests/js/upload_io.test.js` | ❌ W0 | ⬜ pending |
-| Failed upload leaves view intact; stale conversions discarded; partial mount disposed; share disabled for uploads | UPLOAD-01 (SC3b, share) | unit | `node --test tests/js/upload_controller.test.js` | ❌ W0 | ⬜ pending |
-| No network APIs in upload/convert sources | UPLOAD-01 (SC3c) | static | `python -m pytest tests/test_site_static.py -x` | extend | ⬜ pending |
-| `stations.json` / `upload_parity.json` fresh vs Python | UPLOAD-01 | pytest | `python -m pytest tests/test_upload_fixture.py -x` | ❌ W0 | ⬜ pending |
+| Comma and `;` files accepted; multi-file merge; output decodes and `analyze()` runs | UPLOAD-01 (SC1) | unit + integration | `node --test tests/js/convert_reader.test.js tests/js/convert_build.test.js` | ✅ present | ✅ green |
+| Cell recovery (incl. log10 round-up, upper-integer grid), timestamp accept/reject (fromisoformat port) and pyRound ties equal Python on generated cases | UPLOAD-01 (SC2a) | parity (fixture) | `node --test tests/js/convert_recover.test.js tests/js/convert_reader.test.js` | ✅ present | ✅ green |
+| Geofence trecho/sentido/flag equals Python on synthetic routes | UPLOAD-01 (SC2b) | parity (fixture) | `node --test tests/js/convert_geofence.test.js` | ✅ present | ✅ green |
+| JS schema-v1 JSON deep-equals Python (default CLI args) for fixture file cases, ignoring only `UPLOAD_ONLY_META` | UPLOAD-01 (SC2c) | parity (CI) | `node --test tests/js/convert_parity.test.js` | ✅ present | ✅ green |
+| Run-1 raw CSVs → JS JSON deep-equals the committed `site/data/run-2026-10-02-l4-t102.json` ignoring only `RUN1_IGNORED_META` (`run_id, title, workbook_reference, uploaded, generated_at, converter_version`) | UPLOAD-01 (SC2d) | parity (local-only) | `node --test tests/js/convert_run1.test.js` | ✅ present | ✅ green |
+| Invalid files → `ConvertError` code → pt-BR message (core + app layer: no_csv, caps, bad UTF-8) | UPLOAD-01 (SC3a) | unit | `node --test tests/js/convert_errors.test.js tests/js/upload_io.test.js` | ✅ present | ✅ green |
+| Failed upload leaves view intact; stale conversions discarded; partial mount disposed; share disabled for uploads | UPLOAD-01 (SC3b, share) | unit | `node --test tests/js/upload_controller.test.js` | ✅ present | ✅ green |
+| No network APIs in upload/convert sources | UPLOAD-01 (SC3c) | static | `python -m pytest tests/test_site_static.py -x` | extend | ✅ green |
+| `stations.json` / `upload_parity.json` fresh vs Python | UPLOAD-01 | pytest | `python -m pytest tests/test_upload_fixture.py -x` | ✅ present | ✅ green |
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] `tools/dashboard_converter/gen_upload_parity.py` — writes `site/data/stations.json` and `tests/fixtures/upload_parity.json` (14-01)
-- [ ] `tests/test_upload_fixture.py` — freshness + coverage guard (pattern: `tests/test_parity_fixture.py`) (14-01)
-- [ ] `tests/js/convert_*.test.js` (recover, reader, geofence, build, parity, errors, run1) and `tests/js/convert_meta.js` (14-03..14-05)
-- [ ] `tests/js/upload_controller.test.js` (14-02) and `tests/js/upload_io.test.js` (14-06)
-- [ ] Extend `tests/test_site_static.py` — lifecycle (14-02); no-network guard on convert/upload sources, `site/data/stations.json` wired, upload shell (14-06)
+- [x] `tools/dashboard_converter/gen_upload_parity.py` — writes `site/data/stations.json` and `tests/fixtures/upload_parity.json` (14-01)
+- [x] `tests/test_upload_fixture.py` — freshness + coverage guard (pattern: `tests/test_parity_fixture.py`) (14-01)
+- [x] `tests/js/convert_*.test.js` (recover, reader, geofence, build, parity, errors, run1) and `tests/js/convert_meta.js` (14-03..14-05)
+- [x] `tests/js/upload_controller.test.js` (14-02) and `tests/js/upload_io.test.js` (14-06)
+- [x] Extend `tests/test_site_static.py` — lifecycle (14-02); no-network guard on convert/upload sources, `site/data/stations.json` wired, upload shell (14-06)
 
 *Framework install: none (Node 24 + pytest present; `pages.yml` runs both).*
 
@@ -107,12 +107,20 @@ Float tolerance is allowed ONLY on geofence `min_dist_m` / unrounded turnaround 
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 60s
-- [ ] Local run-1 parity executed (`# skipped 0`)
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 60s
+- [x] Local run-1 parity executed (`# skipped 0`)
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** gates green; manual browser checklist (14-07 Task 2) pending
+
+---
+
+## 14-07 Task 1 Gate Results (2026-10-14)
+
+- `python -m pytest -q`: all pass. `node --test "tests/js/*.test.js"`: 241 pass, 0 fail, 0 skipped.
+- Local run-1 parity (`node --test --test-reporter=tap tests/js/convert_run1.test.js`): `# pass 1`, `# fail 0`, `# skipped 0`; conversion of 23,383 rows took 1731 ms. Zero diffs under `RUN1_IGNORED_META`.
+- The earlier one-ulp `min_dist_m` diff was not libm: `haversineM` operation order was fixed to match `geo.py` (commit 3eb96f8). No libm deviation remains, so checklist item 12 needs no decision.
