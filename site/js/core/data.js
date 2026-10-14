@@ -66,7 +66,11 @@ export function fromArrays({ ax, ay, az, tMs, locKey, trecho, trechoNames, sourc
   };
 }
 
-/** Decode schema-v1 dashboard JSON into a Run. */
+/**
+ * Decode schema-v1 dashboard JSON into a Run.
+ * Extra fields: t0Ms, fixLat/fixLon (Float64Array, NaN = null), fixRow (first row per fix, -1 if absent),
+ * priorFix (last known fix index per row, -1 before the first).
+ */
 export function decodeRun(json) {
   if (!json || json.schema !== 1) throw new Error('decodeRun: unsupported schema (expected 1)');
   const n = json.meta.n;
@@ -92,6 +96,22 @@ export function decodeRun(json) {
   run.sentido = expandRuns(json.sentido_runs, n, Uint8Array);
   run.flags = expandRuns(json.flag_runs, n, Uint8Array);
   run.fix = fix;
+  run.t0Ms = Date.parse(json.meta.t0);
+  run.fixLat = Float64Array.from(lat, (v) => (v === null ? NaN : v));
+  run.fixLon = Float64Array.from(json.gps.lon || [], (v) => (v === null ? NaN : v));
+  const fixRow = new Int32Array(lat.length).fill(-1);
+  const priorFix = new Int32Array(n);
+  let lastFix = -1;
+  for (let i = 0; i < n; i++) {
+    const f = fix[i];
+    if (f >= 0) {
+      lastFix = f;
+      if (f < fixRow.length && fixRow[f] === -1) fixRow[f] = i;
+    }
+    priorFix[i] = lastFix;
+  }
+  run.fixRow = fixRow;
+  run.priorFix = priorFix;
   run.meta = json.meta;
   run.trechos = json.trechos;
   run.sentidos = json.sentidos;

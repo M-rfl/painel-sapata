@@ -1,7 +1,7 @@
 // Pure module: no DOM/window. Statistics behind the overview KPIs (means/maxima, per-axis table).
 // Label rule: "Maior = maior valor absoluto, sinal preservado".
 
-const LSB_PER_G = 2048;
+export const LSB_PER_G = 2048;
 const MODES = ['medido', 'dinamico'];
 
 /**
@@ -49,7 +49,9 @@ function checkMode(mode) {
   if (!MODES.includes(mode)) throw new Error(`stats: unknown mode "${mode}"`);
 }
 
-function converter(analysis, mode) {
+/** Per-axis LSB -> g converters. medido: l/2048; dinamico: (2l - off2)/4096. */
+export function axisConverters(analysis, mode) {
+  checkMode(mode);
   if (mode === 'medido') {
     return [(l) => l / LSB_PER_G, (l) => l / LSB_PER_G, (l) => l / LSB_PER_G];
   }
@@ -57,10 +59,11 @@ function converter(analysis, mode) {
   return [(l) => (2 * l - o[0]) / 4096, (l) => (2 * l - o[1]) / 4096, (l) => (2 * l - o[2]) / 4096];
 }
 
+export function resultant(x, y, z) { return Math.sqrt(x * x + y * y + z * z); }
+
 /** Per-axis g values (+ resultant) over rows with mask[i] && valid[i]; mask null = all rows. */
 export function axisValues(run, analysis, mask, mode) {
-  checkMode(mode);
-  const [fx, fy, fz] = converter(analysis, mode);
+  const [fx, fy, fz] = axisConverters(analysis, mode);
   let m = 0;
   for (let i = 0; i < run.n; i++) if ((!mask || mask[i]) && run.valid[i]) m++;
   const ax = new Float64Array(m);
@@ -72,7 +75,7 @@ export function axisValues(run, analysis, mask, mode) {
     if (!((!mask || mask[i]) && run.valid[i])) continue;
     const x = fx(run.ax[i]); const y = fy(run.ay[i]); const z = fz(run.az[i]);
     ax[k] = x; ay[k] = y; az[k] = z;
-    res[k] = Math.sqrt(x * x + y * y + z * z);
+    res[k] = resultant(x, y, z);
     k++;
   }
   return { ax, ay, az, res };
