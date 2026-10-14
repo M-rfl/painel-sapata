@@ -172,6 +172,6 @@ Plans:
 | 9. Repo Hygiene & Raw CSV Converter | v1.3 | 0/6 | Complete | 2026-10-08 |
 | 10. Analysis Engine | v1.3 | 5/5 | Complete | 2026-10-08 |
 | 11. Public Site, Overview & Controls | v1.3 | 7/7 | Complete | 2026-10-14 |
-| 12. Time Series & Map | v1.3 | 0/6 | Planned | - |
+| 12. Time Series & Map | v1.3 | 1/6 | In Progress | - |
 | 13. Matrix, Ranking & Shareable State | v1.3 | 0/TBD | Not started | - |
 | 14. CSV Upload | v1.3 | 0/TBD | Not started | - |

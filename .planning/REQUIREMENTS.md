@@ -48,15 +48,15 @@
 
 ### Charts
 
-- [ ] **CHART-01**: User sees AX/AY/AZ time series with zoom and a medido/dinâmico toggle
+- [x] **CHART-01**: User sees AX/AY/AZ time series with zoom and a medido/dinâmico toggle
 - [ ] **CHART-02**: Charts show threshold lines and keep every peak visible at any zoom level
 - [ ] **CHART-03**: Data gaps (turnaround, missing samples) are drawn as gaps, not bridged
-- [ ] **CHART-04**: User can expand secondary charts for vibration velocity, displacement, frequency and temperature
+- [x] **CHART-04**: User can expand secondary charts for vibration velocity, displacement, frequency and temperature
 - [ ] **CHART-05**: Zoom and time cursor are synchronized across all charts
 
 ### Map
 
-- [ ] **MAP-01**: User sees the GPS track on an OSM map, coloured by sentido and broken at gaps
+- [x] **MAP-01**: User sees the GPS track on an OSM map, coloured by sentido and broken at gaps
 - [ ] **MAP-02**: User sees station markers and trecho segments on the map
 - [ ] **MAP-03**: User sees impact points as severity-coloured markers with a popup (hora, trecho, sentido, AX/AY/AZ din., classe, Google Maps link)
 - [ ] **MAP-04**: User can toggle a geographic heat map weighted by severity on a fixed scale (one point per GPS fix)
@@ -144,12 +144,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PARAM-02 | Phase 11 | Complete |
 | PARAM-03 | Phase 11 | Complete |
 | PARAM-05 | Phase 11 | Complete |
-| CHART-01 | Phase 12 | Pending |
+| CHART-01 | Phase 12 | Complete |
 | CHART-02 | Phase 12 | Pending |
 | CHART-03 | Phase 12 | Pending |
-| CHART-04 | Phase 12 | Pending |
+| CHART-04 | Phase 12 | Complete |
 | CHART-05 | Phase 12 | Pending |
-| MAP-01 | Phase 12 | Pending |
+| MAP-01 | Phase 12 | Complete |
 | MAP-02 | Phase 12 | Pending |
 | MAP-03 | Phase 12 | Pending |
 | MAP-04 | Phase 12 | Pending |
