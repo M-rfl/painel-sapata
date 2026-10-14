@@ -1,9 +1,9 @@
 ---
 phase: 16
 slug: axis-orientation-popup
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-10-14
 ---
 
@@ -38,7 +38,12 @@ created: 2026-10-14
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| (filled by planner/executor) | | | HELP-01 | | | | ⬜ pending |
+| 16-01-T1 | 01 | 1 | HELP-01 | automated | `pytest tests/test_gen_axis_image.py -q` | ✅ | ✅ green |
+| 16-01-T2 | 01 | 1 | HELP-01 | automated | `pytest tests/test_site_static.py -q (test_axis_image_embedded)` | ✅ | ✅ green |
+| 16-02-T1 | 02 | 2 | HELP-01 | automated | `node --test tests/js/axes_strings.test.js` | ✅ | ✅ green |
+| 16-02-T2 | 02 | 2 | HELP-01 | automated | `pytest tests/test_site_static.py -q (test_axes_wiring)` | ✅ | ✅ green |
+| 16-03-T1 | 03 | 3 | HELP-01 | automated | `python -m pytest -q (289 passed) + node --test (296 pass, 0 fail)` | ✅ | ✅ green |
+| 16-03-T2 | 03 | 3 | HELP-01 | manual | `manual browser checklist` | ✅ | ⬜ pending (manual) |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -46,9 +51,9 @@ created: 2026-10-14
 
 ## Wave 0 Requirements
 
-- [ ] `tests/test_site_static.py` — `test_axes_wiring`, `test_axis_image_embedded` (HELP-01)
-- [ ] `tests/test_gen_axis_image.py` — generator builds a valid WebP module, 1024×683 (`importorskip("PIL")`)
-- [ ] `Pillow==12.2.0` in `requirements-dashboard.txt`
+- [x] `tests/test_site_static.py` — `test_axes_wiring`, `test_axis_image_embedded` (HELP-01)
+- [x] `tests/test_gen_axis_image.py` — generator builds a valid WebP module, 1024×683 (`importorskip("PIL")`)
+- [x] `Pillow==12.2.0` in `requirements-dashboard.txt`
 
 ---
 
@@ -62,11 +67,11 @@ created: 2026-10-14
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 60s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 60s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** automated gates green; manual browser check pending
