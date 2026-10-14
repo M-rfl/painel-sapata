@@ -88,7 +88,7 @@
 
 ### Report
 
-- [ ] **REPORT-01**: User downloads a PDF report of the loaded run (bundled or uploaded) with KPIs, the map heat view, the trecho × classe matrices and the trecho / pontos top-50 tables as styled on the page, generated in the browser
+- [x] **REPORT-01**: User downloads a PDF report of the loaded run (bundled or uploaded) with KPIs, the map heat view, the trecho × classe matrices and the trecho / pontos top-50 tables as styled on the page, generated in the browser
 
 ## Future Requirements
 
@@ -170,7 +170,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PARAM-04 | Phase 13 | Complete |
 | SHARE-01 | Phase 13 | Complete |
 | UPLOAD-01 | Phase 14 | Complete |
-| REPORT-01 | Phase 15 | Pending |
+| REPORT-01 | Phase 15 | Complete |
 
 **Coverage:**
 - v1.3 requirements: 49 total
