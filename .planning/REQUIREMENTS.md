@@ -83,7 +83,7 @@
 
 ### Upload
 
-- [ ] **UPLOAD-01**: User uploads any raw logger CSV (comma or pt-BR `;`) in the browser and every view recomputes from it, processed client-side with no server
+- [x] **UPLOAD-01**: User uploads any raw logger CSV (comma or pt-BR `;`) in the browser and every view recomputes from it, processed client-side with no server
 - [x] **SYNC-01**: Hovering a chart highlights the position on the map; clicking a map point moves the chart cursor to that time
 
 ## Future Requirements
@@ -165,7 +165,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RANK-03 | Phase 13 | Complete |
 | PARAM-04 | Phase 13 | Complete |
 | SHARE-01 | Phase 13 | Complete |
-| UPLOAD-01 | Phase 14 | Pending |
+| UPLOAD-01 | Phase 14 | Complete |
 
 **Coverage:**
 - v1.3 requirements: 48 total
