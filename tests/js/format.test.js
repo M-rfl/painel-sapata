@@ -67,7 +67,8 @@ test('validateThresholds', () => {
 
 test('i18n strings are Portuguese and non-empty', () => {
   const deny = /\b(the|filter|filters|reset|threshold|loading|error|records|events|impacts|points|settings|show|hide)\b/i;
-  for (const [k, v] of Object.entries(T)) {
+  const flat = Object.entries(T).flatMap(([k, v]) => (typeof v === 'object' ? Object.entries(v).map(([k2, v2]) => [`${k}.${k2}`, v2]) : [[k, v]]));
+  for (const [k, v] of flat) {
     assert.equal(typeof v, 'string', k);
     assert.ok(v.length > 0, k);
     assert.ok(!deny.test(v), `${k}: ${v}`);

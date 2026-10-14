@@ -214,3 +214,41 @@ def test_dashboard_lifecycle():
     assert ".remove()" in mp
     session = _strip_comments((app / "session.js").read_text(encoding="utf-8"))
     assert "document" not in session and "window" not in session
+
+
+def test_upload_no_network():
+    app = SITE / "js" / "app"
+    strict = list((SITE / "js" / "core" / "convert").rglob("*.js")) + [app / "upload.js", app / "uploadio.js", app / "session.js"]
+    for js in strict:
+        src = _strip_comments(js.read_text(encoding="utf-8"))
+        for needle in ("fetch(", "XMLHttpRequest", "sendBeacon", "WebSocket", "EventSource", "import("):
+            assert needle not in src, f"{js}: {needle}"
+    for js in (SITE / "js").rglob("*.js"):
+        src = _strip_comments(js.read_text(encoding="utf-8"))
+        for needle in ("XMLHttpRequest", "sendBeacon", "WebSocket", "EventSource"):
+            assert needle not in src, f"{js}: {needle}"
+        assert not re.search(r"""method:\s*['"]POST['"]""", src, re.I), js
+
+
+def test_stations_data_wired():
+    import json
+    data = json.loads((SITE / "data" / "stations.json").read_text(encoding="utf-8"))
+    assert "lines" in data
+    src = _strip_comments(MAIN.read_text(encoding="utf-8"))
+    assert "const STATIONS_URL = 'data/stations.json'" in src
+    assert "fetch(STATIONS_URL" in src
+
+
+def test_upload_shell():
+    html = INDEX.read_text(encoding="utf-8")
+    for needle in ('id="upload"', 'id="upload-banner"', 'id="drop-overlay"'):
+        assert needle in html, needle
+    app = SITE / "js" / "app"
+    up = _strip_comments((app / "upload.js").read_text(encoding="utf-8"))
+    for needle in ("accept: '.csv,text/csv'", "multiple", "'dragover'", "'drop'", "preventDefault()", "input.value = ''", "alert"):
+        assert needle in up, needle
+    io = _strip_comments((app / "uploadio.js").read_text(encoding="utf-8"))
+    assert "fatal: true" in io and r"\.csv$" in io
+    main = _strip_comments(MAIN.read_text(encoding="utf-8"))
+    for needle in ("mountUpload(", "session.tryLoad(", "restoreExample(", "readSelected(", "convertFiles(", "res.stale"):
+        assert needle in main, needle

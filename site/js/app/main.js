@@ -21,8 +21,12 @@ import { mountMatrix } from './panels/matrix.js';
 import { mountRanking } from './panels/ranking.js';
 import { mountShare, showIgnoredNotice } from './panels/share.js';
 import { mountControls, renderControls } from './panels/controls.js';
+import { convertFiles, ConvertError } from '../core/convert/index.js';
+import { readSelected, failureNotice, loadedMessage, bannerText } from './uploadio.js';
+import { mountUpload, setBusy, showUploadError, showUploadInfo, showBanner, hideBanner } from './upload.js';
 
 const DATA_URL = 'data/run-2026-10-02-l4-t102.json';
+const STATIONS_URL = 'data/stations.json';
 
 const PANELS = [
   ['overview', renderOverview],
@@ -171,6 +175,60 @@ async function start() {
     return;
   }
   session.showExample(run);
+  mountUpload(document.getElementById('upload'), { onFiles: handleFiles });
+}
+
+// Stations are fetched lazily on the first upload and cached; the page load never needs them.
+let stationsPromise = null;
+function loadStations() {
+  if (!stationsPromise) {
+    stationsPromise = fetch(STATIONS_URL)
+      .then((resp) => {
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        return resp.json();
+      })
+      .catch((err) => {
+        stationsPromise = null;
+        console.error(err);
+        throw new ConvertError('stations_unavailable');
+      });
+  }
+  return stationsPromise;
+}
+
+const uploadInfo = new WeakMap();
+
+async function handleFiles(fileList) {
+  setBusy(true);
+  const res = await session.tryLoad(async () => {
+    const { files, ignored } = await readSelected(fileList);
+    const stations = await loadStations();
+    await new Promise((r) => setTimeout(r, 0)); // let "Processando…" paint
+    const t0 = performance.now();
+    const { json, summary } = convertFiles(files, stations);
+    const run = decodeRun(json);
+    console.debug('convert ms', (performance.now() - t0).toFixed(1));
+    uploadInfo.set(run, { summary, ignored });
+    return run;
+  });
+  setBusy(session.busy());
+  if (res.stale) return; // superseded by a newer pick or by restoreExample(): show nothing
+  const noticeEl = document.getElementById('notice');
+  if (res.ok) {
+    const { summary, ignored } = uploadInfo.get(res.run);
+    showBanner(document.getElementById('upload-banner'), bannerText(summary), backToExample);
+    showUploadInfo(noticeEl, loadedMessage(summary, ignored));
+  } else {
+    console.error(res.error);
+    if (res.fatal) setStatus(T.loadError);
+    showUploadError(noticeEl, failureNotice(res.error)); // view untouched: session mounted nothing
+  }
+}
+
+function backToExample() {
+  session.restoreExample();
+  hideBanner(document.getElementById('upload-banner'));
+  setBusy(false);
 }
 
 start();
