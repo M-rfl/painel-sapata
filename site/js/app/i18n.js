@@ -150,6 +150,36 @@ export const T = Object.freeze({
   axAY: 'AY Lateral',
   axAZ: 'AZ Vertical',
   axRes: 'Resultante',
+
+  // Upload
+  upload: 'Carregar CSV',
+  uploadBusy: 'Processando…',
+  uploadDrop: 'Solte o CSV para carregar',
+  uploadBack: 'Voltar à corrida de exemplo',
+  uploadFailed: 'Não foi possível carregar os dados.',
+  uploadKept: 'A visualização atual foi mantida.',
+  uploadErrGeneric: 'Erro inesperado ao processar o arquivo.',
+  uploadIgnored: 'Ignorados (não são .csv)',
+  uploadLoaded: 'Arquivo carregado',
+  uploadWarnAmbiguous: 'Atenção: a linha do trajeto não pôde ser identificada com segurança; confira trechos e sentidos.',
+  uploadWarnFewStations: 'Atenção: o GPS passou por apenas uma estação; trechos e sentidos podem estar incompletos.',
+  uploadBanner: 'Dados enviados por você ({files}, {rows} linhas). O processamento ocorreu neste navegador e nada foi enviado a nenhum servidor.',
+  uploadErrors: Object.freeze({
+    no_files: 'Nenhum arquivo selecionado.',
+    no_csv: 'Nenhum arquivo .csv na seleção. Envie o CSV bruto do logger.',
+    too_many_files: 'Selecione no máximo {max} arquivos CSV por vez.',
+    too_large: 'O arquivo "{file}" tem {mb} MB; o limite é {max} MB.',
+    read_failed: 'Não foi possível ler o arquivo "{file}".',
+    bad_encoding: 'O arquivo "{file}" não está em UTF-8 e não pôde ser lido.',
+    empty_file: 'O arquivo "{file}" está vazio.',
+    missing_column: 'O arquivo "{file}" não parece ser um CSV do logger: falta a coluna "{column}".',
+    bad_timestamp: '{file}, linha {line}: data/hora inválida "{text}".',
+    naive_timestamp: '{file}, linha {line}: data/hora "{text}" sem fuso horário.',
+    no_rows: 'Os arquivos não têm nenhuma linha de dados.',
+    channel_off_grid: 'Valor fora da resolução do sensor no canal "{channel}" (amostra {index}).',
+    unknown_line: 'Não foi possível identificar a linha: nenhuma estação das linhas conhecidas foi encontrada no trajeto do GPS.',
+    stations_unavailable: 'Não foi possível carregar a lista de estações. Verifique a conexão e tente novamente.',
+  }),
 });
 
 // Info (i) button texts: short explanations derived from the engine rules (core/*.js).
@@ -209,6 +239,7 @@ export const INFO = Object.freeze({
   csv: 'Arquivo para Excel em português: separador ponto e vírgula, vírgula decimal e horário de Brasília. Exporta as linhas filtradas na ordem atual; em pontos, todos os pontos filtrados, não só os 50.',
   share: 'O endereço da página guarda limiares, parâmetros de análise, filtros, exibição, mapa de calor, base da matriz e ordenação do ranking. Não guarda a ampliação dos gráficos nem a posição do mapa. "Restaurar padrões" limpa o link.',
   resetZoom: 'Volta todos os gráficos para a corrida inteira. Os filtros não são alterados.',
+  upload: 'O processamento acontece só neste navegador; nada é enviado a um servidor. Aceita o CSV bruto do logger (separador vírgula ou ponto e vírgula) e vários arquivos da mesma corrida de uma vez (um por sentido). Também é possível soltar os arquivos sobre a página. O link de compartilhamento fica indisponível para dados enviados. "Voltar à corrida de exemplo" restaura a corrida incluída no painel.',
 });
 
 export function topPontosTitle(n, total) {
