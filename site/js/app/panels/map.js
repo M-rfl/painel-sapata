@@ -1,4 +1,4 @@
-// Mount-once Leaflet panel: OSM tiles, sentido-coloured track (faded outside the filter), stations,
+// Mount-once Leaflet panel: OSM tiles, OSM route relations of the run's line (background, per sentido), stations,
 // ponto markers with DOM popups, optional fixed-scale heat layer and a chart-driven position marker.
 // Map content comes only from core/geo.js; render(ctx) never moves the view.
 import { h } from '../dom.js';
@@ -7,9 +7,7 @@ import { infoBtn } from '../info.js';
 import { fmtDate, fmtTime, fmtG } from '../format.js';
 import { paramsKey } from '../state.js';
 import { CLASS_NAMES } from '../../core/defaults.js';
-import {
-  trackSegments, fixMatched, pontoMarkers, unplacedCounts, heatPoints, hoverPosition, nearestFix,
-} from '../../core/geo.js';
+import { pontoMarkers, unplacedCounts, heatPoints, hoverPosition } from '../../core/geo.js';
 
 const SENTIDO_COLORS = ['#1565c0', '#5d4037'];
 const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -55,7 +53,7 @@ export function mountMap(el, link, run) {
   else map.fitWorld();
   requestAnimationFrame(() => map.invalidateSize());
 
-  const trackLayer = L.layerGroup().addTo(map);
+  const routeLayer = L.layerGroup().addTo(map);
   const stationLayer = L.layerGroup().addTo(map);
   const markerLayer = L.layerGroup().addTo(map);
   for (const s of run.stations || []) {
@@ -63,13 +61,43 @@ export function mountMap(el, link, run) {
       .bindTooltip(s.name).addTo(stationLayer);
   }
 
+  // Routes: static OSM relation geometry of the run's line, loaded once; never snapped to, never interactive.
+  map.createPane('routes').style.zIndex = 350;
+  const routeRenderer = L.canvas({ pane: 'routes' });
+  const sentidoBox = h('div', null);
+  function legendRow(i, text) {
+    return h('div', null, h('span', { class: 'swatch', style: { background: SENTIDO_COLORS[i % SENTIDO_COLORS.length] } }), text);
+  }
+  function setLegend(rows) {
+    sentidoBox.replaceChildren(...rows);
+  }
+  setLegend((run.sentidos || []).map((s, i) => legendRow(i, s.name)));
+  const lineId = run.meta?.line?.id;
+  const lines = lineId && !run.meta.line.ambiguous ? [lineId] : [1, 2, 3, 4];
+  Promise.all(lines.flatMap((ln) => [1, 2].map((sn) =>
+    fetch(`data/routes/linha-${ln}-sentido-${sn}.geojson`).then((r) => (r.ok ? r.json() : null)).catch(() => null))))
+    .then((feats) => {
+      const ok = feats.filter(Boolean);
+      for (const f of ok) {
+        const i = f.properties.sentido - 1;
+        L.geoJSON(f, {
+          pane: 'routes',
+          renderer: routeRenderer,
+          interactive: false,
+          style: { color: SENTIDO_COLORS[i % SENTIDO_COLORS.length], weight: lines.length === 1 ? 5 : 3, opacity: lines.length === 1 ? 0.55 : 0.3, dashArray: i ? '10 6' : null },
+        }).addTo(routeLayer);
+      }
+      if (lines.length === 1 && ok.length) {
+        setLegend(ok.map((f) => legendRow(f.properties.sentido - 1, `Sentido ${f.properties.sentido}: ${f.properties.name}`)));
+      }
+    });
+
   // Legend
   const legend = L.control({ position: 'bottomleft' });
   legend.onAdd = () => {
     const box = h('div', { class: 'map-legend' },
       h('strong', null, T.legSentidos),
-      (run.sentidos || []).map((s, i) => h('div', null,
-        h('span', { class: 'swatch', style: { background: SENTIDO_COLORS[i % SENTIDO_COLORS.length] } }), s.name)),
+      sentidoBox,
       h('strong', null, T.legClasses),
       CLASS_NAMES.slice(1).map((name, i) => h('div', null,
         h('span', { class: 'dot', style: { background: CLASS_COLORS[i + 1] } }), name)));
@@ -145,35 +173,6 @@ export function mountMap(el, link, run) {
 
   let viewKey = null;
 
-  function trackTooltipText(f) {
-    const r = run.fixRow[f];
-    return `${run.trechoNames[run.trecho[r]] ?? ''} — ${run.sentidos?.[run.sentido[r]]?.name ?? ''}`;
-  }
-
-  function drawTrack(view) {
-    trackLayer.clearLayers();
-    const segs = trackSegments(run, fixMatched(run, view.mask));
-    for (const seg of segs) {
-      const color = SENTIDO_COLORS[seg.sentido % SENTIDO_COLORS.length];
-      L.polyline(seg.latlngs, seg.matched
-        ? { color, weight: 4, opacity: 0.9, interactive: false }
-        : { color, weight: 2, opacity: 0.3, interactive: false }).addTo(trackLayer);
-      const tipNode = h('span', null, '');
-      const hit = L.polyline(seg.latlngs, { color, weight: 14, opacity: 0 }).addTo(trackLayer);
-      hit.bindTooltip(tipNode, { sticky: true });
-      const first = seg.fixes[0];
-      const lastFix = seg.fixes[seg.fixes.length - 1];
-      hit.on('mousemove', (e) => {
-        const f = nearestFix(run, e.latlng.lat, e.latlng.lng, first, lastFix);
-        if (f >= 0) tipNode.textContent = trackTooltipText(f);
-      });
-      hit.on('click', (e) => {
-        const f = nearestFix(run, e.latlng.lat, e.latlng.lng, first, lastFix);
-        if (f >= 0) link.select(run.fixRow[f]);
-      });
-    }
-  }
-
   function drawMarkers(analysis, view) {
     markerLayer.clearLayers();
     for (const m of pontoMarkers(run, analysis, view)) {
@@ -193,7 +192,6 @@ export function mountMap(el, link, run) {
     const vk = paramsKey(state.params) + '|' + JSON.stringify(state.filters);
     if (vk !== viewKey) {
       viewKey = vk;
-      drawTrack(view);
       drawMarkers(analysis, view);
       const u = unplacedCounts(run, analysis, view);
       note.textContent = semGpsNote(u.pontos, u.eventos);

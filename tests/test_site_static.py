@@ -162,3 +162,24 @@ def test_map_panel_contract():
     i18n = (SITE / "js" / "app" / "i18n.js").read_text(encoding="utf-8")
     assert "Ainda sem efeito" not in i18n
     assert "próxima etapa" not in i18n
+
+
+def test_map_routes_static_and_no_gps_track():
+    import json
+    routes = SITE / "data" / "routes"
+    expected = {(1, 6667528, 6667529), (2, 7064052, 7064053), (3, 9453118, 9453119), (4, 19644242, 19644243)}
+    for line, r1, r2 in expected:
+        for sentido, rid in ((1, r1), (2, r2)):
+            f = json.loads((routes / f"linha-{line}-sentido-{sentido}.geojson").read_text(encoding="utf-8"))
+            p = f["properties"]
+            assert (p["line"], p["sentido"], p["relation"]) == (line, sentido, rid)
+            assert p["name"] and "→" in p["name"]
+            assert f["geometry"]["type"] == "MultiLineString" and f["geometry"]["coordinates"]
+            for seg in f["geometry"]["coordinates"]:
+                assert len(seg) >= 2
+                lon, lat = seg[0]
+                assert -44 < lon < -42 and -24 < lat < -22
+    mp = _strip_comments((SITE / "js" / "app" / "panels" / "map.js").read_text(encoding="utf-8"))
+    for dead in ("trackSegments", "nearestFix", "fixMatched", "drawTrack", "polyline"):
+        assert dead not in mp, dead
+    assert "data/routes/" in mp

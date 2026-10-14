@@ -27,3 +27,7 @@ df630c6a8d6f8eeaff264b50f73ce5b114f646ffd9a0bb74f049b0a00135fa04  uplot/uPlot.mi
 Rode `npm pack <pacote>@<versao>` em um diretorio temporario, extraia, copie os mesmos arquivos de `package/dist/` (mais `LICENSE`) e atualize versoes e hashes acima.
 
 O diretorio `images/` do Leaflet esta ausente de proposito: so usamos `L.circleMarker` e controles customizados (nunca `L.marker` com icone padrao nem `L.control.layers`).
+
+## Dados de rotas (OpenStreetMap)
+
+`site/data/routes/linha-{N}-sentido-{S}.geojson` contem a geometria das relacoes OSM de cada linha/sentido (somente ways), (c) colaboradores do OpenStreetMap, licenca ODbL 1.0 (https://www.openstreetmap.org/copyright). Regenerar com `python tools/fetch_routes.py`.
