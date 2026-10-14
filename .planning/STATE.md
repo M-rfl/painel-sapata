@@ -4,14 +4,14 @@ milestone: v1.3
 milestone_name: Field Run Dashboard
 current_plan: Not started
 status: planning
-stopped_at: Completed 13-03-PLAN.md
-last_updated: "2026-10-14T11:42:19.033Z"
+stopped_at: Completed 13-01-PLAN.md
+last_updated: "2026-10-14T11:42:55.576Z"
 last_activity: 2026-10-14
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 31
-  completed_plans: 26
+  completed_plans: 27
   percent: 67
 ---
 
@@ -72,6 +72,7 @@ Progress: [███████░░░] 67%
 | Phase 12 P06 | checkpoint-driven | 2 tasks | 3 files |
 | Phase 13 P02 | 10min | 2 tasks | 4 files |
 | Phase 13 P03 | 15min | 3 tasks | 6 files |
+| Phase 13 P01 | 20min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -149,6 +150,7 @@ Progress: [███████░░░] 67%
 - [Phase 12]: [12-06] sem-GPS note wording kept: N pontos de impacto sem GPS (M eventos)
 - [Phase 13]: [13-02] GPS jump filter is a derived run outside analyze(); run 1 shows pontos 98 (fix 31 rejected), raw stays 99
 - [Phase 13]: [13-03] Classe filter applies to trecho-table counts/IQ; trecho filter only marks rows; sem Critico from full-run top-class medicoes
+- [Phase 13]: [13-01] GPS limits in params.gps/paramsKey only (analyze untouched); hash keys decoded per part, last duplicate wins, invalid keys ignored and reported
 
 ### Key Constraints for v1.2
 
@@ -159,6 +161,6 @@ Progress: [███████░░░] 67%
 
 ## Session Continuity
 
-Stopped at: Completed 13-03-PLAN.md
+Stopped at: Completed 13-01-PLAN.md
 
 Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)

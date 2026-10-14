@@ -185,5 +185,5 @@ Plans:
 | 10. Analysis Engine | v1.3 | 5/5 | Complete | 2026-10-08 |
 | 11. Public Site, Overview & Controls | v1.3 | 7/7 | Complete | 2026-10-14 |
 | 12. Time Series & Map | v1.3 | 6/6 | Complete | 2026-10-14 |
-| 13. Matrix, Ranking & Shareable State | v1.3 | 2/7 | In Progress | - |
+| 13. Matrix, Ranking & Shareable State | v1.3 | 3/7 | In Progress | - |
 | 14. CSV Upload | v1.3 | 0/TBD | Not started | - |

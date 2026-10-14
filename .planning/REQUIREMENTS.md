@@ -79,7 +79,7 @@
 - [x] **PARAM-03**: User can set display options: heat-map metric (eixo dominante / AX / AY / AZ / resultante dinâmica), radius, intensity; medido vs dinâmico
 - [x] **PARAM-04**: User can set analysis parameters: rest-level offset per axis (median default or manual), event-grouping gap, GPS max speed and max fix interval
 - [x] **PARAM-05**: User can reset all parameters to defaults
-- [ ] **SHARE-01**: Page URL encodes all parameters and filters; opening the link restores the same view
+- [x] **SHARE-01**: Page URL encodes all parameters and filters; opening the link restores the same view
 
 ### Upload
 
@@ -164,7 +164,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RANK-02 | Phase 13 | Complete |
 | RANK-03 | Phase 13 | Complete |
 | PARAM-04 | Phase 13 | Complete |
-| SHARE-01 | Phase 13 | Pending |
+| SHARE-01 | Phase 13 | Complete |
 | UPLOAD-01 | Phase 14 | Pending |
 
 **Coverage:**
