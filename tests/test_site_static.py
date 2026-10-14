@@ -132,3 +132,17 @@ def test_no_cdn():
 def test_panels_do_not_use_innerhtml():
     for f in (SITE / "js" / "app").rglob("*.js"):
         assert "innerHTML" not in _strip_comments(f.read_text(encoding="utf-8")), f
+
+
+def test_charts_panel_contract():
+    charts = _strip_comments((SITE / "js" / "app" / "panels" / "charts.js").read_text(encoding="utf-8"))
+    assert "SYNC_KEY" in charts
+    assert re.search(r"setData\([^)]*,\s*false\)", charts)
+    assert "h('details'" in charts
+    details_call = charts[charts.index("h('details'"):].split("\n")[0]
+    assert "open:" not in details_call and "'open'" not in details_call
+    assert "getComputedStyle" in charts
+    assert "innerHTML" not in charts
+    main = _strip_comments(MAIN.read_text(encoding="utf-8"))
+    assert "mountCharts(" in main
+    assert "charts.render(ctx)" in main
