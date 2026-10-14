@@ -1,3 +1,5 @@
 # Vendored third-party files: keep the npm bytes on every OS (sha256 in site/vendor/README.md).
 site/vendor/jspdf/** -text
 site/vendor/jspdf-autotable/** -text
+# Generated base64 image module: one long LF line, never normalised, collapsed in diffs.
+site/js/app/axisimage.js -text linguist-generated

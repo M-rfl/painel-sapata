@@ -1,2 +1,4 @@
 # Dev-only dependencies for tools/dashboard_converter (validation reads the workbook). Not needed by the logger.
 openpyxl==3.1.5
+# Dev-only: tools/gen_axis_image.py re-encodes the Phase 16 axis image (WebP).
+Pillow==12.2.0
