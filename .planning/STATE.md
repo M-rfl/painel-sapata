@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Field Run Dashboard
-current_plan: Not started
-status: planning
-stopped_at: Completed 12-02-PLAN.md
-last_updated: "2026-10-14T01:40:53.986Z"
+current_plan: 4
+status: executing
+stopped_at: Completed 12-03-PLAN.md
+last_updated: "2026-10-14T01:42:42.310Z"
 last_activity: 2026-10-14
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 24
-  completed_plans: 20
+  completed_plans: 21
   percent: 50
 ---
 
@@ -27,9 +27,9 @@ See: .planning/PROJECT.md (updated 2026-10-08 after v1.3 start)
 ## Current Position
 
 Phase: 12 of 14 (Time Series & Map)
-**Current Plan:** 3
+**Current Plan:** 4
 **Total Plans in Phase:** 6
-**Status:** In progress
+**Status:** Ready to execute
 **Last Activity:** 2026-10-14
 
 Progress: [█████░░░░░] 50%
@@ -66,6 +66,7 @@ Progress: [█████░░░░░] 50%
 | Phase 11 P07 | checkpoint-driven | 4 tasks | 1 files |
 | Phase 12 P01 | 8min | 2 tasks | 13 files |
 | Phase 12 P02 | 15min | 2 tasks | 5 files |
+| Phase 12 P03 | 10min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -136,6 +137,7 @@ Progress: [█████░░░░░] 50%
 - [Phase 11]: [11-07] Published to M-rfl/painel-sapata (Pages via Actions); 6 dp GPS confirmed public by user 2026-10-13; CI full pytest passes on Linux/xvfb
 - [Phase 12]: [12-01] Vendored uPlot 1.6.32/Leaflet 1.9.4/leaflet.heat 0.2.0 without Leaflet images/
 - [Phase 12]: [12-02] Threshold lines from th2/off2 (medido offset by off2); gap rows only for dt > maxJumpMs; no decimation
+- [Phase 12]: [12-03] Track breaks at sentido change or fix gap >120s; heat scale fixed at Critico threshold; unplacedCounts returns pontos and eventos
 
 ### Key Constraints for v1.2
 
@@ -146,6 +148,6 @@ Progress: [█████░░░░░] 50%
 
 ## Session Continuity
 
-Stopped at: Completed 12-02-PLAN.md
+Stopped at: Completed 12-03-PLAN.md
 
 Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)
