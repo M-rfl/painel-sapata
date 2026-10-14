@@ -74,10 +74,12 @@ export function mountMap(el, link, run, store) {
   setLegend((run.sentidos || []).map((s, i) => legendRow(i, s.name)));
   const lineId = run.meta?.line?.id;
   const lines = lineId && !run.meta.line.ambiguous ? [lineId] : [1, 2, 3, 4];
+  let routeFeatures = [];
   Promise.all(lines.flatMap((ln) => [1, 2].map((sn) =>
     fetch(`data/routes/linha-${ln}-sentido-${sn}.geojson`).then((r) => (r.ok ? r.json() : null)).catch(() => null))))
     .then((feats) => {
       const ok = feats.filter(Boolean);
+      routeFeatures = ok;
       for (const f of ok) {
         const i = f.properties.sentido - 1;
         L.geoJSON(f, {
@@ -220,5 +222,5 @@ export function mountMap(el, link, run, store) {
     map.remove();
   }
 
-  return { render, focus, destroy };
+  return { render, focus, destroy, getRouteFeatures: () => routeFeatures.slice() };
 }
