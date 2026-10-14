@@ -114,3 +114,30 @@ td.num, th.num { text-align: right; }
 .matrix-pair td.mx-total, .matrix-pair th { padding: 0.25rem 0.5rem; }
 .mx-cell.selected { outline: 2px solid #1f2933; outline-offset: -2px; }
 .mx-cell:focus-visible { outline: 2px solid #2563eb; outline-offset: -2px; }
+
+/* Ranking */
+.rank-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 1rem; }
+@media (max-width: 1200px) { .rank-pair { grid-template-columns: minmax(0, 1fr); } }
+.rank-block h3 { display: flex; gap: 0.5rem; align-items: center; margin: 0 0 0.4rem; font-size: 1rem; }
+.rank-csv { margin-left: auto; display: inline-flex; gap: 0.3rem; align-items: center; }
+.rank-csv button { cursor: pointer; }
+.rank-scroll { overflow: auto; max-height: 32rem; }
+.rank-scroll thead th { position: sticky; top: 0; background: var(--card); z-index: 1; }
+.rank-block td.num { text-align: right; }
+.rank-block tr.selected { background: #eef2ff; }
+.rank-block tr.clickable { cursor: pointer; }
+.rank-block tr.clickable:hover { background: #f3f4f6; }
+.rank-block tr.clickable:focus-visible { outline: 2px solid #2563eb; outline-offset: -2px; }
+.badge-semcritico { display: inline-block; font-size: 0.7rem; border-radius: 999px; padding: 0 0.4rem; background: #e5e7eb; color: #374151; }
+.lvl-pill { display: inline-block; border-radius: 999px; padding: 0 0.5rem; font-weight: 600; color: #fff; background: var(--muted); }
+.lvl-1 { background: var(--critico); }
+.lvl-2 { background: var(--severo); }
+.lvl-3 { background: var(--moderado); }
+.lvl-4 { background: var(--leve); color: #1f2933; }
+.iq-cell.iq-bom { color: var(--normal); font-weight: 600; }
+.iq-cell.iq-regular { color: #b26a00; font-weight: 600; }
+.iq-cell.iq-ruim { color: var(--severo); font-weight: 600; }
+.cls-swatch { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; vertical-align: middle; }
+th button { background: none; border: 0; font: inherit; font-weight: 600; cursor: pointer; padding: 0; color: inherit; }
+th[aria-sort="ascending"] button::after { content: " \25B2"; font-size: 0.7em; }
+th[aria-sort="descending"] button::after { content: " \25BC"; font-size: 0.7em; }

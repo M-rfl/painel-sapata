@@ -15,6 +15,7 @@ import { createLink } from './link.js';
 import { mountCharts } from './panels/charts.js';
 import { mountMap } from './panels/map.js';
 import { mountMatrix } from './panels/matrix.js';
+import { mountRanking } from './panels/ranking.js';
 import { mountControls, renderControls } from './panels/controls.js';
 
 const DATA_URL = 'data/run-2026-10-02-l4-t102.json';
@@ -52,6 +53,8 @@ async function start() {
   const charts = mountCharts(document.getElementById('charts'), link, run);
   const map = mountMap(document.getElementById('map'), link, run);
   const matrix = mountMatrix(document.getElementById('matrix'), store);
+  // 13-06 extends onRowClick with map focus.
+  const ranking = mountRanking(document.getElementById('ranking'), store, { onRowClick: (row) => link.select(row) });
 
   let memoKey = null;
   let analysis = null;
@@ -76,6 +79,7 @@ async function start() {
     charts.render(ctx);
     map.render(ctx);
     matrix.render(ctx);
+    ranking.render(ctx);
     renderControls(state);
   }
 

@@ -113,6 +113,32 @@ export const T = Object.freeze({
   mTotal: 'Total',
   mTrecho: 'Trecho',
 
+  // Ranking
+  secRanking: 'Ranking',
+  rTrechos: 'Trechos por prioridade',
+  rCsv: 'Exportar CSV',
+  rSemCritico: 'sem Crítico',
+  rSemGps: 'sem GPS',
+  rcPrioridade: 'Prioridade',
+  rcSentido: 'Sentido',
+  rcTrecho: 'Trecho',
+  rcIq: 'IQ',
+  rcRegistros: 'Registros',
+  rcEventos: 'Eventos',
+  rcImpactos: 'Impactos',
+  rcPontos: 'Pontos',
+  rcMaior: 'Maior classe',
+  rcPico: 'Pico |dom| (g)',
+  rcRank: '#',
+  rcHora: 'Hora',
+  rcEixo: 'Eixo dominante',
+  rcDom: '|dom| (g)',
+  rcAx: 'AX din. (g)',
+  rcAy: 'AY din. (g)',
+  rcAz: 'AZ din. (g)',
+  rcClasse: 'Classe',
+  rcMapa: 'Mapa',
+
   // Axis names
   axAX: 'AX Longitudinal',
   axAY: 'AY Lateral',
@@ -172,8 +198,15 @@ export const INFO = Object.freeze({
   mapCalor: 'Mostra um ponto por posição GPS. O peso é o maior valor da métrica escolhida entre as amostras filtradas daquela posição. A escala é fixa: o limiar Crítico corresponde à cor máxima e não depende dos filtros. Densidade de amostras não é usada.',
   matrix: 'Linhas são os trechos na ordem do percurso, uma tabela por sentido; colunas são as classes. A cor da coluna é a cor da classe, com intensidade proporcional ao maior valor da coluna nas duas tabelas. A matriz segue os filtros de sentido, eixo e tempo e ignora os de trecho e classe, para continuar toda selecionável. Um toque na célula substitui o filtro de trecho e classe; tocar de novo na mesma célula limpa; com Ctrl ou Shift a célula é adicionada, e a seleção vale para todas as combinações de trechos e classes marcados. Células selecionadas ficam contornadas.',
   matrixBase: 'Define o que cada célula conta. Impactos: um por impacto, pela amostra de pico. Medições: cada amostra classificada, incluindo Normal. Pontos: um por local, na pior classe do local.',
+  rankTrecho: 'Prioridade da corrida inteira, de Alta (1) a Monitorar (4), pela classe dos impactos do trecho; não muda com os filtros. Contagens e IQ seguem os filtros, exceto o de trecho, que só destaca linhas. "sem Crítico" indica que nenhuma medição do trecho chegou à classe mais alta na corrida inteira.',
+  rankPontos: 'Os 50 pontos de maior |dom| entre os pontos filtrados, os mesmos do mapa. Clicar no cabeçalho reordena esses 50. Clicar numa linha leva os gráficos e o mapa ao ponto.',
+  csv: 'Arquivo para Excel em português: separador ponto e vírgula, vírgula decimal e horário de Brasília. Exporta as linhas filtradas na ordem atual; em pontos, todos os pontos filtrados, não só os 50.',
   resetZoom: 'Volta todos os gráficos para a corrida inteira. Os filtros não são alterados.',
 });
+
+export function topPontosTitle(n, total) {
+  return `Top ${fmtInt(n)} de ${fmtInt(total)} pontos`;
+}
 
 export function pontosNote(engine, ref) {
   return `Pontos de impacto: ${fmtInt(engine)} aqui vs ${fmtInt(ref)} na planilha (chaves de GPS diferentes); comparação apenas informativa.`;
