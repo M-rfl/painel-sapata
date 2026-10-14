@@ -148,3 +148,10 @@ th[aria-sort="descending"] button::after { content: " \25BC"; font-size: 0.7em; 
 .notice { margin: 0 0 0.6rem; padding: 0.4rem 0.7rem; background: #fff4e5; border: 1px solid #b26a00; border-radius: 4px; font-size: 0.9rem; }
 .notice[hidden] { display: none; }
 .notice-close { font: inherit; margin-left: 0.5rem; border: 0; background: transparent; cursor: pointer; }
+.notice--error { background: #fdecea; border-color: #b3261e; }
+.upload-btn { font: inherit; font-size: 0.85rem; padding: 0.2rem 0.6rem; cursor: pointer; }
+.upload-banner { margin: 0 0 0.6rem; padding: 0.4rem 0.7rem; background: #e8f1fb; border: 1px solid #2a64a8; border-radius: 4px; font-size: 0.9rem; }
+.upload-banner[hidden] { display: none; }
+.upload-back { font: inherit; font-size: 0.85rem; margin-left: 0.5rem; cursor: pointer; }
+.drop-overlay { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; background: rgba(20, 60, 110, 0.55); color: #fff; font-size: 2rem; pointer-events: none; }
+.drop-overlay[hidden] { display: none; }

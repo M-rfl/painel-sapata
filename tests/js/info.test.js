@@ -5,7 +5,8 @@ import { INFO } from '../../site/js/app/i18n.js';
 
 const dir = new URL('../../site/js/app/panels/', import.meta.url);
 const sources = readdirSync(dir).filter((f) => f.endsWith('.js'))
-  .map((f) => readFileSync(new URL(f, dir), 'utf8')).join('\n');
+  .map((f) => readFileSync(new URL(f, dir), 'utf8')).join('\n')
+  + '\n' + readFileSync(new URL('../../site/js/app/upload.js', import.meta.url), 'utf8');
 
 const REQUIRED = [
   'kpiRegistros', 'kpiEventos', 'kpiImpactos', 'kpiPontos', 'kpiTrecho', 'kpiIQ', 'badge',
@@ -15,7 +16,7 @@ const REQUIRED = [
   'thresholds', 'analise', 'pOffset', 'pGap', 'pSalto', 'pGpsVel', 'pGpsFix', 'fSentido', 'fTrecho', 'fEixo', 'fClasse', 'fTempo', 'display',
   'dValores', 'dMetrica', 'dRaio', 'dIntensidade',
   'charts', 'maisCanais', 'resetZoom', 'map', 'mapCalor', 'matrix', 'matrixBase',
-  'rankTrecho', 'rankPontos', 'csv', 'share',
+  'rankTrecho', 'rankPontos', 'csv', 'share', 'upload',
 ];
 
 test('every required info key has non-empty Portuguese text', () => {

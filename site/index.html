@@ -14,10 +14,12 @@
   <p id="run-date"></p>
   <span id="badge"></span>
   <span id="share"></span>
+  <span id="upload"></span>
 </header>
 <div class="layout">
   <aside id="controls"><p class="muted">Controles em breve.</p></aside>
   <main>
+    <div id="upload-banner" class="upload-banner" role="status" hidden></div>
     <div id="status">Carregando dados…</div>
     <p id="notice" class="notice" role="status" hidden></p>
     <section id="overview"></section>
@@ -31,6 +33,7 @@
   </main>
 </div>
 <noscript>Este painel precisa de JavaScript habilitado para funcionar.</noscript>
+<div id="drop-overlay" class="drop-overlay" hidden>Solte o CSV para carregar</div>
 <script src="vendor/leaflet/leaflet.js"></script>
 <script src="vendor/leaflet-heat/leaflet-heat.js"></script>
 <script src="vendor/uplot/uPlot.iife.min.js"></script>
