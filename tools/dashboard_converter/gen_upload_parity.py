@@ -329,7 +329,7 @@ def _timestamp_texts() -> list[str]:
         "2026-10-02T00:40:00-03:00:30", "2026-10-02T00:40:00-03:00:30.000001",
         "2026-10-02T00:40:00-0300.5", "2026-10-02T00:40:00-00:00", "2026-10-02T00:40:00+00:00",
         "2026-10-02 00:40:00-03:00", "2026-10-02X00:40:00-03:00", "2026-10-02_00:40:00-03:00",
-        "20261002T004000-0300", "2026-10-02T004000-03:00", "2026-10-02T00:40-03:00",
+        "20261002T003000-0300", "20261002T004000-0300", "2026-10-02T004000-03:00", "2026-10-02T00:40-03:00",
         "2026-10-02T00-03:00", "2026-W40-5T00:30:00-03:00", "0099-10-02T00:30:00-03:00",
         "2028-02-29T12:00:00-03:00", "2026-10-02T23:30:00-03:00", "2026-10-02T00:30:00+05:00",
         "2026-12-31T22:30:00-03:00", "2026-01-01T00:00:00+14:00", "1970-01-01T00:00:00+00:00",
@@ -503,9 +503,141 @@ def _convert(named_texts: list[tuple[str, str]]) -> dict:
     return obj
 
 
+CSV_HEADER = ("timestamp,ax_g,ay_g,az_g,vx_mm_s,vy_mm_s,vz_mm_s,angle_x,angle_y,angle_z,"
+              "temperature_c,dx_um,dy_um,dz_um,freq_x_hz,freq_y_hz,freq_z_hz,sensor_id,"
+              "gps_lat,gps_lon,gps_speed_mps").split(",")
+REST_LSB = (94, -38, -2018)
+AMBIG_LSB = 22400                       # 10.9375 g; mangled '109.375' reads as 1.09375 g (k) and 10.9375 g (k-1)
+
+
+def _synthetic_rows(rng: random.Random) -> tuple[list[dict], int]:
+    """One continuous Line 4 run: direction 0, terminal dwell, direction 1. Returns (rows, split)."""
+    lines, _ = load_stations(_stations_dir())
+    l4 = next(l for l in lines if l.line_id == 4)
+    d0, d1 = l4.directions[0].stations, l4.directions[1].stations
+    p0, p1 = _dir_points(d0, 120.0), _dir_points(d1, 120.0)
+    mid = len(p0) // 3
+    p0 = [None if mid <= i < mid + 8 else p for i, p in enumerate(p0)]    # tunnel: 32 rows
+    st3 = d0[3]
+    fixes: list[tuple] = []     # (point, rows, tag)
+    for p in p0:
+        near = p is not None and haversine_m(p[0], p[1], st3.lat, st3.lon) < 1.0
+        fixes.append((p, 18 if near else 4 if p is None else 3, ""))                          # dwell at a station
+    fixes.append((p0[-1], 12, "terminal"))                                # terminal dwell, 1.25 s step
+    split_fix = len(fixes)
+    for p in p1:
+        fixes.append((p, 3, ""))
+    rows: list[dict] = []
+    t_us = 0
+    split = 0
+    for fi, (pt, nrows, tag) in enumerate(fixes):
+        if fi == split_fix:
+            split = len(rows)
+        for r in range(nrows):
+            if rows:
+                step = 100000
+                if fi == 8 and r == 0:
+                    step = 2250000                      # run maximum gap (round-half-even tie)
+                if tag == "terminal" and r == 6:
+                    step = 1250000                      # raw turnaround gap
+                t_us += step
+            lsb = [REST_LSB[a] + rng.randint(-30, 30) for a in range(3)]
+            if rng.random() < 0.04:
+                lsb[rng.randrange(3)] += rng.choice((-1, 1)) * rng.randint(4300, 9000)
+            rows.append({
+                "t_us": t_us, "pt": pt, "lsb": lsb,
+                "vel": [rng.randint(100, 300) / 100 for _ in range(3)],
+                "disp": [float(rng.randint(10, 20)) for _ in range(3)],
+                "freq": [rng.randint(100, 160) / 10 for _ in range(3)],
+                "temp": rng.choice((21.6, 21.65, 21.7, 21.75, 21.8)),
+            })
+    for k in (split + 20, split + 60):                       # forced ambiguous cells (direction 1)
+        for j in range(k - 3, k + 4):                        # neighbours near 10.94 g
+            rows[j]["lsb"][0] = AMBIG_LSB + rng.randint(-4, 4)
+        rows[k]["lsb"][0] = AMBIG_LSB
+        rows[k]["ambig"] = True
+    for k, a, lsb in ((split + 90, 0, 21003), (split + 100, 1, -24567), (split + 110, 2, 22221)):
+        rows[k]["lsb"][a] = lsb                              # >= 10 g off the k grid: rule k-1
+        rows[k]["force"] = a
+    return rows, split
+
+
+def _fmt_ts(t_us: int) -> str:
+    base = datetime(2026, 10, 2, 8, 0, 0, 180000, tzinfo=BRT)
+    return (base + timedelta(microseconds=t_us)).isoformat(timespec="microseconds")
+
+
+def _render_file(rows: list[dict], ptbr: bool, rng: random.Random, force_bad_cell: int | None) -> str:
+    delim = ";" if ptbr else ","
+    protect: set[int] = set()
+    for i, r in enumerate(rows):
+        if r.get("ambig"):
+            protect.update(range(i - 4, i + 5))
+    out = [delim.join(CSV_HEADER)]
+    for i, r in enumerate(rows):
+        cells = [_fmt_ts(r["t_us"])]
+        for a in range(3):
+            v = Fraction(r["lsb"][a], 2048)
+            if ptbr and ((r.get("ambig") and a == 0) or r.get("force") == a):
+                cells.append(_mangle(v))
+            elif ptbr and i not in protect:
+                x = rng.random()
+                cells.append(_mangle(v) if x < 0.35 else
+                             _exact_text(v).replace(".", ",") if x < 0.42 else _exact_text(v))
+            else:
+                cells.append(_exact_text(v))
+
+        def scaled(val: float, pad: int | None = None) -> str:
+            text = repr(val)
+            if not ptbr or i in protect:
+                return text
+            x = rng.random()
+            if val >= 1 and x < 0.2:
+                return _mangle(Fraction(Decimal(text)), pad_to=pad or rng.choice((15, 16, 17)))
+            if x < 0.3:
+                return text.replace(".", ",")
+            return text
+        cells += [scaled(v) for v in r["vel"]]
+        cells += ["", "", ""]
+        cells.append(scaled(r["temp"], 17))
+        cells += [scaled(v) for v in r["disp"]]
+        cells += [scaled(v) for v in r["freq"]]
+        cells.append("wtvb01")
+        if r["pt"] is None:
+            cells += ["", "", ""]
+        else:
+            for v in r["pt"]:
+                text = repr(v)
+                if ptbr and i not in protect and rng.random() < 0.5:
+                    text = ("-" if v < 0 else "") + _grp3(text.replace("-", "").replace(".", ""))
+                cells.append(text)
+            cells.append("")
+        if force_bad_cell is not None and i == force_bad_cell:
+            cells[4] = "abc"
+        out.append(delim.join(cells))
+    return "\n".join(out) + "\n"
+
+
 def _file_cases() -> list[dict]:
-    """Whole-file conversion cases (added in task 2)."""
-    return []
+    cases: list[dict] = []
+    mini = ROOT / "tests" / "fixtures" / "run_mini"
+    mini_files = [{"name": p.name,
+                   "text": p.read_bytes().decode("utf-8").replace("\r\n", "\n")}
+                  for p in sorted(mini.glob("*.csv"))]
+    cases.append({"name": "run_mini", "files": mini_files,
+                  "expected": _convert([(f["name"], f["text"]) for f in mini_files])})
+    rng = random.Random(SEED + 14)
+    rows, split = _synthetic_rows(rng)
+    text_a = _render_file(rows[:split], False, rng, None)
+    rows_b = rows[split:]
+    text_b = _render_file(rows_b, True, rng, 50)
+    both = [{"name": "2. TIG-PXV.csv", "text": text_a}, {"name": "3. PXV-TIG.csv", "text": text_b}]
+    cases.append({"name": "synthetic-l4", "files": both,
+                  "expected": _convert([(f["name"], f["text"]) for f in both])})
+    single = [both[1]]
+    cases.append({"name": "single-ptbr", "files": single,
+                  "expected": _convert([(f["name"], f["text"]) for f in single])})
+    return cases
 
 
 # ---------------------------------------------------------------- public
