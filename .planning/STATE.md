@@ -4,14 +4,14 @@ milestone: v1.3
 milestone_name: Field Run Dashboard
 current_plan: Not started
 status: planning
-stopped_at: Phase 13 context gathered
-last_updated: "2026-10-14T11:18:28.138Z"
+stopped_at: Completed 13-02-PLAN.md
+last_updated: "2026-10-14T11:41:13.264Z"
 last_activity: 2026-10-14
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 24
-  completed_plans: 24
+  total_plans: 31
+  completed_plans: 25
   percent: 67
 ---
 
@@ -70,6 +70,7 @@ Progress: [███████░░░] 67%
 | Phase 12 P04 | 20min | 2 tasks | 7 files |
 | Phase 12 P05 | 20min | 2 tasks | 6 files |
 | Phase 12 P06 | checkpoint-driven | 2 tasks | 3 files |
+| Phase 13 P02 | 10min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -145,6 +146,7 @@ Progress: [███████░░░] 67%
 - [Phase 12]: [12-05] Map view fitted once at mount; heat toggle local to panel, fixed scale via maxZoom 0
 - [Phase 12]: [12-06] Map shows only filtered impact points + OSM-relation route outlines per sentido; no line connecting impacts; GPS-derived track removed
 - [Phase 12]: [12-06] sem-GPS note wording kept: N pontos de impacto sem GPS (M eventos)
+- [Phase 13]: [13-02] GPS jump filter is a derived run outside analyze(); run 1 shows pontos 98 (fix 31 rejected), raw stays 99
 
 ### Key Constraints for v1.2
 
@@ -155,6 +157,6 @@ Progress: [███████░░░] 67%
 
 ## Session Continuity
 
-Stopped at: Phase 13 context gathered
+Stopped at: Completed 13-02-PLAN.md
 
 Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)

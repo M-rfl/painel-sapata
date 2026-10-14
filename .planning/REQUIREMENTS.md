@@ -66,8 +66,8 @@
 
 ### Matrix & Ranking
 
-- [ ] **MTX-01**: User sees a trecho × severidade heat-map matrix in route order per sentido
-- [ ] **MTX-02**: Clicking a matrix cell filters all other views
+- [x] **MTX-01**: User sees a trecho × severidade heat-map matrix in route order per sentido
+- [x] **MTX-02**: Clicking a matrix cell filters all other views
 - [ ] **RANK-01**: User sees a sortable top-50 pontos de impacto table with Google Maps links
 - [ ] **RANK-02**: User sees a trecho table with priority and "sem Crítico" highlight
 - [ ] **RANK-03**: User can export the filtered ranking as CSV
@@ -77,7 +77,7 @@
 - [x] **PARAM-01**: User can edit the 4 severity thresholds; order is enforced; `,` or `.` accepted as decimal separator
 - [x] **PARAM-02**: User can filter by sentido, trecho, eixo dominante, time window and severity class
 - [x] **PARAM-03**: User can set display options: heat-map metric (eixo dominante / AX / AY / AZ / resultante dinâmica), radius, intensity; medido vs dinâmico
-- [ ] **PARAM-04**: User can set analysis parameters: rest-level offset per axis (median default or manual), event-grouping gap, GPS max speed and max fix interval
+- [x] **PARAM-04**: User can set analysis parameters: rest-level offset per axis (median default or manual), event-grouping gap, GPS max speed and max fix interval
 - [x] **PARAM-05**: User can reset all parameters to defaults
 - [ ] **SHARE-01**: Page URL encodes all parameters and filters; opening the link restores the same view
 
@@ -158,12 +158,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MAP-06 | Phase 12 | Complete |
 | SYNC-01 | Phase 12 | Complete |
 | KPI-06 | Phase 13 | Pending |
-| MTX-01 | Phase 13 | Pending |
-| MTX-02 | Phase 13 | Pending |
+| MTX-01 | Phase 13 | Complete |
+| MTX-02 | Phase 13 | Complete |
 | RANK-01 | Phase 13 | Pending |
 | RANK-02 | Phase 13 | Pending |
 | RANK-03 | Phase 13 | Pending |
-| PARAM-04 | Phase 13 | Pending |
+| PARAM-04 | Phase 13 | Complete |
 | SHARE-01 | Phase 13 | Pending |
 | UPLOAD-01 | Phase 14 | Pending |
 
