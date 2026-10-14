@@ -43,7 +43,7 @@ created: 2026-10-14
 | 16-02-T1 | 02 | 2 | HELP-01 | automated | `node --test tests/js/axes_strings.test.js` | ✅ | ✅ green |
 | 16-02-T2 | 02 | 2 | HELP-01 | automated | `pytest tests/test_site_static.py -q (test_axes_wiring)` | ✅ | ✅ green |
 | 16-03-T1 | 03 | 3 | HELP-01 | automated | `python -m pytest -q (289 passed) + node --test (296 pass, 0 fail)` | ✅ | ✅ green |
-| 16-03-T2 | 03 | 3 | HELP-01 | manual | `manual browser checklist` | ✅ | ⬜ pending (manual) |
+| 16-03-T2 | 03 | 3 | HELP-01 | manual | `manual browser checklist` | ✅ | ✅ approved (manual, 10/10 browser items) |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -62,6 +62,8 @@ created: 2026-10-14
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
 | Dialog behaviour in a real browser | HELP-01 | No jsdom/browser harness in repo | Click the header icon → popup "Orientação dos eixos" opens; Esc, backdrop click and "Fechar" close it; Tab stays inside; focus returns to the icon; no horizontal scroll at 360 px; Network tab shows no image request; image has no visible artifacts around the X/Y/Z badges |
+
+**Result (2026-10-14): approved by engineer - all 10 checklist items passed.**
 
 ---
 
