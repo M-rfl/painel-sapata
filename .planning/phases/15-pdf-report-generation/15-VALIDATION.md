@@ -51,7 +51,7 @@ created: 2026-10-14
 | 15-05-T1 | 05 | 3 | REPORT-01 | unit (fakes) | `node --test tests/js/report_action.test.js` | ✅ | ✅ green |
 | 15-05-T2 | 05 | 3 | REPORT-01 | static | `python -m pytest tests/test_site_static.py -q && node --test "tests/js/*.test.js"` | extend | ✅ green |
 | 15-06-T1 | 06 | 4 | REPORT-01 | full gates | `python -m pytest -q && node --test "tests/js/*.test.js"` | ✅ | ✅ green |
-| 15-06-T2 | 06 | 4 | REPORT-01 | manual checkpoint | n/a (browser) | n/a | ⬜ pending (manual) |
+| 15-06-T2 | 06 | 4 | REPORT-01 | manual checkpoint | n/a (browser) | n/a | ✅ green (approved 2026-10-14) |
 
 Determinism rules (Phase 14 CI lessons): tests inject the clock (`now`), never assert on whole PDF bytes, `/CreationDate` (local TZ offset) or `/ID` (random); Mercator results compared with tolerances, tile-plan assertions as ranges; no dependence on platform libm or the Python patch version. New files are LF; vendored jsPDF files are byte-guarded by `.gitattributes` (`-text`).
 
@@ -76,7 +76,7 @@ Determinism rules (Phase 14 CI lessons): tests inject the clock (`now`), never a
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| Button busy state, download name, map raster with tiles and with network blocked, live map unchanged, uploaded-run report, selectable text, working links, pt-BR | REPORT-01 | Needs canvas, DOM, OSM network and visual comparison | Serve `site/`, generate the PDF for the bundled run and an uploaded run, block tiles and regenerate, compare with the page |
+| Button busy state, download name, map raster with tiles and with network blocked, live map unchanged, uploaded-run report, selectable text, working links, pt-BR | REPORT-01 | Needs canvas, DOM, OSM network and visual comparison | Serve `site/`, generate the PDF for the bundled run and an uploaded run, block tiles and regenerate, compare with the page | **Approved 2026-10-14**: all 13 browser checks passed (lazy-load, busy state, live map untouched, page 1 header/KPIs, map raster, matrices, tables, links, footers, selectable pt-BR text, tiles-blocked fallback, uploaded run, total-failure message, double-click guard). |
 
 ---
 
@@ -89,4 +89,4 @@ Determinism rules (Phase 14 CI lessons): tests inject the clock (`now`), never a
 - [x] Feedback latency < 60s
 - [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** automated gates green (pytest, 295 node tests); manual browser checkpoint pending
+**Approval:** automated gates green (pytest, 295 node tests); manual browser checkpoint approved 2026-10-14
