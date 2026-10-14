@@ -52,7 +52,7 @@ created: 2026-10-14
 | 13-06-T1 | 06 | 4 | PARAM-04, RANK-01 | static | `python -m pytest tests/test_site_static.py -q && node --test "tests/js/*.test.js"` | ✅ extend map contract | ✅ green |
 | 13-06-T2 | 06 | 4 | SHARE-01 | static | `python -m pytest -q && node --test "tests/js/*.test.js"` | ✅ new test_share_wiring | ✅ green |
 | 13-07-T1 | 07 | 5 | all | full suite | `python -m pytest -q && node --test "tests/js/*.test.js"` | ✅ | ✅ green |
-| 13-07-T2 | 07 | 5 | all (visual) | manual checkpoint | browser checklist (`python -m tools.serve_site`) | manual | ⬜ pending |
+| 13-07-T2 | 07 | 5 | all (visual) | manual checkpoint | browser checklist (`python -m tools.serve_site`) | manual | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -74,7 +74,7 @@ created: 2026-10-14
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| IQ card first in KPI row, colour bands | KPI-06 | DOM, no browser runner | Load run 1 at defaults → card shows 96,4 % Bom |
+| IQ card first in KPI row, colour bands | KPI-06 | DOM, no browser runner | Load run 1 at defaults → card shows 96,4 % Regular (amber; bands >=98 Bom, 90-98 Regular, <90 Ruim) - approved |
 | Matrix shading, cell click filters map/charts/KPIs | MTX-01, MTX-02 | DOM/Leaflet/uPlot | Click a cell → all views filter; click again clears |
 | Ranking row click pans map / zooms charts | RANK-01 | Leaflet/uPlot | Click a ponto row |
 | CSV opens in Excel pt-BR | RANK-03 | Excel | Export, double-click, check columns and decimals |
@@ -91,4 +91,4 @@ created: 2026-10-14
 - [x] Feedback latency < 30s
 - [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** automated gates green; manual checklist pending (13-07-T2)
+**Approval:** automated gates green; manual browser checklist (10 checks) approved by engineer (13-07-T2). GPS baseline accepted: 98 pontos at defaults 50 km/h / 120 s.
