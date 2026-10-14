@@ -54,7 +54,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 - [x] **Phase 13: Matrix, Ranking & Shareable State** - Trecho × severidade matrix, ranking tables with CSV export, analysis parameters and shareable URLs (completed 2026-10-14)
 - [x] **Phase 14: CSV Upload** - User uploads any raw logger CSV in the browser and the whole dashboard re-renders from it (JS port of the converter, no backend) (completed 2026-10-14)
 - [x] **Phase 15: PDF Report Generation** - "Gerar PDF" button builds a report of the currently loaded run (bundled or uploaded) with the tables and heatmap exactly as shown on the page (completed 2026-10-14)
-- [ ] **Phase 16: Axis Orientation Popup** - Header icon opens a popup with the "Orientação dos eixos" image (X/Y/Z on the vehicle), embedded as base64
+- [x] **Phase 16: Axis Orientation Popup** - Header icon opens a popup with the "Orientação dos eixos" image (X/Y/Z on the vehicle), embedded as base64 (completed 2026-10-14)
 
 ## Phase Details
 
@@ -235,4 +235,4 @@ Plans:
 | 13. Matrix, Ranking & Shareable State | v1.3 | 7/7 | Complete | 2026-10-14 |
 | 14. CSV Upload | v1.3 | 7/7 | Complete | 2026-10-14 |
 | 15. PDF Report Generation | v1.3 | 6/6 | Complete | 2026-10-14 |
-| 16. Axis Orientation Popup | v1.3 | 2/3 | In Progress | - |
+| 16. Axis Orientation Popup | v1.3 | 3/3 | Complete | 2026-10-14 |
