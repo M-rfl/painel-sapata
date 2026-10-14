@@ -313,3 +313,23 @@ def test_axis_image_embedded():
     html = INDEX.read_text(encoding="utf-8")
     assert "data:" not in html and "<img" not in html
     assert len(INDEX.read_bytes()) < 4096
+
+
+def test_axes_wiring():
+    html = INDEX.read_text(encoding="utf-8")
+    assert html.index('id="report"') < html.index('id="axes"') < html.index("</header>")
+    app = SITE / "js" / "app"
+    main = _strip_comments(MAIN.read_text(encoding="utf-8"))
+    assert "mountAxes(" in main and "from './panels/axes.js'" in main
+    panel = _strip_comments((app / "panels" / "axes.js").read_text(encoding="utf-8"))
+    for needle in ("showModal(", "aria-labelledby", "ev.target === dlg", "T.axesClose", "T.axesLegend",
+                   "alt: T.axesAlt", "'aria-label': T.axes", "AXIS_IMAGE", "from '../axisimage.js'",
+                   "createElementNS"):
+        assert needle in panel, needle
+    for needle in ("innerHTML", "fetch(", "import(", "Escape", "keydown"):
+        assert needle not in panel, needle
+    css = (SITE / "css" / "app.css").read_text(encoding="utf-8")
+    for needle in ("dialog.axes-dialog", "::backdrop", "align-self: center", "min(92vw"):
+        assert needle in css, needle
+    m = re.search(r"dialog\.axes-dialog\s*\{([^}]*)\}", css)
+    assert m and "display:" not in m.group(1)

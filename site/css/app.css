@@ -154,6 +154,17 @@ th[aria-sort="descending"] button::after { content: " \25BC"; font-size: 0.7em; 
 .report-feedback { font-size: 0.85rem; color: var(--muted); }
 .report-feedback--warn { color: #b26a00; }
 .report-feedback[role="alert"] { color: var(--severo); }
+.axes-btn { align-self: center; display: inline-flex; padding: 0.3rem; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--text); cursor: pointer; }
+.axes-btn:hover { background: #e0e7ff; border-color: #3730a3; color: #3730a3; }
+.axes-btn:focus-visible, .axes-close:focus-visible { outline: 2px solid #3730a3; outline-offset: 2px; }
+.axes-close { font: inherit; font-size: 0.85rem; padding: 0.2rem 0.6rem; cursor: pointer; }
+dialog.axes-dialog { padding: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); width: min(92vw, 880px); max-height: 92vh; overflow: auto; }
+dialog.axes-dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+.axes-body { padding: 0.75rem 1rem 1rem; }
+.axes-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.axes-head h2 { margin: 0; font-size: 1.1rem; }
+.axes-img { display: block; width: 100%; height: auto; margin-top: 0.5rem; border-radius: 6px; }
+.axes-legend { color: var(--muted); font-size: 0.85rem; }
 .upload-btn { font: inherit; font-size: 0.85rem; padding: 0.2rem 0.6rem; cursor: pointer; }
 .upload-banner { margin: 0 0 0.6rem; padding: 0.4rem 0.7rem; background: #e8f1fb; border: 1px solid #2a64a8; border-radius: 4px; font-size: 0.9rem; }
 .upload-banner[hidden] { display: none; }

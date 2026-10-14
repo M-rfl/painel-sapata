@@ -21,6 +21,7 @@ import { mountMatrix } from './panels/matrix.js';
 import { mountRanking } from './panels/ranking.js';
 import { mountShare, showIgnoredNotice } from './panels/share.js';
 import { mountReport } from './panels/report.js';
+import { mountAxes } from './panels/axes.js';
 import { mountControls, renderControls } from './panels/controls.js';
 import { convertFiles, ConvertError } from '../core/convert/index.js';
 import { readSelected, failureNotice, loadedMessage, bannerText } from './uploadio.js';
@@ -170,6 +171,7 @@ function mountDashboard(run, { uploaded = false, fresh = false } = {}) {
 const session = createSession(mountDashboard);
 
 async function start() {
+  mountAxes(document.getElementById('axes'));
   let run;
   try {
     const resp = await fetch(DATA_URL);
