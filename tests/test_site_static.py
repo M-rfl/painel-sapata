@@ -1,4 +1,5 @@
 """Static checks for the public site shell (Phase 11-05). Stdlib only."""
+import base64
 import re
 from pathlib import Path
 
@@ -296,3 +297,19 @@ def test_report_modules_pure_and_offline():
     for rel in ("vendor/jspdf/jspdf.umd.min.js", "vendor/jspdf-autotable/jspdf.plugin.autotable.min.js"):
         assert rel in lib, rel
         assert (SITE / rel).exists(), rel
+
+
+def test_axis_image_embedded():
+    raw = (SITE / "js" / "app" / "axisimage.js").read_bytes()
+    assert b"\r" not in raw
+    assert len(raw) < 340_000
+    text = raw.decode("utf-8")
+    pat = re.compile(r"^export const AXIS_IMAGE = 'data:image/webp;base64,([A-Za-z0-9+/=]+)';$", re.M)
+    found = pat.findall(text)
+    assert len(found) == 1
+    data = base64.b64decode(found[0], validate=True)
+    assert data[:4] == b"RIFF" and data[8:12] == b"WEBP"
+    assert 40_000 <= len(data) <= 250_000
+    html = INDEX.read_text(encoding="utf-8")
+    assert "data:" not in html and "<img" not in html
+    assert len(INDEX.read_bytes()) < 4096
