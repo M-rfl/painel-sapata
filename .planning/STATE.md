@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Field Run Dashboard
 current_plan: 7
-status: executing
-stopped_at: Completed 11-06-PLAN.md
-last_updated: "2026-10-13T23:59:39.326Z"
-last_activity: 2026-10-13
+status: verifying
+stopped_at: Completed 11-07-PLAN.md
+last_updated: "2026-10-14T00:32:27.992Z"
+last_activity: 2026-10-14
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 18
-  completed_plans: 17
+  completed_plans: 18
   percent: 40
 ---
 
@@ -29,8 +29,8 @@ See: .planning/PROJECT.md (updated 2026-10-08 after v1.3 start)
 Phase: 11 of 13 (Public Site — Overview & Controls)
 **Current Plan:** 7
 **Total Plans in Phase:** 7
-**Status:** Ready to execute
-**Last Activity:** 2026-10-13
+**Status:** Phase complete — ready for verification
+**Last Activity:** 2026-10-14
 
 Progress: [████░░░░░░] 40%
 
@@ -63,6 +63,7 @@ Progress: [████░░░░░░] 40%
 | Phase 11 P04 | 25min | 2 tasks | 2 files |
 | Phase 11 P05 | 25min | 2 tasks | 9 files |
 | Phase 11 P06 | checkpoint-driven | 3 tasks | 7 files |
+| Phase 11 P07 | checkpoint-driven | 4 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -130,6 +131,7 @@ Progress: [████░░░░░░] 40%
 - [Phase 11]: [11-05] analyze memoized on paramsKey; buildView/stats per state change; quality computed once; badge rendered by overview panel
 - [Phase 11]: [11-06] Local preview uses python -m tools.serve_site (no-cache) because browsers cached stale ES modules under http.server
 - [Phase 11]: [11-06] Map + filter-driven map routed to Phase 12 (MAP-06); CSV upload to new Phase 14 (UPLOAD-01)
+- [Phase 11]: [11-07] Published to M-rfl/painel-sapata (Pages via Actions); 6 dp GPS confirmed public by user 2026-10-13; CI full pytest passes on Linux/xvfb
 
 ### Key Constraints for v1.2
 
@@ -140,6 +142,6 @@ Progress: [████░░░░░░] 40%
 
 ## Session Continuity
 
-Stopped at: Completed 11-06-PLAN.md
+Stopped at: Completed 11-07-PLAN.md
 
 Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)

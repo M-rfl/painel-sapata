@@ -47,7 +47,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
  (completed 2026-10-08)
 - [x] **Phase 10: Analysis Engine** - Pure JS core recomputes classes, eventos, impactos, pontos and trecho priority, protected by golden and Python↔JS parity tests
  (completed 2026-10-08)
-- [ ] **Phase 11: Public Site, Overview & Controls** - Public Portuguese GitHub Pages site with test-gated deploy, KPI overview, and threshold/filter/display controls
+- [x] **Phase 11: Public Site, Overview & Controls** - Public Portuguese GitHub Pages site with test-gated deploy, KPI overview, and threshold/filter/display controls (completed 2026-10-14)
 - [ ] **Phase 12: Time Series & Map** - Zoomable synchronized charts and the OSM route/impact/heat map, linked by hover and click
 - [ ] **Phase 13: Matrix, Ranking & Shareable State** - Trecho × severidade matrix, ranking tables with CSV export, analysis parameters and shareable URLs
 - [ ] **Phase 14: CSV Upload** - User uploads any raw logger CSV in the browser and the whole dashboard re-renders from it (JS port of the converter, no backend)
@@ -163,7 +163,7 @@ Plans:
 | 8. CSV Integration | v1.2 | 1/1 | Complete | 2026-05-25 |
 | 9. Repo Hygiene & Raw CSV Converter | v1.3 | 0/6 | Complete | 2026-10-08 |
 | 10. Analysis Engine | v1.3 | 5/5 | Complete | 2026-10-08 |
-| 11. Public Site, Overview & Controls | v1.3 | 6/7 | In Progress | - |
+| 11. Public Site, Overview & Controls | v1.3 | 7/7 | Complete | 2026-10-14 |
 | 12. Time Series & Map | v1.3 | 0/TBD | Not started | - |
 | 13. Matrix, Ranking & Shareable State | v1.3 | 0/TBD | Not started | - |
 | 14. CSV Upload | v1.3 | 0/TBD | Not started | - |
