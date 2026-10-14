@@ -38,19 +38,17 @@ created: 2026-10-13
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| TBD | TBD | TBD | CHART-01 | unit | `node --test tests/js/series.test.js` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | CHART-02 | unit | `node --test tests/js/series.test.js` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | CHART-03 | unit | `node --test tests/js/series.test.js` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | CHART-04 | unit + static | `node --test tests/js/series.test.js`; `python -m pytest tests/test_site_static.py` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | CHART-05 | unit | `node --test tests/js/series.test.js` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | MAP-01 | unit | `node --test tests/js/geo.test.js` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | MAP-02 | unit | `node --test tests/js/geo.test.js` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | MAP-03 | unit | `node --test tests/js/geo.test.js` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | MAP-04 | unit | `node --test tests/js/geo.test.js` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | MAP-05 | unit | `node --test tests/js/geo.test.js` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | MAP-06 | unit | `node --test tests/js/geo.test.js` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | SYNC-01 | unit | `node --test tests/js/geo.test.js` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | (infra) | static | `python -m pytest tests/test_site_static.py -x` | ⚠ extend | ⬜ pending |
+| 12-01-T1 | 12-01 | 1 | (infra) vendor | static | `python -m pytest tests/test_site_static.py -x` | ❌ W0 | ⬜ pending |
+| 12-01-T2 | 12-01 | 1 | (infra) sections/order | static | `python -m pytest tests/test_site_static.py -x` | ❌ W0 | ⬜ pending |
+| 12-02-T1 | 12-02 | 1 | SYNC-01, MAP-02 (decode fix tables) | unit | `node --test tests/js/decode.test.js` | ❌ W0 | ⬜ pending |
+| 12-02-T2 | 12-02 | 1 | CHART-01, CHART-02, CHART-03, CHART-04, CHART-05 | unit | `node --test tests/js/series.test.js` | ❌ W0 | ⬜ pending |
+| 12-03-T1 | 12-03 | 2 | MAP-01, MAP-02, SYNC-01 | unit | `node --test tests/js/geo.test.js` | ❌ W0 | ⬜ pending |
+| 12-03-T2 | 12-03 | 2 | MAP-03, MAP-04, MAP-05, MAP-06 | unit | `node --test tests/js/geo.test.js` | ❌ W0 | ⬜ pending |
+| 12-04-T1 | 12-04 | 2 | SYNC-01 (link bus) | unit | `node --test tests/js/link.test.js` | ❌ W0 | ⬜ pending |
+| 12-04-T2 | 12-04 | 2 | CHART-01..05 (panel) | static + manual | `python -m pytest tests/test_site_static.py -q` | ❌ W0 | ⬜ pending |
+| 12-05-T1 | 12-05 | 3 | MAP-01, MAP-02, SYNC-01 (panel) | static + manual | `python -m pytest tests/test_site_static.py -q` | ❌ W0 | ⬜ pending |
+| 12-05-T2 | 12-05 | 3 | MAP-03..06 (panel) | static + manual | `node --test "tests/js/*.test.js"` | ❌ W0 | ⬜ pending |
+| 12-06-T2 | 12-06 | 4 | all (visual) | manual | `checkpoint checklist` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 

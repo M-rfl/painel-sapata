@@ -123,8 +123,16 @@ Plans:
   4. User toggles a severity-weighted geographic heat map on a fixed scale (one point per GPS fix)
   5. Hovering a chart highlights the position on the map, and clicking a map point moves the chart cursor to that time
   6. Every filter and threshold change from the Phase 11 controls updates the map (markers, track highlight, heat map) immediately
-**Plans**: TBD
+**Plans**: 6 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 12-01-PLAN.md — Vendor uPlot 1.6.32 / Leaflet 1.9.4 / leaflet.heat 0.2.0, #map + #charts sections, base CSS, static guards (W1)
+- [ ] 12-02-PLAN.md — decodeRun fix tables, exported g converters, core/series.js chart derivation + tests (W1)
+- [ ] 12-03-PLAN.md — core/geo.js: track segments, ponto markers, fixed-scale heat, sem-GPS counts, row<->fix lookups + tests (W2)
+- [ ] 12-04-PLAN.md — link bus + mount-once uPlot panel (AX/AY/AZ + Mais canais), sync, thresholds, main.js wiring (W2)
+- [ ] 12-05-PLAN.md — Mount-once Leaflet panel (track, stations, markers/popups, heat toggle, note), chart<->map link (W3)
+- [ ] 12-06-PLAN.md — Full gates, validation map, engineer browser check (W4, checkpoint)
 
 ### Phase 13: Matrix, Ranking & Shareable State
 **Goal**: User can find the worst trechos and pontos, tune analysis parameters, and share the exact view by link
@@ -164,6 +172,6 @@ Plans:
 | 9. Repo Hygiene & Raw CSV Converter | v1.3 | 0/6 | Complete | 2026-10-08 |
 | 10. Analysis Engine | v1.3 | 5/5 | Complete | 2026-10-08 |
 | 11. Public Site, Overview & Controls | v1.3 | 7/7 | Complete | 2026-10-14 |
-| 12. Time Series & Map | v1.3 | 0/TBD | Not started | - |
+| 12. Time Series & Map | v1.3 | 0/6 | Planned | - |
 | 13. Matrix, Ranking & Shareable State | v1.3 | 0/TBD | Not started | - |
 | 14. CSV Upload | v1.3 | 0/TBD | Not started | - |
