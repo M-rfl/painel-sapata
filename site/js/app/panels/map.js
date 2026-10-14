@@ -2,10 +2,10 @@
 // ponto markers with DOM popups, optional fixed-scale heat layer and a chart-driven position marker.
 // Map content comes only from core/geo.js; render(ctx) never moves the view.
 import { h } from '../dom.js';
-import { T, semGpsNote, nImpactosNote } from '../i18n.js';
+import { T, semGpsNote, gpsRejectedNote, nImpactosNote } from '../i18n.js';
 import { infoBtn } from '../info.js';
 import { fmtDate, fmtTime, fmtG } from '../format.js';
-import { paramsKey } from '../state.js';
+import { paramsKey, setUi } from '../state.js';
 import { CLASS_NAMES } from '../../core/defaults.js';
 import { pontoMarkers, unplacedCounts, heatPoints, hoverPosition } from '../../core/geo.js';
 
@@ -31,7 +31,7 @@ function popupNode(m) {
     h('a', { href: m.url, target: '_blank', rel: 'noopener noreferrer' }, T.popGoogle));
 }
 
-export function mountMap(el, link, run) {
+export function mountMap(el, link, run, store) {
   const css = getComputedStyle(document.documentElement);
   const CLASS_COLORS = ['--normal', '--leve', '--moderado', '--severo', '--critico']
     .map((v, i) => css.getPropertyValue(v).trim() || ['#2e7d32', '#f9a825', '#ef6c00', '#c62828', '#6a1b9a'][i]);
@@ -108,9 +108,9 @@ export function mountMap(el, link, run) {
 
   // Heat layer (created lazily, off by default; toggle state is local to the panel)
   let heat = null;
-  let heatOn = false;
   let heatKey = null;
   let last = null;
+  let cur = run;
 
   function heatOptions(display) {
     return { radius: display.radius, blur: Math.round(display.radius * 0.6), max: 1, maxZoom: 0, minOpacity: 0.3 };
@@ -120,7 +120,7 @@ export function mountMap(el, link, run) {
     const { run: r, analysis, view, state } = ctx;
     const d = state.display;
     if (!heat) heat = L.heatLayer([], heatOptions(d));
-    if (!heatOn || !map.getSize().x) return false;
+    if (!state.ui.heat || !map.getSize().x) return false;
     if (!map.hasLayer(heat)) heat.addTo(map);
     heat.setOptions(heatOptions(d));
     heat.setLatLngs(heatPoints(r, analysis, view.mask, d.heatMetric, d.intensity));
@@ -129,15 +129,7 @@ export function mountMap(el, link, run) {
 
   const checkbox = h('input', {
     type: 'checkbox',
-    onChange: (ev) => {
-      heatOn = ev.target.checked;
-      if (heatOn) {
-        heatKey = null;
-        if (last) { updateHeat(last); heatKey = 'on'; }
-      } else if (heat && map.hasLayer(heat)) {
-        map.removeLayer(heat);
-      }
-    },
+    onChange: (ev) => { store.set((s) => setUi(s, 'heat', ev.target.checked)); },
   });
   const toggle = L.control({ position: 'topright' });
   toggle.onAdd = () => {
@@ -153,7 +145,7 @@ export function mountMap(el, link, run) {
   let rafId = 0;
   function applyHover() {
     rafId = 0;
-    const p = hoverPosition(run, pendingRow);
+    const p = hoverPosition(cur, pendingRow);
     if (!p) {
       if (pos && map.hasLayer(pos)) map.removeLayer(pos);
       return;
@@ -173,9 +165,18 @@ export function mountMap(el, link, run) {
 
   let viewKey = null;
 
-  function drawMarkers(analysis, view) {
+  function focus(row) {
+    const p = hoverPosition(cur, row);
+    if (!p) return;
+    map.setView([p.lat, p.lon], Math.max(map.getZoom(), 16));
+    pendingRow = row;
+    if (rafId) cancelAnimationFrame(rafId);
+    applyHover();
+  }
+
+  function drawMarkers(r, analysis, view) {
     markerLayer.clearLayers();
-    for (const m of pontoMarkers(run, analysis, view)) {
+    for (const m of pontoMarkers(r, analysis, view)) {
       const mk = L.circleMarker([m.lat, m.lon], {
         radius: 5 + 1.5 * m.cls, color: '#ffffff', weight: 1, fillColor: CLASS_COLORS[m.cls], fillOpacity: 0.95,
       });
@@ -189,24 +190,29 @@ export function mountMap(el, link, run) {
     const t0 = performance.now();
     last = ctx;
     const { analysis, view, state } = ctx;
+    cur = ctx.run || run;
     const vk = paramsKey(state.params) + '|' + JSON.stringify(state.filters);
     if (vk !== viewKey) {
       viewKey = vk;
-      drawMarkers(analysis, view);
-      const u = unplacedCounts(run, analysis, view);
-      note.textContent = semGpsNote(u.pontos, u.eventos);
+      drawMarkers(cur, analysis, view);
+      const u = unplacedCounts(cur, analysis, view);
+      const nRej = cur.gpsRejected ? cur.gpsRejected.length : 0;
+      note.textContent = semGpsNote(u.pontos, u.eventos)
+        + (nRej > 0 ? ' ' + gpsRejectedNote(nRej, state.params.gps.maxSpeedKmh) : '');
     }
     const d = state.display;
-    const hk = vk + '|' + d.heatMetric + '|' + d.radius + '|' + d.intensity;
+    checkbox.checked = state.ui.heat;
+    const hk = vk + '|' + d.heatMetric + '|' + d.radius + '|' + d.intensity + '|' + state.ui.heat;
     if (hk !== heatKey) {
-      if (heatOn) {
+      if (state.ui.heat) {
         if (updateHeat(ctx)) heatKey = hk;
       } else {
+        if (heat && map.hasLayer(heat)) map.removeLayer(heat);
         heatKey = hk;
       }
     }
     console.debug('map ms', (performance.now() - t0).toFixed(1));
   }
 
-  return { render };
+  return { render, focus };
 }

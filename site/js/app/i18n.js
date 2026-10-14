@@ -219,6 +219,12 @@ export function semGpsNote(pontos, eventos) {
   return `${p} sem GPS (${e}) — não aparecem no mapa.`;
 }
 
+export function gpsRejectedNote(n, vmax) {
+  const v = Number.isInteger(vmax) ? fmtInt(vmax) : String(vmax).replace('.', ',');
+  const lead = n === 1 ? '1 fix de GPS descartado' : `${fmtInt(n)} fixes de GPS descartados`;
+  return `${lead} por velocidade implícita acima de ${v} km/h.`;
+}
+
 export function nImpactosNote(n) {
   return n === 1 ? '1 impacto neste ponto' : `${fmtInt(n)} impactos neste ponto`;
 }

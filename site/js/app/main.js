@@ -2,6 +2,7 @@
 import { decodeRun } from '../core/data.js';
 import { analyze } from '../core/engine.js';
 import { buildView } from '../core/view.js';
+import { applyGpsFilter, gpsKey } from '../core/gpsfilter.js';
 import { meansMaxima, axisStatsTable } from '../core/stats.js';
 import { qualitySummary } from '../core/quality.js';
 import { createStore, defaultState, paramsKey } from './state.js';
@@ -51,30 +52,33 @@ async function start() {
 
   const link = createLink();
   const charts = mountCharts(document.getElementById('charts'), link, run);
-  const map = mountMap(document.getElementById('map'), link, run);
+  const map = mountMap(document.getElementById('map'), link, run, store);
   const matrix = mountMatrix(document.getElementById('matrix'), store);
-  // 13-06 extends onRowClick with map focus.
-  const ranking = mountRanking(document.getElementById('ranking'), store, { onRowClick: (row) => link.select(row) });
+  const ranking = mountRanking(document.getElementById('ranking'), store, { onRowClick: (row) => { link.select(row); map.focus(row); } });
 
   let memoKey = null;
   let analysis = null;
+  let gpsMemo = { key: null, run: null };
 
   function update() {
     const state = store.get();
+    const gk = gpsKey(state.params.gps);
+    if (gk !== gpsMemo.key) gpsMemo = { key: gk, run: applyGpsFilter(run, state.params.gps) };
+    const r = gpsMemo.run;
     const key = paramsKey(state.params);
     if (key !== memoKey) {
       const t0 = performance.now();
-      analysis = analyze(run, state.params);
+      analysis = analyze(r, state.params);
       memoKey = key;
       // Pitfall 7: if this exceeds ~50 ms, Plan 06 coalesces updates with requestAnimationFrame.
       console.debug('analyze ms', (performance.now() - t0).toFixed(1));
     }
-    const view = buildView(run, analysis, state.filters);
+    const view = buildView(r, analysis, state.filters);
     const stats = {
-      mm: meansMaxima(run, analysis, view.mask),
-      table: axisStatsTable(run, analysis, view.mask, state.display.valueMode),
+      mm: meansMaxima(r, analysis, view.mask),
+      table: axisStatsTable(r, analysis, view.mask, state.display.valueMode),
     };
-    const ctx = { run, analysis, view, state, stats, quality: { ...quality, naoClassificadas: analysis.naoClassificadas } };
+    const ctx = { run: r, baseRun: run, analysis, view, state, stats, quality: { ...quality, naoClassificadas: analysis.naoClassificadas } };
     for (const [id, render] of PANELS) render(document.getElementById(id), ctx);
     charts.render(ctx);
     map.render(ctx);

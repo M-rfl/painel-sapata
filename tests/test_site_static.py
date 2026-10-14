@@ -154,11 +154,17 @@ def test_map_panel_contract():
         assert needle in mp, needle
     assert "innerHTML" not in mp
     assert mp.count("fitBounds") == 1
-    assert "setView(" not in mp
+    assert mp.count("setView(") == 1
+    fi = mp.index("function focus(")
+    assert "setView(" in mp[fi:mp.index("\n  }", fi)]
+    assert "setUi(" in mp
+    assert "ctx.run" in mp
     assert "flyTo(" not in mp
     main = _strip_comments(MAIN.read_text(encoding="utf-8"))
     assert "mountMap(" in main
     assert "map.render(ctx)" in main
+    assert "applyGpsFilter(" in main
+    assert "map.focus(" in main
     i18n = (SITE / "js" / "app" / "i18n.js").read_text(encoding="utf-8")
     assert "Ainda sem efeito" not in i18n
     assert "próxima etapa" not in i18n
