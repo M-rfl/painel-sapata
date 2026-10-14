@@ -76,3 +76,17 @@ td.num, th.num { text-align: right; }
 #badge { display: inline-flex; align-items: center; }
 #status { color: var(--muted); margin-bottom: 0.5rem; }
 #status:empty { display: none; }
+
+/* Phase 12: mapa e series */
+#map .map-canvas { height: 450px; width: 100%; border: 1px solid var(--border); border-radius: 6px; }
+.map-note { margin: 0.4rem 0 0; color: var(--muted); font-size: 0.85rem; }
+.map-legend, .map-heat-toggle { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem 0.6rem; font-size: 0.8rem; }
+.map-heat-toggle { cursor: pointer; }
+.map-legend span.swatch { display: inline-block; width: 14px; height: 4px; margin-right: 0.3rem; vertical-align: middle; }
+.map-legend span.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 0.3rem; vertical-align: middle; }
+.map-popup dl { display: grid; grid-template-columns: auto 1fr; gap: 0.1rem 0.6rem; margin: 0; }
+#charts .chart-head { display: flex; align-items: center; gap: 0.5rem; justify-content: space-between; }
+#charts .chart { width: 100%; margin-bottom: 0.25rem; }
+#charts .chart-title { font-weight: 600; font-size: 0.9rem; margin: 0.25rem 0 0; }
+#charts details.more-channels { margin-top: 0.75rem; }
+#charts details.more-channels > summary { cursor: pointer; font-weight: 600; }

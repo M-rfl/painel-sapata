@@ -86,3 +86,49 @@ def test_no_english_ui_words_in_html():
     text = re.sub(r"<[^>]+>", " ", html)
     for word in ("Loading", "Filters", "Reset", "Threshold", "Error", "Overview"):
         assert word not in text, word
+
+
+VENDOR = SITE / "vendor"
+VENDOR_FILES = [
+    "uplot/uPlot.iife.min.js", "uplot/uPlot.min.css",
+    "leaflet/leaflet.js", "leaflet/leaflet.css",
+    "leaflet-heat/leaflet-heat.js",
+]
+
+
+def test_vendor_files_present_and_pinned():
+    for rel in VENDOR_FILES:
+        f = VENDOR / rel
+        assert f.is_file() and f.stat().st_size > 0, rel
+    readme = (VENDOR / "README.md").read_text(encoding="utf-8")
+    for ver in ("1.6.32", "1.9.4", "0.2.0"):
+        assert ver in readme
+    for lib in ("uplot", "leaflet", "leaflet-heat"):
+        assert (VENDOR / lib / "LICENSE").is_file(), lib
+
+
+def test_vendor_scripts_load_before_module():
+    html = INDEX.read_text(encoding="utf-8")
+    pos = lambda s: html.index(s)
+    assert pos("vendor/leaflet/leaflet.js") < pos("vendor/leaflet-heat/leaflet-heat.js") < pos("js/app/main.js")
+    assert pos("vendor/uplot/uPlot.iife.min.js") < pos("js/app/main.js")
+    assert pos("vendor/leaflet/leaflet.css") < pos("css/app.css")
+    assert pos("vendor/uplot/uPlot.min.css") < pos("css/app.css")
+
+
+def test_section_order():
+    html = INDEX.read_text(encoding="utf-8")
+    ids = ["overview", "map", "charts", "classes", "stats", "quality"]
+    positions = [html.index(f'<section id="{i}"') for i in ids]
+    assert positions == sorted(positions)
+
+
+def test_no_cdn():
+    html = INDEX.read_text(encoding="utf-8")
+    for url in re.findall(r"""(?:src|href)=["']([^"']+)["']""", html):
+        assert "://" not in url and not url.startswith("//"), url
+
+
+def test_panels_do_not_use_innerhtml():
+    for f in (SITE / "js" / "app").rglob("*.js"):
+        assert "innerHTML" not in _strip_comments(f.read_text(encoding="utf-8")), f

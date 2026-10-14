@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Monitoramento de Sapata Coletora — Painel da Corrida</title>
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="vendor/uplot/uPlot.min.css">
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
@@ -17,12 +19,17 @@
   <main>
     <div id="status">Carregando dados…</div>
     <section id="overview"></section>
+    <section id="map"></section>
+    <section id="charts"></section>
     <section id="classes"></section>
     <section id="stats"></section>
     <section id="quality"></section>
   </main>
 </div>
 <noscript>Este painel precisa de JavaScript habilitado para funcionar.</noscript>
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="vendor/leaflet-heat/leaflet-heat.js"></script>
+<script src="vendor/uplot/uPlot.iife.min.js"></script>
 <script type="module" src="js/app/main.js"></script>
 </body>
 </html>
