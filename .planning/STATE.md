@@ -12,7 +12,7 @@ progress:
   completed_phases: 3
   total_plans: 18
   completed_plans: 18
-  percent: 40
+  percent: 50
 ---
 
 # Project State
@@ -22,17 +22,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-08 after v1.3 start)
 
 **Core value:** O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não funcionar, nada mais importa.
-**Current focus:** Phase 11 executing — Wave 1 (11-01..11-04) complete, next: 11-05
+**Current focus:** Phase 11 complete and live at https://m-rfl.github.io/painel-sapata/ — next: Phase 12 (Time Series & Map)
 
 ## Current Position
 
-Phase: 11 of 13 (Public Site — Overview & Controls)
+Phase: 12 of 14 (Time Series & Map)
 **Current Plan:** Not started
-**Total Plans in Phase:** 7
+**Total Plans in Phase:** TBD
 **Status:** Ready to plan
 **Last Activity:** 2026-10-14
 
-Progress: [████░░░░░░] 40%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
