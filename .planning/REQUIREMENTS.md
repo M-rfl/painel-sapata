@@ -86,6 +86,10 @@
 - [x] **UPLOAD-01**: User uploads any raw logger CSV (comma or pt-BR `;`) in the browser and every view recomputes from it, processed client-side with no server
 - [x] **SYNC-01**: Hovering a chart highlights the position on the map; clicking a map point moves the chart cursor to that time
 
+### Report
+
+- [ ] **REPORT-01**: User downloads a PDF report of the loaded run (bundled or uploaded) with KPIs, the map heat view, the trecho × classe matrices and the trecho / pontos top-50 tables as styled on the page, generated in the browser
+
 ## Future Requirements
 
 Deferred — tracked but not in the v1.3 roadmap.
@@ -166,10 +170,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PARAM-04 | Phase 13 | Complete |
 | SHARE-01 | Phase 13 | Complete |
 | UPLOAD-01 | Phase 14 | Complete |
+| REPORT-01 | Phase 15 | Pending |
 
 **Coverage:**
-- v1.3 requirements: 48 total
-- Mapped to phases: 48
+- v1.3 requirements: 49 total
+- Mapped to phases: 49
 - Unmapped: 0 ✓
 
 ---

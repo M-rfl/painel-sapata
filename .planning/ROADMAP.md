@@ -182,7 +182,7 @@ Plans:
 ### Phase 15: PDF Report Generation
 **Goal**: User clicks a button and gets a PDF report of the currently displayed run (bundled run 1 or an uploaded CSV), containing the page's tables and the heatmap exactly as they appear on screen
 **Depends on**: Phase 14
-**Requirements**: TBD
+**Requirements**: REPORT-01
 **Success Criteria** (what must be TRUE):
   1. A "Gerar PDF" button produces a PDF of the run currently on screen; after a CSV upload the report reflects the uploaded data
   2. The PDF contains the dashboard tables (matrix and ranking) and a heatmap screenshot that look the same as on the page, with the current filters and parameters
