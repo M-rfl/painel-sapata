@@ -19,7 +19,7 @@ created: 2026-10-14
 |----------|-------|
 | **Framework** | `node --test` (Node 24) for `tests/js/*.test.js`; pytest for static checks |
 | **Config file** | none (CI runs `node --test "tests/js/*.test.js"` and `python -m pytest`) |
-| **Quick run command** | `node --test tests/js/report.test.js tests/js/mapshot.test.js tests/js/pdf_smoke.test.js` |
+| **Quick run command** | `node --test tests/js/pdflib.test.js tests/js/report.test.js tests/js/mapshot.test.js tests/js/pdf_smoke.test.js tests/js/report_action.test.js` |
 | **Full suite command** | `node --test "tests/js/*.test.js"` then `python -m pytest` |
 | **Estimated runtime** | ~60 seconds |
 
@@ -36,17 +36,24 @@ created: 2026-10-14
 
 ## Per-Task Verification Map
 
-*Filled in by the planner/executor per task. Requirement-level map from research:*
+*Per-task map (planner, 2026-10-14). Executors update Status.*
 
-| Behavior | Requirement | Test Type | Automated Command | File Exists | Status |
-|----------|-------------|-----------|-------------------|-------------|--------|
-| Model: full run, filters ignored, current params, basis and sort | REPORT-01 | unit | `node --test tests/js/report.test.js` | ❌ W0 | ⬜ pending |
-| Matrix shading, class/IQ/priority colours, sem Crítico, top-50 rule, link cell | REPORT-01 | unit | `node --test tests/js/report.test.js` | ❌ W0 | ⬜ pending |
-| Filename, "Gerado em" (America/Sao_Paulo), method note, "Dados enviados" block | REPORT-01 | unit | `node --test tests/js/report.test.js` | ❌ W0 | ⬜ pending |
-| `pdfText` sanitiser (→ − ≥ ≤ …) over all bundled/route names | REPORT-01 | unit | `node --test tests/js/report.test.js` | ❌ W0 | ⬜ pending |
-| Mercator projection, fit zoom, tile plan, heat grid | REPORT-01 | unit | `node --test tests/js/mapshot.test.js` | ❌ W0 | ⬜ pending |
-| PDF renders in node: `%PDF-`, A4 landscape, multi-page, repeated header, links, page numbers, no-map path | REPORT-01 | integration | `node --test tests/js/pdf_smoke.test.js` | ❌ W0 | ⬜ pending |
-| Vendor pinning + licences, lazy load, `#report` wiring, no-network, purity, colour tokens | REPORT-01 | static | `python -m pytest tests/test_site_static.py -q` | extend | ⬜ pending |
+| Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
+|---------|------|------|-------------|-----------|-------------------|-------------|--------|
+| 15-01-T1 | 01 | 1 | REPORT-01 | static | `sha256sum site/vendor/jspdf/jspdf.umd.min.js site/vendor/jspdf-autotable/jspdf.plugin.autotable.min.js && python -m pytest tests/test_site_static.py -q` | extend | ⬜ pending |
+| 15-01-T2 | 01 | 1 | REPORT-01 | unit (real UMD in vm) | `node --test tests/js/pdflib.test.js` | ❌ W0 (created in task) | ⬜ pending |
+| 15-02-T1 | 02 | 1 | REPORT-01 | unit | `node --test tests/js/report.test.js tests/js/info.test.js` | ❌ W0 (created in task) | ⬜ pending |
+| 15-02-T2 | 02 | 1 | REPORT-01 | unit | `node --test tests/js/report.test.js && node --test "tests/js/*.test.js"` | ✅ after T1 | ⬜ pending |
+| 15-03-T1 | 03 | 1 | REPORT-01 | unit | `node --test tests/js/mapshot.test.js` | ❌ W0 (created in task) | ⬜ pending |
+| 15-03-T2 | 03 | 1 | REPORT-01 | unit (fake canvas) + static | `node --test tests/js/mapshot.test.js && python -m pytest tests/test_site_static.py -q` | ✅ after T1 | ⬜ pending |
+| 15-04-T1 | 04 | 2 | REPORT-01 | integration (vendored UMD) | `node --test tests/js/pdf_smoke.test.js` | ❌ W0 (created in task) | ⬜ pending |
+| 15-04-T2 | 04 | 2 | REPORT-01 | integration | `node --test tests/js/pdf_smoke.test.js && node --test "tests/js/*.test.js"` | ✅ after T1 | ⬜ pending |
+| 15-05-T1 | 05 | 3 | REPORT-01 | unit (fakes) | `node --test tests/js/report_action.test.js` | ❌ W0 (created in task) | ⬜ pending |
+| 15-05-T2 | 05 | 3 | REPORT-01 | static | `python -m pytest tests/test_site_static.py -q && node --test "tests/js/*.test.js"` | extend | ⬜ pending |
+| 15-06-T1 | 06 | 4 | REPORT-01 | full gates | `python -m pytest -q && node --test "tests/js/*.test.js"` | ✅ | ⬜ pending |
+| 15-06-T2 | 06 | 4 | REPORT-01 | manual checkpoint | n/a (browser) | n/a | ⬜ pending |
+
+Determinism rules (Phase 14 CI lessons): tests inject the clock (`now`), never assert on whole PDF bytes, `/CreationDate` (local TZ offset) or `/ID` (random); Mercator results compared with tolerances, tile-plan assertions as ranges; no dependence on platform libm or the Python patch version. New files are LF; vendored jsPDF files are byte-guarded by `.gitattributes` (`-text`).
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -57,6 +64,8 @@ created: 2026-10-14
 - [ ] `tests/js/report.test.js` — report model, formatting, colours, filename, method note, pdfText
 - [ ] `tests/js/mapshot.test.js` — pure map maths and heat grid
 - [ ] `tests/js/pdf_smoke.test.js` — PDF rendering under node with the vendored UMD
+- [ ] `tests/js/pdflib.test.js` — lazy loader resolver + autotable browser global (real UMD in a vm sandbox)
+- [ ] `tests/js/report_action.test.js` — click controller (ok / warning / error / skipped)
 - [ ] Extend `tests/test_site_static.py` — report wiring, vendor pinning, no-network, purity
 
 *Framework install: none (node built-ins; vendored jsPDF 4.2.1 + jspdf-autotable 5.0.8 are the only new inputs).*

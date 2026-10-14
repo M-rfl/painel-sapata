@@ -185,10 +185,18 @@ Plans:
 **Requirements**: REPORT-01
 **Success Criteria** (what must be TRUE):
   1. A "Gerar PDF" button produces a PDF of the run currently on screen; after a CSV upload the report reflects the uploaded data
-  2. The PDF contains the dashboard tables (matrix and ranking) and a heatmap screenshot that look the same as on the page, with the current filters and parameters
+  2. The PDF contains the dashboard tables (matrix and ranking) and a heatmap that look the same as on the page, for the full run (no filters) with the current parameters
   3. The PDF is generated in the browser with no backend, and text is in Portuguese (pt-BR)
-**Plans**: TBD (run /gsd:plan-phase 15)
+**Plans**: 6 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 15-01-PLAN.md — Vendor jsPDF 4.2.1 + jspdf-autotable 5.0.8 (sha256, LICENSE, .gitattributes guard) + lazy loader pdflib.js, autotable global proven in a vm sandbox (W1)
+- [ ] 15-02-PLAN.md — Pure report model report.js: full run/no filters, current params/basis/sort, pdfText (→ as »), colours with app.css drift guard, pt-BR strings (W1)
+- [ ] 15-03-PLAN.md — Map raster compositor mapshot.js (Mercator, fit, 2x tile plan capped at 64, heat merge, fallbacks) + getRouteFeatures() on the map handle (W1)
+- [ ] 15-04-PLAN.md — PDF renderer pdf.js (A4 landscape, KPIs, map, side-by-side matrices, tables, links, page chrome) + deterministic node smoke test (W2)
+- [ ] 15-05-PLAN.md — Report controller + "Gerar PDF" header button, click-time snapshot in main.js, partial/total failure UX, static guards (W3)
+- [ ] 15-06-PLAN.md — Full gates, validation record, engineer browser checkpoint (W4, checkpoint)
 
 ## Progress
 
@@ -208,4 +216,4 @@ Plans:
 | 12. Time Series & Map | v1.3 | 6/6 | Complete | 2026-10-14 |
 | 13. Matrix, Ranking & Shareable State | v1.3 | 7/7 | Complete | 2026-10-14 |
 | 14. CSV Upload | v1.3 | 7/7 | Complete | 2026-10-14 |
-| 15. PDF Report Generation | v1.3 | 0/TBD | Not started | - |
+| 15. PDF Report Generation | v1.3 | 0/6 | Not started | - |
