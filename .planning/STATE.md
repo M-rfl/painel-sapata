@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Field Run Dashboard
-current_plan: 6
+current_plan: 7
 status: executing
-stopped_at: Completed 13-05-PLAN.md
-last_updated: "2026-10-14T11:51:52.134Z"
+stopped_at: Completed 13-06-PLAN.md
+last_updated: "2026-10-14T11:58:02.762Z"
 last_activity: 2026-10-14
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 31
-  completed_plans: 29
+  completed_plans: 30
   percent: 67
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-10-08 after v1.3 start)
 ## Current Position
 
 Phase: 13 of 14 (Matrix, Ranking & Shareable State)
-**Current Plan:** 6
+**Current Plan:** 7
 **Total Plans in Phase:** 7
 **Status:** Ready to execute
 **Last Activity:** 2026-10-14
@@ -75,6 +75,7 @@ Progress: [███████░░░] 67%
 | Phase 13 P01 | 20min | 2 tasks | 7 files |
 | Phase 13 P04 | 15min | 2 tasks | 5 files |
 | Phase 13 P05 | 20min | 2 tasks | 8 files |
+| Phase 13 P06 | 20min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -155,6 +156,7 @@ Progress: [███████░░░] 67%
 - [Phase 13]: [13-01] GPS limits in params.gps/paramsKey only (analyze untouched); hash keys decoded per part, last duplicate wins, invalid keys ignored and reported
 - [Phase 13]: [13-04] IQ band label stored as flat T keys; analysis group is a closed <details> synced without rewriting matching fields
 - [Phase 13]: [13-05] Matrix tables rebuilt only on counts-affecting filters; trecho/classe clicks only toggle .selected
+- [Phase 13]: [13-06] Hash read before store creation; debounced replaceState writer; charts keep mount-time run, other panels use GPS-derived run
 
 ### Key Constraints for v1.2
 
@@ -165,6 +167,6 @@ Progress: [███████░░░] 67%
 
 ## Session Continuity
 
-Stopped at: Completed 13-05-PLAN.md
+Stopped at: Completed 13-06-PLAN.md
 
 Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)
