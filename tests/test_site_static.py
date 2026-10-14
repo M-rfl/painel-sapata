@@ -146,3 +146,19 @@ def test_charts_panel_contract():
     main = _strip_comments(MAIN.read_text(encoding="utf-8"))
     assert "mountCharts(" in main
     assert "charts.render(ctx)" in main
+
+
+def test_map_panel_contract():
+    mp = _strip_comments((SITE / "js" / "app" / "panels" / "map.js").read_text(encoding="utf-8"))
+    for needle in ("tile.openstreetmap.org", "OpenStreetMap", "maxZoom: 0", "bindPopup(", "link.select(", "link.onHover("):
+        assert needle in mp, needle
+    assert "innerHTML" not in mp
+    assert mp.count("fitBounds") == 1
+    assert "setView(" not in mp
+    assert "flyTo(" not in mp
+    main = _strip_comments(MAIN.read_text(encoding="utf-8"))
+    assert "mountMap(" in main
+    assert "map.render(ctx)" in main
+    i18n = (SITE / "js" / "app" / "i18n.js").read_text(encoding="utf-8")
+    assert "Ainda sem efeito" not in i18n
+    assert "próxima etapa" not in i18n

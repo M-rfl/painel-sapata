@@ -14,7 +14,7 @@ const REQUIRED = [
   'qNaoClassificadas', 'qIrrecuperaveis', 'qAmbiguos', 'qAvisos', 'qCanais',
   'thresholds', 'fSentido', 'fTrecho', 'fEixo', 'fClasse', 'fTempo', 'display',
   'dValores', 'dMetrica', 'dRaio', 'dIntensidade',
-  'charts', 'maisCanais', 'resetZoom',
+  'charts', 'maisCanais', 'resetZoom', 'map', 'mapCalor',
 ];
 
 test('every required info key has non-empty Portuguese text', () => {
