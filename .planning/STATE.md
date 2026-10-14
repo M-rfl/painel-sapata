@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Field Run Dashboard
 current_plan: 6
-status: executing
-stopped_at: Completed 12-05-PLAN.md
-last_updated: "2026-10-14T01:46:43.420Z"
+status: verifying
+stopped_at: Completed 12-06-PLAN.md
+last_updated: "2026-10-14T10:41:52.324Z"
 last_activity: 2026-10-14
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 24
-  completed_plans: 23
+  completed_plans: 24
   percent: 50
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-10-08 after v1.3 start)
 Phase: 12 of 14 (Time Series & Map)
 **Current Plan:** 6
 **Total Plans in Phase:** 6
-**Status:** Ready to execute
+**Status:** Phase complete — ready for verification
 **Last Activity:** 2026-10-14
 
 Progress: [█████░░░░░] 50%
@@ -69,6 +69,7 @@ Progress: [█████░░░░░] 50%
 | Phase 12 P03 | 10min | 2 tasks | 2 files |
 | Phase 12 P04 | 20min | 2 tasks | 7 files |
 | Phase 12 P05 | 20min | 2 tasks | 6 files |
+| Phase 12 P06 | checkpoint-driven | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -142,6 +143,8 @@ Progress: [█████░░░░░] 50%
 - [Phase 12]: [12-03] Track breaks at sentido change or fix gap >120s; heat scale fixed at Critico threshold; unplacedCounts returns pontos and eventos
 - [Phase 12]: [12-04] Charts mount once outside PANELS; axis charts built on first render, channels on first details toggle; link hover deduped
 - [Phase 12]: [12-05] Map view fitted once at mount; heat toggle local to panel, fixed scale via maxZoom 0
+- [Phase 12]: [12-06] Map shows only filtered impact points + OSM-relation route outlines per sentido; no line connecting impacts; GPS-derived track removed
+- [Phase 12]: [12-06] sem-GPS note wording kept: N pontos de impacto sem GPS (M eventos)
 
 ### Key Constraints for v1.2
 
@@ -152,6 +155,6 @@ Progress: [█████░░░░░] 50%
 
 ## Session Continuity
 
-Stopped at: Completed 12-05-PLAN.md
+Stopped at: Completed 12-06-PLAN.md
 
 Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)
