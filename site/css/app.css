@@ -149,6 +149,11 @@ th[aria-sort="descending"] button::after { content: " \25BC"; font-size: 0.7em; 
 .notice[hidden] { display: none; }
 .notice-close { font: inherit; margin-left: 0.5rem; border: 0; background: transparent; cursor: pointer; }
 .notice--error { background: #fdecea; border-color: #b3261e; }
+#report { display: inline-flex; align-items: center; gap: 0.4rem; }
+.report-btn { font: inherit; font-size: 0.85rem; padding: 0.2rem 0.6rem; cursor: pointer; }
+.report-feedback { font-size: 0.85rem; color: var(--muted); }
+.report-feedback--warn { color: #b26a00; }
+.report-feedback[role="alert"] { color: var(--severo); }
 .upload-btn { font: inherit; font-size: 0.85rem; padding: 0.2rem 0.6rem; cursor: pointer; }
 .upload-banner { margin: 0 0 0.6rem; padding: 0.4rem 0.7rem; background: #e8f1fb; border: 1px solid #2a64a8; border-radius: 4px; font-size: 0.9rem; }
 .upload-banner[hidden] { display: none; }

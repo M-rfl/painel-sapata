@@ -260,3 +260,39 @@ def test_upload_shell():
     main = _strip_comments(MAIN.read_text(encoding="utf-8"))
     for needle in ("mountUpload(", "session.tryLoad(", "restoreExample(", "readSelected(", "convertFiles(", "res.stale"):
         assert needle in main, needle
+
+
+def test_report_wiring():
+    html = INDEX.read_text(encoding="utf-8")
+    assert html.index('id="upload"') < html.index('id="report"') < html.index("</header>")
+    app = SITE / "js" / "app"
+    main = _strip_comments(MAIN.read_text(encoding="utf-8"))
+    assert "mountReport(" in main and "getRoutes: map.getRouteFeatures" in main
+    assert main.count("reportCtx = null") >= 2
+    assert "getRouteFeatures" in (app / "panels" / "map.js").read_text(encoding="utf-8")
+    panel = (app / "panels" / "report.js").read_text(encoding="utf-8")
+    for needle in ("infoBtn('report'", "T.reportBusy", "aria-live", "createReportAction(", "loadPdfLib("):
+        assert needle in panel, needle
+    i18n = (app / "i18n.js").read_text(encoding="utf-8")
+    assert "report: 'Baixa um relatório em PDF" in i18n
+
+
+def test_report_modules_pure_and_offline():
+    app = SITE / "js" / "app"
+    read = lambda n: _strip_comments((app / n).read_text(encoding="utf-8"))
+    for name in ("report.js", "pdf.js", "reportaction.js"):
+        src = read(name)
+        for pat in (r"\bdocument\b", r"\bwindow\b", r"Date\.now"):
+            assert not re.search(pat, src), (name, pat)
+    for name in ("report.js", "pdf.js", "reportaction.js", "mapshot.js", "pdflib.js", "panels/report.js"):
+        src = read(name)
+        for needle in ("fetch(", "import(", "XMLHttpRequest", "sendBeacon"):
+            assert needle not in src, (name, needle)
+    shot = read("mapshot.js")
+    urls = re.findall(r"""['"`]([a-z]+://[^'"`]*)['"`]""", shot)
+    assert urls == ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"], urls
+    assert "crossOrigin = 'anonymous'" in shot and "MAX_TILES = 64" in shot
+    lib = read("pdflib.js")
+    for rel in ("vendor/jspdf/jspdf.umd.min.js", "vendor/jspdf-autotable/jspdf.plugin.autotable.min.js"):
+        assert rel in lib, rel
+        assert (SITE / rel).exists(), rel

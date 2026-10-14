@@ -20,6 +20,7 @@ import { mountMap } from './panels/map.js';
 import { mountMatrix } from './panels/matrix.js';
 import { mountRanking } from './panels/ranking.js';
 import { mountShare, showIgnoredNotice } from './panels/share.js';
+import { mountReport } from './panels/report.js';
 import { mountControls, renderControls } from './panels/controls.js';
 import { convertFiles, ConvertError } from '../core/convert/index.js';
 import { readSelected, failureNotice, loadedMessage, bannerText } from './uploadio.js';
@@ -44,6 +45,8 @@ const MOUNT_IDS = ['controls', 'overview', 'map', 'charts', 'matrix', 'ranking',
 // Header share control persists across mounts; getUrl reads whichever store is current.
 let share = null;
 let currentStore = null;
+// Latest dashboard state for the PDF report, read at click time.
+let reportCtx = null;
 
 function writeHash(hsh) {
   try { history.replaceState(null, '', hsh ? '#' + hsh : location.pathname + location.search); } catch (_) { /* ignore */ }
@@ -52,6 +55,7 @@ function writeHash(hsh) {
 function mountDashboard(run, { uploaded = false, fresh = false } = {}) {
   const disposers = createDisposers();
   try {
+    reportCtx = null;
     for (const id of MOUNT_IDS) {
       const old = document.getElementById(id);
       old.replaceWith(old.cloneNode(false));
@@ -146,6 +150,7 @@ function mountDashboard(run, { uploaded = false, fresh = false } = {}) {
       matrix.render(ctx);
       ranking.render(ctx);
       renderControls(state);
+      reportCtx = { run: r, analysis, state, getRoutes: map.getRouteFeatures };
     }
 
     mountControls(document.getElementById('controls'), store, run);
@@ -156,6 +161,7 @@ function mountDashboard(run, { uploaded = false, fresh = false } = {}) {
     update();
     return { destroy: () => disposers.run() };
   } catch (err) {
+    reportCtx = null;
     disposers.run();
     throw err;
   }
@@ -176,6 +182,11 @@ async function start() {
   }
   session.showExample(run);
   mountUpload(document.getElementById('upload'), { onFiles: handleFiles });
+  mountReport(document.getElementById('report'), {
+    getSnapshot: () => (reportCtx
+      ? { run: reportCtx.run, analysis: reportCtx.analysis, state: reportCtx.state, routes: reportCtx.getRoutes() }
+      : null),
+  });
 }
 
 // Stations are fetched lazily on the first upload and cached; the page load never needs them.
