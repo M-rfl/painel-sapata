@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import {
   fmtInt, fmtDec, fmtG, fmtPct, fmtDate, fmtTime, fmtDateTime, fmtDuration,
-  fmtThreshold, parseDecimal, validateThresholds,
+  fmtThreshold, parseDecimal, parseSignedDecimal, validateThresholds,
 } from '../../site/js/app/format.js';
 import { T, pontosNote } from '../../site/js/app/i18n.js';
 
@@ -75,4 +75,11 @@ test('i18n strings are Portuguese and non-empty', () => {
   const note = pontosNote(99, 101);
   assert.ok(note.includes('99') && note.includes('101'));
   assert.ok(pontosNote(1000, 2000).includes('1.000'));
+});
+
+test('parseSignedDecimal', () => {
+  assert.equal(parseSignedDecimal('-0,0186'), -0.0186);
+  assert.equal(parseSignedDecimal('+0.5'), 0.5);
+  assert.equal(parseSignedDecimal('0'), 0);
+  for (const bad of ['', '-', '1,2,3', '1.000,5', 'abc']) assert.ok(Number.isNaN(parseSignedDecimal(bad)), bad);
 });

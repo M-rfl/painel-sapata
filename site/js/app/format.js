@@ -88,3 +88,10 @@ export function validateThresholds(vals) {
 
   return { ok: true, error: null, fieldErrors };
 }
+
+// Signed variant for manual offsets (g may be negative): optional +/- then digits with optional ',' or '.'.
+export function parseSignedDecimal(text) {
+  const t = String(text).trim();
+  if (!/^[+-]?\d+([.,]\d+)?$/.test(t)) return NaN;
+  return Number(t.replace(',', '.'));
+}

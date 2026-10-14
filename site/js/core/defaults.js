@@ -7,3 +7,4 @@ export const DEFAULT_PARAMS = Object.freeze({
   gap: 0,
   maxJumpMs: 2000,
 });
+export const DEFAULT_GPS = Object.freeze({ maxSpeedKmh: 50, maxFixGapS: 120 });

@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import { analyze, DEFAULT_PARAMS } from '../../site/js/core/index.js';
 import {
   defaultState, setThresholdText, setFilter, setDisplay, resetState, paramsKey, createStore,
+  setOffsetMode, setOffsetText, setAnalysisText, setUi, offsetPrefill,
 } from '../../site/js/app/state.js';
+import { halfUp } from '../../site/js/core/dynamics.js';
 import { loadRun1 } from './helpers.js';
 
 function deepFreeze(o) {
@@ -17,10 +19,19 @@ function deepFreeze(o) {
 test('defaultState matches contract and is independent', () => {
   const s = defaultState();
   assert.deepEqual(s, {
-    params: { thresholds_g: [0.5, 1, 2, 4], offset: { mode: 'median' }, gap: 0, maxJumpMs: 2000 },
-    inputs: { thresholdText: ['0,5', '1', '2', '4'], thresholdError: null, thresholdFieldErrors: [false, false, false, false] },
+    params: {
+      thresholds_g: [0.5, 1, 2, 4], offset: { mode: 'median' }, gap: 0, maxJumpMs: 2000,
+      gps: { maxSpeedKmh: 50, maxFixGapS: 120 },
+    },
+    inputs: {
+      thresholdText: ['0,5', '1', '2', '4'], thresholdError: null, thresholdFieldErrors: [false, false, false, false],
+      offsetMode: 'median', offsetText: ['', '', ''], offsetError: null,
+      gapText: '0', saltoText: '2', vmaxText: '50', fixmaxText: '120',
+      analysisErrors: { gap: null, salto: null, vmax: null, fixmax: null },
+    },
     filters: { sentidos: [], trechos: [], eixos: [], classes: [], tFrom: null, tTo: null },
     display: { valueMode: 'dinamico', heatMetric: 'dom', radius: 15, intensity: 1 },
+    ui: { heat: false, matrixBasis: 'impactos', rankSort: { col: 'dom', dir: 'desc' } },
   });
   s.params.thresholds_g[0] = 9;
   s.params.offset.mode = 'x';
@@ -115,4 +126,93 @@ test('createStore', () => {
   unsub();
   store.set((s) => setDisplay(s, 'radius', 10));
   assert.equal(seen.length, 2);
+});
+
+test('setOffsetMode and setOffsetText', () => {
+  const s = deepFreeze(defaultState());
+  const pre = ['0,0459', '-0,0186', '-0,9854'];
+  const a = setOffsetMode(s, 'manual', pre);
+  assert.deepEqual(a.inputs.offsetText, pre);
+  assert.deepEqual(a.params.offset, { mode: 'manual', g: [0.0459, -0.0186, -0.9854] });
+  assert.equal(a.inputs.offsetMode, 'manual');
+  const typed = setOffsetText(setOffsetMode(s, 'median'), 0, '1');
+  assert.equal(typed.params.offset.mode, 'median');
+  const keep = setOffsetMode(typed, 'manual', pre);
+  assert.equal(keep.inputs.offsetText[0], '1');
+  assert.equal(keep.inputs.offsetText[1], '');
+  const m = setOffsetMode(deepFreeze(a), 'median');
+  assert.deepEqual(m.params.offset, { mode: 'median' });
+  assert.equal(m.inputs.offsetError, null);
+  assert.deepEqual(m.inputs.offsetText, pre);
+  assert.throws(() => setOffsetMode(s, 'x'));
+  for (const bad of ['abc', '17', '-16,5']) {
+    const b = setOffsetText(deepFreeze(a), 1, bad);
+    assert.deepEqual(b.params.offset, a.params.offset);
+    assert.equal(typeof b.inputs.offsetError, 'string');
+  }
+  const ok = setOffsetText(deepFreeze(a), 1, '-0,5');
+  assert.deepEqual(ok.params.offset.g, [0.0459, -0.5, -0.9854]);
+  assert.equal(ok.inputs.offsetError, null);
+});
+
+test('setAnalysisText', () => {
+  const s = deepFreeze(defaultState());
+  assert.equal(setAnalysisText(s, 'gap', '3').params.gap, 3);
+  for (const bad of ['1,5', '-1', '1001']) {
+    const r = setAnalysisText(s, 'gap', bad);
+    assert.equal(r.params.gap, 0);
+    assert.equal(typeof r.inputs.analysisErrors.gap, 'string');
+    assert.equal(r.inputs.gapText, bad);
+  }
+  assert.equal(setAnalysisText(s, 'salto', '2,5').params.maxJumpMs, 2500);
+  for (const bad of ['0', '3601']) assert.equal(typeof setAnalysisText(s, 'salto', bad).inputs.analysisErrors.salto, 'string');
+  assert.equal(setAnalysisText(s, 'vmax', '60').params.gps.maxSpeedKmh, 60);
+  for (const bad of ['0', '301']) assert.equal(typeof setAnalysisText(s, 'vmax', bad).inputs.analysisErrors.vmax, 'string');
+  assert.equal(setAnalysisText(s, 'fixmax', '90').params.gps.maxFixGapS, 90);
+  for (const bad of ['0', '3601']) assert.equal(typeof setAnalysisText(s, 'fixmax', bad).inputs.analysisErrors.fixmax, 'string');
+  const fixed = setAnalysisText(setAnalysisText(s, 'gap', 'x'), 'gap', '2');
+  assert.equal(fixed.inputs.analysisErrors.gap, null);
+  assert.equal(fixed.params.gap, 2);
+  assert.throws(() => setAnalysisText(s, 'nope', '1'));
+});
+
+test('setUi', () => {
+  const s = deepFreeze(defaultState());
+  assert.equal(setUi(s, 'heat', true).ui.heat, true);
+  assert.equal(setUi(s, 'matrixBasis', 'medicoes').ui.matrixBasis, 'medicoes');
+  assert.deepEqual(setUi(s, 'rankSort', { col: 'trecho', dir: 'asc' }).ui.rankSort, { col: 'trecho', dir: 'asc' });
+  assert.throws(() => setUi(s, 'matrixBasis', 'x'));
+  assert.throws(() => setUi(s, 'rankSort', { col: 'x', dir: 'asc' }));
+  assert.throws(() => setUi(s, 'rankSort', { col: 'dom', dir: 'up' }));
+  assert.throws(() => setUi(s, 'heat', 1));
+  assert.throws(() => setUi(s, 'nope', 1));
+});
+
+test('offsetPrefill round-trips doubled LSB and reproduces run 1', () => {
+  const back = (txts) => txts.map((t) => halfUp(Number(t.replace(',', '.')) * 4096));
+  assert.deepEqual(back(offsetPrefill([92, -38, -4036])), [92, -38, -4036]);
+  const run = loadRun1();
+  const base = analyze(run, DEFAULT_PARAMS);
+  const real = offsetPrefill(base.med2);
+  assert.deepEqual(back(real), Array.from(base.med2));
+  const st = setOffsetMode(defaultState(), 'manual', real);
+  assert.equal(st.inputs.offsetError, null);
+  const man = analyze(run, st.params);
+  assert.deepEqual(man.classCounts, base.classCounts);
+  assert.deepEqual(man.eventos, base.eventos);
+  assert.deepEqual(man.impactos, base.impactos);
+  assert.equal(man.conforme.ok, false);
+});
+
+test('paramsKey covers offset.g, gap, jump, gps; reset clears all slices', () => {
+  const k = paramsKey(defaultState().params);
+  let s = defaultState();
+  for (const [key, txt] of [['gap', '1'], ['salto', '3'], ['vmax', '60'], ['fixmax', '60']]) {
+    assert.notEqual(paramsKey(setAnalysisText(s, key, txt).params), k, key);
+  }
+  const m1 = setOffsetMode(s, 'manual', ['0', '0', '-1']);
+  const m2 = setOffsetText(m1, 0, '0,1');
+  assert.notEqual(paramsKey(m1.params), paramsKey(m2.params));
+  s = setUi(setAnalysisText(m2, 'gap', '4'), 'heat', true);
+  assert.deepEqual(resetState(), defaultState());
 });
