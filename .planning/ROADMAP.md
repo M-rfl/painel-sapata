@@ -166,8 +166,17 @@ Plans:
   1. User picks or drops a raw logger CSV (comma or pt-BR `;`) and every view recomputes from it; the bundled run stays the default
   2. Parsing, mangled-value recovery and station-geofence trecho/sentido assignment run in JS and match the Python converter on the run-1 CSVs (parity test)
   3. Invalid or unrecognised files show a Portuguese error and leave the current view intact; nothing is uploaded to any server
-**Plans**: TBD (run /gsd:plan-phase 14)
+**Plans**: 7 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 14-01-PLAN.md — Python oracle: stations.json + upload_parity fixture (recover, log10k, timestamps, pyround, geofence, whole files) + freshness guard (W1)
+- [ ] 14-02-PLAN.md — Pure session controller (generation token, disposer stack, rollback) + mountDashboard/destroy lifecycle, share disabled for uploads (W1)
+- [ ] 14-03-PLAN.md — JS recover/reader port: exact decimals, CPython log10/round, fromisoformat port, CSV reader (W2)
+- [ ] 14-04-PLAN.md — JS geofence port: haversine, line scoring, assign() state machine (W2)
+- [ ] 14-05-PLAN.md — gps/build/convertFiles, known-line guard, CI parity + local run-1 parity under the meta contract (W3)
+- [ ] 14-06-PLAN.md — Upload UI: .csv-only selection, caps, UTF-8, pt-BR errors, busy, banner, return to example, no-network guard (W4)
+- [ ] 14-07-PLAN.md — Full gates, local run-1 parity, validation record, engineer browser checkpoint (W5, checkpoint)
 
 ## Progress
 
