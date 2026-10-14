@@ -45,7 +45,7 @@
 - [x] **KPI-03**: User sees means and maxima per axis and for the resultant (medido and dinâmico)
 - [x] **KPI-04**: User sees a per-axis statistics table (mean, median, std, P0.5/P99.5)
 - [x] **KPI-05**: User sees a data-quality card: GPS coverage, samples without position, empty channels, turnaround gap, station-file warnings
-- [ ] **KPI-06**: User sees a track quality index card (0–100 %, linear class penalty over classified medições, Bom/Regular/Ruim band) first in the KPI row, reacting to filters and parameters, plus the same index per trecho in the trecho table
+- [x] **KPI-06**: User sees a track quality index card (0–100 %, linear class penalty over classified medições, Bom/Regular/Ruim band) first in the KPI row, reacting to filters and parameters, plus the same index per trecho in the trecho table
 
 ### Charts
 
@@ -68,9 +68,9 @@
 
 - [x] **MTX-01**: User sees a trecho × severidade heat-map matrix in route order per sentido
 - [x] **MTX-02**: Clicking a matrix cell filters all other views
-- [ ] **RANK-01**: User sees a sortable top-50 pontos de impacto table with Google Maps links
-- [ ] **RANK-02**: User sees a trecho table with priority and "sem Crítico" highlight
-- [ ] **RANK-03**: User can export the filtered ranking as CSV
+- [x] **RANK-01**: User sees a sortable top-50 pontos de impacto table with Google Maps links
+- [x] **RANK-02**: User sees a trecho table with priority and "sem Crítico" highlight
+- [x] **RANK-03**: User can export the filtered ranking as CSV
 
 ### User Parameters
 
@@ -157,12 +157,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MAP-05 | Phase 12 | Complete |
 | MAP-06 | Phase 12 | Complete |
 | SYNC-01 | Phase 12 | Complete |
-| KPI-06 | Phase 13 | Pending |
+| KPI-06 | Phase 13 | Complete |
 | MTX-01 | Phase 13 | Complete |
 | MTX-02 | Phase 13 | Complete |
-| RANK-01 | Phase 13 | Pending |
-| RANK-02 | Phase 13 | Pending |
-| RANK-03 | Phase 13 | Pending |
+| RANK-01 | Phase 13 | Complete |
+| RANK-02 | Phase 13 | Complete |
+| RANK-03 | Phase 13 | Complete |
 | PARAM-04 | Phase 13 | Complete |
 | SHARE-01 | Phase 13 | Pending |
 | UPLOAD-01 | Phase 14 | Pending |
