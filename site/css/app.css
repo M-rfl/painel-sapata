@@ -141,3 +141,10 @@ td.num, th.num { text-align: right; }
 th button { background: none; border: 0; font: inherit; font-weight: 600; cursor: pointer; padding: 0; color: inherit; }
 th[aria-sort="ascending"] button::after { content: " \25B2"; font-size: 0.7em; }
 th[aria-sort="descending"] button::after { content: " \25BC"; font-size: 0.7em; }
+
+#share { display: inline-flex; align-items: center; gap: 0.4rem; }
+.share-btn { font: inherit; font-size: 0.85rem; padding: 0.2rem 0.6rem; cursor: pointer; }
+.share-feedback { font-size: 0.85rem; color: var(--muted); }
+.notice { margin: 0 0 0.6rem; padding: 0.4rem 0.7rem; background: #fff4e5; border: 1px solid #b26a00; border-radius: 4px; font-size: 0.9rem; }
+.notice[hidden] { display: none; }
+.notice-close { font: inherit; margin-left: 0.5rem; border: 0; background: transparent; cursor: pointer; }

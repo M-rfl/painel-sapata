@@ -189,3 +189,14 @@ def test_map_routes_static_and_no_gps_track():
     for dead in ("trackSegments", "nearestFix", "fixMatched", "drawTrack", "polyline"):
         assert dead not in mp, dead
     assert "data/routes/" in mp
+
+
+def test_share_wiring():
+    main = _strip_comments(MAIN.read_text(encoding="utf-8"))
+    for needle in ("parseHash(", "serialize(", "replaceState(", "hashchange", "mountShare("):
+        assert needle in main, needle
+    assert "pushState(" not in main
+    sh = (SITE / "js" / "app" / "panels" / "share.js").read_text(encoding="utf-8")
+    assert "clipboard" in sh and "execCommand" in sh
+    html = (SITE / "index.html").read_text(encoding="utf-8")
+    assert 'id="share"' in html and 'id="notice"' in html

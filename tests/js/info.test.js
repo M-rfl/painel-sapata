@@ -15,7 +15,7 @@ const REQUIRED = [
   'thresholds', 'analise', 'pOffset', 'pGap', 'pSalto', 'pGpsVel', 'pGpsFix', 'fSentido', 'fTrecho', 'fEixo', 'fClasse', 'fTempo', 'display',
   'dValores', 'dMetrica', 'dRaio', 'dIntensidade',
   'charts', 'maisCanais', 'resetZoom', 'map', 'mapCalor', 'matrix', 'matrixBase',
-  'rankTrecho', 'rankPontos', 'csv',
+  'rankTrecho', 'rankPontos', 'csv', 'share',
 ];
 
 test('every required info key has non-empty Portuguese text', () => {

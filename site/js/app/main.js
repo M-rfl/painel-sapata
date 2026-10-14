@@ -5,7 +5,8 @@ import { buildView } from '../core/view.js';
 import { applyGpsFilter, gpsKey } from '../core/gpsfilter.js';
 import { meansMaxima, axisStatsTable } from '../core/stats.js';
 import { qualitySummary } from '../core/quality.js';
-import { createStore, defaultState, paramsKey } from './state.js';
+import { createStore, paramsKey } from './state.js';
+import { parseHash, serialize, hashContext } from './urlstate.js';
 import { fmtDateTime } from './format.js';
 import { T } from './i18n.js';
 import { render as renderOverview } from './panels/overview.js';
@@ -17,6 +18,7 @@ import { mountCharts } from './panels/charts.js';
 import { mountMap } from './panels/map.js';
 import { mountMatrix } from './panels/matrix.js';
 import { mountRanking } from './panels/ranking.js';
+import { mountShare, showIgnoredNotice } from './panels/share.js';
 import { mountControls, renderControls } from './panels/controls.js';
 
 const DATA_URL = 'data/run-2026-10-02-l4-t102.json';
@@ -48,7 +50,39 @@ async function start() {
   document.getElementById('run-date').textContent = fmtDateTime(run.meta.t0);
 
   const quality = qualitySummary(run, null);
-  const store = createStore(defaultState());
+  const noticeEl = document.getElementById('notice');
+  const init = parseHash(location.hash, hashContext(run));
+  const store = createStore(init.state);
+  if (init.ignored.length) showIgnoredNotice(noticeEl, init.ignored);
+
+  // Live URL: debounced replaceState (no history entries); empty state -> no hash.
+  function writeHash(hsh) {
+    try { history.replaceState(null, '', hsh ? '#' + hsh : location.pathname + location.search); } catch (_) { /* ignore */ }
+  }
+  let lastWritten = serialize(store.get());
+  if (location.hash.replace(/^#/, '') !== lastWritten) writeHash(lastWritten);
+  let timer = 0;
+  store.subscribe(() => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const hsh = serialize(store.get());
+      if (hsh === lastWritten) return;
+      lastWritten = hsh;
+      writeHash(hsh);
+    }, 250);
+  });
+  window.addEventListener('hashchange', () => {
+    const hsh = location.hash.replace(/^#/, '');
+    if (hsh === lastWritten) return;
+    const p = parseHash(location.hash, hashContext(run));
+    lastWritten = serialize(p.state);
+    store.set(() => p.state);
+    if (p.ignored.length) showIgnoredNotice(noticeEl, p.ignored);
+  });
+  mountShare(document.getElementById('share'), () => {
+    const hsh = serialize(store.get());
+    return location.origin + location.pathname + location.search + (hsh ? '#' + hsh : '');
+  });
 
   const link = createLink();
   const charts = mountCharts(document.getElementById('charts'), link, run);

@@ -6,6 +6,11 @@ export const T = Object.freeze({
   pageTitle: 'Monitoramento de Sapata Coletora — Painel da Corrida',
   loading: 'Carregando dados…',
   loadError: 'Não foi possível carregar os dados da corrida.',
+  share: 'Copiar link',
+  shareOk: 'Link copiado',
+  shareFail: 'Não foi possível copiar; copie o endereço da barra do navegador.',
+  linkIgnored: 'Alguns parâmetros do link foram ignorados',
+  close: 'Fechar',
 
   // KPI labels
   kpiRegistros: 'registros',
@@ -201,6 +206,7 @@ export const INFO = Object.freeze({
   rankTrecho: 'Prioridade da corrida inteira, de Alta (1) a Monitorar (4), pela classe dos impactos do trecho; não muda com os filtros. Contagens e IQ seguem os filtros, exceto o de trecho, que só destaca linhas. "sem Crítico" indica que nenhuma medição do trecho chegou à classe mais alta na corrida inteira.',
   rankPontos: 'Os 50 pontos de maior |dom| entre os pontos filtrados, os mesmos do mapa. Clicar no cabeçalho reordena esses 50. Clicar numa linha leva os gráficos e o mapa ao ponto.',
   csv: 'Arquivo para Excel em português: separador ponto e vírgula, vírgula decimal e horário de Brasília. Exporta as linhas filtradas na ordem atual; em pontos, todos os pontos filtrados, não só os 50.',
+  share: 'O endereço da página guarda limiares, parâmetros de análise, filtros, exibição, mapa de calor, base da matriz e ordenação do ranking. Não guarda a ampliação dos gráficos nem a posição do mapa. "Restaurar padrões" limpa o link.',
   resetZoom: 'Volta todos os gráficos para a corrida inteira. Os filtros não são alterados.',
 });
 
