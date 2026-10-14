@@ -14,6 +14,7 @@ import { render as renderQuality } from './panels/quality.js';
 import { createLink } from './link.js';
 import { mountCharts } from './panels/charts.js';
 import { mountMap } from './panels/map.js';
+import { mountMatrix } from './panels/matrix.js';
 import { mountControls, renderControls } from './panels/controls.js';
 
 const DATA_URL = 'data/run-2026-10-02-l4-t102.json';
@@ -50,6 +51,7 @@ async function start() {
   const link = createLink();
   const charts = mountCharts(document.getElementById('charts'), link, run);
   const map = mountMap(document.getElementById('map'), link, run);
+  const matrix = mountMatrix(document.getElementById('matrix'), store);
 
   let memoKey = null;
   let analysis = null;
@@ -73,6 +75,7 @@ async function start() {
     for (const [id, render] of PANELS) render(document.getElementById(id), ctx);
     charts.render(ctx);
     map.render(ctx);
+    matrix.render(ctx);
     renderControls(state);
   }
 

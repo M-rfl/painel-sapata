@@ -118,7 +118,7 @@ def test_vendor_scripts_load_before_module():
 
 def test_section_order():
     html = INDEX.read_text(encoding="utf-8")
-    ids = ["overview", "map", "charts", "classes", "stats", "quality"]
+    ids = ["overview", "map", "charts", "matrix", "ranking", "classes", "stats", "quality"]
     positions = [html.index(f'<section id="{i}"') for i in ids]
     assert positions == sorted(positions)
 

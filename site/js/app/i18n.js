@@ -104,6 +104,15 @@ export const T = Object.freeze({
   sP995: 'P99,5',
   sMaxAbs: 'Maior valor absoluto',
 
+  // Matrix
+  secMatrix: 'Matriz trecho × severidade',
+  mBase: 'Base',
+  mImpactos: 'Impactos',
+  mMedicoes: 'Medições',
+  mPontos: 'Pontos',
+  mTotal: 'Total',
+  mTrecho: 'Trecho',
+
   // Axis names
   axAX: 'AX Longitudinal',
   axAY: 'AY Lateral',
@@ -161,6 +170,8 @@ export const INFO = Object.freeze({
   maisCanais: 'Velocidade (mm/s), deslocamento (µm), frequência (Hz) e temperatura (°C) medidos pelo sensor, com o mesmo eixo de tempo e a mesma ampliação dos gráficos de aceleração. Canais com todas as leituras iguais a zero indicam ausência de sinal (veja Qualidade dos dados).',
   map: 'Mapa base OpenStreetMap. A linha segue o percurso GPS, colorida por sentido; trechos apagados estão fora do filtro e as quebras são intervalos sem GPS maiores que 120 s ou mudança de sentido. Os círculos são pontos de impacto, coloridos e dimensionados pela pior classe do ponto. Clicar num círculo ou na linha leva os gráficos àquele instante, com ampliação de ±30 s. A linha sob o mapa conta os pontos de impacto e eventos que não têm GPS e por isso não aparecem.',
   mapCalor: 'Mostra um ponto por posição GPS. O peso é o maior valor da métrica escolhida entre as amostras filtradas daquela posição. A escala é fixa: o limiar Crítico corresponde à cor máxima e não depende dos filtros. Densidade de amostras não é usada.',
+  matrix: 'Linhas são os trechos na ordem do percurso, uma tabela por sentido; colunas são as classes. A cor da coluna é a cor da classe, com intensidade proporcional ao maior valor da coluna nas duas tabelas. A matriz segue os filtros de sentido, eixo e tempo e ignora os de trecho e classe, para continuar toda selecionável. Um toque na célula substitui o filtro de trecho e classe; tocar de novo na mesma célula limpa; com Ctrl ou Shift a célula é adicionada, e a seleção vale para todas as combinações de trechos e classes marcados. Células selecionadas ficam contornadas.',
+  matrixBase: 'Define o que cada célula conta. Impactos: um por impacto, pela amostra de pico. Medições: cada amostra classificada, incluindo Normal. Pontos: um por local, na pior classe do local.',
   resetZoom: 'Volta todos os gráficos para a corrida inteira. Os filtros não são alterados.',
 });
 

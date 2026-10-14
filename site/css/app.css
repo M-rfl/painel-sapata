@@ -103,3 +103,14 @@ td.num, th.num { text-align: right; }
 #charts .chart-title { font-weight: 600; font-size: 0.9rem; margin: 0.25rem 0 0; }
 #charts details.more-channels { margin-top: 0.75rem; }
 #charts details.more-channels > summary { cursor: pointer; font-weight: 600; }
+
+/* Matrix */
+.matrix-pair { display: flex; gap: 1rem; flex-wrap: wrap; }
+.matrix-pair table { flex: 1 1 22rem; }
+.matrix-pair caption { text-align: left; font-weight: 600; padding: 0.3rem 0; }
+.matrix-basis { display: flex; gap: 0.75rem; align-items: center; margin: 0.3rem 0 0.5rem; flex-wrap: wrap; }
+.mx-cell { display: block; width: 100%; border: 0; background: transparent; font: inherit; font-variant-numeric: tabular-nums; text-align: right; padding: 0.25rem 0.5rem; cursor: pointer; }
+.matrix-pair td { padding: 0; border: 1px solid var(--border); }
+.matrix-pair td.mx-total, .matrix-pair th { padding: 0.25rem 0.5rem; }
+.mx-cell.selected { outline: 2px solid #1f2933; outline-offset: -2px; }
+.mx-cell:focus-visible { outline: 2px solid #2563eb; outline-offset: -2px; }
