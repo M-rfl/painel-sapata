@@ -27,7 +27,7 @@ from zoneinfo import ZoneInfo
 from .geo import haversine_m
 from .geofence import assign
 from .gps import build_fixes, key6
-from .recover import (alternative_accel_reading, is_thousands_shaped, parse_plain,
+from .recover import (alternative_accel_reading, int_log10, is_thousands_shaped, parse_plain,
                       recover_accel, recover_gps, resolve_scaled)
 from .sources.logger_csv import read_run
 from .stations import display_name, geofence_overlap_warnings, load_stations
@@ -131,7 +131,7 @@ def _mangle(v: Fraction, pad_to: int | None = None) -> str:
 
 
 def _log10k_cases():
-    log10 = lambda n: int(math.log10(n))  # noqa: E731
+    log10 = int_log10
     seen: dict[int, None] = {}
     bounds: list[int] = []
     for d in range(2, 21):

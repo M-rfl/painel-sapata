@@ -15,7 +15,7 @@ from __future__ import annotations
 import math
 import re
 import statistics
-from decimal import Decimal, InvalidOperation
+from decimal import Context, Decimal, InvalidOperation
 from fractions import Fraction
 
 ACCEL_PER_G = 2048
@@ -46,6 +46,24 @@ def _on_grid(v: Fraction) -> bool:
     return abs(float(x - round(x))) <= GRID_TOL
 
 
+def int_log10(n: int) -> int:
+    """int(math.log10(n)) with log10 correctly rounded, so k is the same on every platform.
+
+    WHY: the float log10 rounds up just below a power of ten (999999999999999 -> 15),
+    and the recovery rules depend on that, but libms disagree on the last ulp there
+    (glibc vs the Windows CRT). Near a power of ten, use an exact Decimal log10 of
+    the same double that math.log10 sees.
+    """
+    f = math.log10(n)
+    if abs(f - round(f)) > 1e-9:
+        return int(f)
+    exact = Decimal(float(n)).log10(context=_LOG10_CTX)
+    return int(float(exact))
+
+
+_LOG10_CTX = Context(prec=60)
+
+
 def recover_accel(text: str, ptbr: bool = True) -> tuple[int | None, str]:
     """Recover an acceleration cell to signed LSB counts (1/2048 g)."""
     text = text.strip()
@@ -62,7 +80,7 @@ def recover_accel(text: str, ptbr: bool = True) -> tuple[int | None, str]:
                 v = Fraction(sign * n)
                 rule = "k"
             else:
-                k = int(math.log10(n))
+                k = int_log10(n)
                 y = sign * Fraction(n, 10 ** k)
                 if abs(y) <= ACCEL_MAX_G and _on_grid(y):
                     v, rule = y, "k"
@@ -89,7 +107,7 @@ def alternative_accel_reading(text: str) -> int | None:
     chosen, _ = recover_accel(text, ptbr=True)
     n = int(text.replace("-", "").replace(".", ""))
     sign = -1 if text.startswith("-") else 1
-    k = int(math.log10(n))
+    k = int_log10(n)
     for kk in (k, k - 1, k - 2):
         if kk < 0:
             continue
