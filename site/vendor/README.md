@@ -7,10 +7,18 @@ Sem CDN e sem etapa de build (decisao travada, STACK.md). Arquivos copiados sem 
 | uPlot | 1.6.32 | uplot | https://registry.npmjs.org/uplot/-/uplot-1.6.32.tgz | MIT |
 | Leaflet | 1.9.4 | leaflet | https://registry.npmjs.org/leaflet/-/leaflet-1.9.4.tgz | BSD-2-Clause |
 | leaflet.heat | 0.2.0 | leaflet.heat | https://registry.npmjs.org/leaflet.heat/-/leaflet.heat-0.2.0.tgz | BSD-2-Clause |
+| jsPDF | 4.2.1 | jspdf | https://registry.npmjs.org/jspdf/-/jspdf-4.2.1.tgz | MIT |
+| jspdf-autotable | 5.0.8 | jspdf-autotable | https://registry.npmjs.org/jspdf-autotable/-/jspdf-autotable-5.0.8.tgz | MIT |
+
+jsPDF e jspdf-autotable sao carregados sob demanda (site/js/app/pdflib.js) no primeiro clique em Gerar PDF; nao estao no index.html.
 
 ## sha256
 
 ```
+dc388ec35ff463288cdde3588a36fd4ed12a45deff053243b37309acc9ef583b  jspdf/LICENSE
+e6551fcdc32f09d6853b2c5126d18d01d9447e0da618a41a11ebeee0f6c20d54  jspdf/jspdf.umd.min.js
+99a374e0385cf714d2faae5f6e02ec79217c6bcecec39bdb9e102091471b960a  jspdf-autotable/LICENSE
+a65dff2c6a8296b16aff24e69f7683cd7dbaed4a4ec26b507d6840ee27d54649  jspdf-autotable/jspdf.plugin.autotable.min.js
 9010b843aad8e450890fc18dae2dfec00e68c10da775515801c42878afbb0da1  leaflet-heat/LICENSE
 eb952aae5806a1102729f291bab887dde783ace859819a354827a776e73e486a  leaflet-heat/leaflet-heat.js
 53e8dc25862014e4324741ca18fbe3611e11d42ef69f59f86ea8c5389647d4cb  leaflet/LICENSE

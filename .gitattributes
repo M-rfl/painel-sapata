@@ -1,0 +1,3 @@
+# Vendored third-party files: keep the npm bytes on every OS (sha256 in site/vendor/README.md).
+site/vendor/jspdf/** -text
+site/vendor/jspdf-autotable/** -text

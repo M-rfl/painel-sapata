@@ -93,6 +93,7 @@ VENDOR_FILES = [
     "uplot/uPlot.iife.min.js", "uplot/uPlot.min.css",
     "leaflet/leaflet.js", "leaflet/leaflet.css",
     "leaflet-heat/leaflet-heat.js",
+    "jspdf/jspdf.umd.min.js", "jspdf-autotable/jspdf.plugin.autotable.min.js",
 ]
 
 
@@ -101,10 +102,17 @@ def test_vendor_files_present_and_pinned():
         f = VENDOR / rel
         assert f.is_file() and f.stat().st_size > 0, rel
     readme = (VENDOR / "README.md").read_text(encoding="utf-8")
-    for ver in ("1.6.32", "1.9.4", "0.2.0"):
+    for ver in ("1.6.32", "1.9.4", "0.2.0", "4.2.1", "5.0.8"):
         assert ver in readme
-    for lib in ("uplot", "leaflet", "leaflet-heat"):
+    for lib in ("uplot", "leaflet", "leaflet-heat", "jspdf", "jspdf-autotable"):
         assert (VENDOR / lib / "LICENSE").is_file(), lib
+
+
+def test_pdf_libs_lazy():
+    html = INDEX.read_text(encoding="utf-8")
+    assert "vendor/jspdf" not in html
+    for d in VENDOR.glob("jspdf*"):
+        assert not list(d.rglob("*.map")), d
 
 
 def test_vendor_scripts_load_before_module():
