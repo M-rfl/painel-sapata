@@ -17,7 +17,9 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
-          python-version: '3.13'
+          # Exact patch: tests/fixtures/upload_parity.json records this interpreter's
+          # datetime.fromisoformat behaviour (it changed between 3.13 patch releases).
+          python-version: '3.13.14'
           cache: pip
           cache-dependency-path: |
             requirements.txt
