@@ -22,14 +22,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-08 after v1.3 start)
 
 **Core value:** O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não funcionar, nada mais importa.
-**Current focus:** Phase 12 complete — next: Phase 13 (Matrix, Ranking & Shareable State)
+**Current focus:** Phase 14 (CSV Upload) — executing
 
 ## Current Position
 
-Phase: 13 of 14 (Matrix, Ranking & Shareable State)
-**Current Plan:** Not started
+Phase: 14 of 14 (CSV Upload)
+**Current Plan:** 3
 **Total Plans in Phase:** 7
-**Status:** Ready to plan
+**Status:** In progress
 **Last Activity:** 2026-10-14
 
 Progress: [███████░░░] 67%
