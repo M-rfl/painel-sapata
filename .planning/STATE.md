@@ -4,204 +4,66 @@ milestone: v1.3
 milestone_name: Field Run Dashboard
 current_plan: Not started
 status: completed
-stopped_at: Completed 16-03-PLAN.md
-last_updated: "2026-10-14T17:30:00.730Z"
+stopped_at: v1.3 milestone archived and tagged
+last_updated: "2026-10-14T19:00:00.000Z"
 last_activity: 2026-10-14
 progress:
   total_phases: 8
   completed_phases: 8
   total_plans: 47
   completed_plans: 47
-  percent: 67
+  percent: 100
 ---
-
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-08 after v1.3 start)
+See: .planning/PROJECT.md (updated 2026-10-14 after v1.3 milestone)
 
 **Core value:** O sensor deve conectar, ler e salvar dados confiáveis em CSV — se isso não funcionar, nada mais importa.
-**Current focus:** Phase 16 (Axis Orientation Popup) — executing
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 16 (Axis Orientation Popup)
+Phase: none (v1.3 shipped; the next phase number is 17)
 **Current Plan:** Not started
-**Total Plans in Phase:** 3
-**Status:** Milestone complete
+**Status:** v1.3 milestone complete. Archived to `.planning/milestones/v1.3-*`, tagged `v1.3`.
 **Last Activity:** 2026-10-14
 
-Progress: [███████░░░] 67%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
-| Metric | v1.0 | v1.1 | v1.2 |
-|--------|------|------|------|
-| Timeline | 3 days | 1 day | — |
-| Tests GREEN | 64 | 79 | — |
-| Python LOC added | 2,064 | +707 | — |
-| Phases | 4 | 2 | 2 planned |
-| Plans | 8/9 | 4/4 | 3/3 |
-| Tests GREEN | 64 | 81 | 95 (08-01) |
-| Phase 07 P03 | 25min | 3 tasks | 5 files |
-| Phase 08 P01 | 4min | 2 tasks | 2 files |
-| Phase 09 P01 | 5min | 2 tasks | 9 files |
-| Phase 09 P02 | 25min | 3 tasks | 14 files |
-| Phase 09 P04 | 20min | 3 tasks | 6 files |
-| Phase 09 P03 | 40min | 3 tasks | 4 files |
-| Phase 09 P05 | 30min | 2 tasks | 6 files |
-| Phase 09 P06 | ~1h | 3 tasks | 5 files |
-| Phase 10 P03 | 15min | 3 tasks | 10 files |
-| Phase 10 P02 | 15min | 2 tasks | 7 files |
-| Phase 10 P01 | 20min | 2 tasks | 2 files |
-| Phase 10 P04 | 15min | 2 tasks | 6 files |
-| Phase 10 P05 | 25min | 2 tasks | 5 files |
-| Phase 11 P01 | 15min | 2 tasks | 5 files |
-| Phase 11 P03 | 15min | 2 tasks | 5 files |
-| Phase 11 P02 | 15min | 2 tasks | 2 files |
-| Phase 11 P04 | 25min | 2 tasks | 2 files |
-| Phase 11 P05 | 25min | 2 tasks | 9 files |
-| Phase 11 P06 | checkpoint-driven | 3 tasks | 7 files |
-| Phase 11 P07 | checkpoint-driven | 4 tasks | 1 files |
-| Phase 12 P01 | 8min | 2 tasks | 13 files |
-| Phase 12 P02 | 15min | 2 tasks | 5 files |
-| Phase 12 P03 | 10min | 2 tasks | 2 files |
-| Phase 12 P04 | 20min | 2 tasks | 7 files |
-| Phase 12 P05 | 20min | 2 tasks | 6 files |
-| Phase 12 P06 | checkpoint-driven | 2 tasks | 3 files |
-| Phase 13 P02 | 10min | 2 tasks | 4 files |
-| Phase 13 P03 | 15min | 3 tasks | 6 files |
-| Phase 13 P01 | 20min | 2 tasks | 7 files |
-| Phase 13 P04 | 15min | 2 tasks | 5 files |
-| Phase 13 P05 | 20min | 2 tasks | 8 files |
-| Phase 13 P06 | 20min | 2 tasks | 8 files |
-| Phase 14 P02 | 20min | 2 tasks | 8 files |
-| Phase 14 P01 | 40min | 2 tasks | 4 files |
-| Phase 14 P04 | 15min | 2 tasks | 4 files |
-| Phase 14 P03 | 75min | 2 tasks | 8 files |
-| Phase 14 P05 | 35min | 2 tasks | 8 files |
-| Phase 14 P06 | 20min | 3 tasks | 10 files |
-| Phase 14 P07 | 15min | 2 tasks | 1 files |
-| Phase 15 P01 | 15min | 2 tasks | 9 files |
-| Phase 15 P03 | 25min | 2 tasks | 3 files |
-| Phase 15 P02 | 20min | 2 tasks | 3 files |
-| Phase 15 P04 | 25min | 2 tasks | 2 files |
-| Phase 15 P05 | 15min | 2 tasks | 7 files |
-| Phase 16 P01 | 10min | 2 tasks | 7 files |
-| Phase 16 P02 | 10min | 2 tasks | 7 files |
-| Phase 16 P03 | n/a | 2 tasks | 2 files |
+| Metric | v1.0 | v1.1 | v1.2 | v1.3 |
+|--------|------|------|------|------|
+| Timeline | 3 days | 1 day | 1 day | 7 days |
+| Phases | 4 | 2 | 2 | 8 |
+| Plans | 8/9 | 4/4 | 4/4 | 47/47 |
+| Tests GREEN | 64 | 79 | 95 | pytest 289 + node 296 |
+
+Per-plan timings for v1.3 are in the phase SUMMARY files (`.planning/phases/09-*` … `16-*`).
 
 ## Accumulated Context
 
-### Carried forward from v1.1
+### Open items carried forward
 
-- `test_main.py` uses `mock_csv.file_path` but `main.py` reads `csv_logger.path` (4 locations) — test correctness fix deferred to v1.3
-- Validate SCALE_VEL = 1/100 (mm/s) in field with reference instrument — deferred to v1.3
-- `05-VALIDATION.md` and `06-VALIDATION.md` show `nyquist_compliant: false` — planning artifacts only, not a runtime issue
-
-### v1.2 GPS Decisions Made
-
-- GPS fields appended as last 3 in SensorReading using field(default=None) for backward compatibility and CSV column ordering (07-02)
-
-- GPS source: Windows Location API (WinRT / winsdk) — no extra serial port needed
-- New fields on SensorReading: `gps_lat`, `gps_lon`, `gps_speed_mps` (all `float | None`)
-- No-fix behavior: empty fields in CSV (same pattern as angle RESERVED registers)
-- Activation: always-on — GPS columns always present in CSV header regardless of fix status
-- Non-blocking: GPSReader runs in a background thread; must not delay 10 Hz sensor acquisition
-- Resilience: app starts normally if GPS hardware absent, API import fails, or permission denied
-
-### 07-01 Decisions (GPSReader)
-
-- asyncio.run() per get_location() call: acceptable at 1 Hz, no shared event loop state with sensor thread
-- _WINSDK_AVAILABLE module-level flag: import attempted once at module load, fast hot path
-- speed=None normalized to 0.0: Windows returns None for speed when fix exists but speed unknown
-
-### 07-03 Decisions (main.py GPS wiring)
-
-- poll/cache split in GPSReader: get_location() returns self._cache instantly; poll() does Windows Location API I/O — ensures 10 Hz acquisition loop is never blocked by GPS
-- Synchronous startup poll before thread start: one poll() call establishes status before the "GPS: ..." message is printed
-- gps_reader=None default params on _acquire/_run_headless_mode/_run_gui_mode for backward compatibility with tests
-
-### 08-01 Decisions (CSVLogger GPS extension)
-
-- GPS columns appended as columns 19-21 (after sensor_id at 18) — consistent with SensorReading field order and STORE-02 invariant (08-01)
-- test_header_row_columns updated to assert against GPS_CSV_HEADER (21 cols) rather than keeping a stale 18-col local constant — keeps test file self-consistent (08-01)
-
-### v1.3 Decisions
-
-- Primary data source is raw logger CSVs in Results_1st.Run/raw/; workbook only for validation (CONV-07, CORE-05)
-- Trecho by station geofence (Stations_GEO/*.txt); sentido auto-detected; tunnel samples inferred from neighbours
-- Accel stored as integer 1/2048 g counts; JS core owns rules, Python converter owns quantization/GPS validation
-- Parity: trecho-free KPIs must match workbook exactly; pontos/per-trecho side by side
-- Repo has no GitHub remote; REPO-02 needs user action
+- Per-trecho deviation at inferred stations (CTR 210 m, EQD 159 m, SCT): Vila Olímpica – Central 1 vs 2.940 records, Rodoviária – Equador 1 vs 295, Gamboa – Santo Cristo 326 vs 1.468. Fix with a larger radius or a closest-GPS-approach boundary. That means changing the Python converter and the JS port (`site/js/core/convert/geofence`), regenerating the site JSON, and refreshing the golden, parity and upload fixtures.
+- v1.3 tech debt (see `.planning/milestones/v1.3-MILESTONE-AUDIT.md`):
+  - A PDF made before the routes load has no route lines.
+  - The quality card ignores the GPS filter.
+  - An upload-failure rollback drops the example URL state.
+  - No automated test covers `main.js` mount wiring.
+- Upload oracle fixture `upload_parity.json` is tied to Python 3.13.14 (CI pinned). Regenerate the fixture and bump the pin together.
+- Carried from v1.1: `test_main.py` `mock_csv.file_path` → `.path`; field-validate SCALE_VEL = 1/100 mm/s; VIZ-07..VIZ-10.
+- `tests/test_visualizer.py` is flaky on Tk/Tcl init on Windows (environmental).
 
 ### Decisions
 
-- [09-01] `.gitignore` is the first v1.3 code commit; run data, workbook, logs, generated docs and caches are excluded, `logs/.gitkeep` kept via negation rule
-- [Phase 09]: [09-02] Ambiguous accel readings reported as ValueIssue but never changed (workbook rule parity); slow pytest marker deselected by default
-- [Phase 09]: [09-04] Public JSON GPS precision 6 dp (half-up keys); re-confirm at Phase 11 push checkpoint
-- [Phase 09]: [09-03] Forward-only station progress state machine; dwell stays in arriving trecho; terminal radius 200 m
-- [Phase 09]: [09-05] Workbook row-level mismatches are exact checks (exit 2); pontos/per-trecho side by side only
-- [Phase 09]: [09-06] Engineer approved report; known per-trecho deviations at inferred stations (CTR 210 m, EQD 159 m, SCT collapse following trecho: Vila Olimpica-Central 1 vs 2.940, Rodoviaria-Equador 1 vs 295, Gamboa-Santo Cristo 326 vs 1.468); fix via larger radius or closest-GPS-approach boundary before per-trecho views
-- [Phase 09]: [09-06] Sentido split at 11.835 vs ~10.839 in workbook (PXV 200 m terminal dwell) accepted; pontos 99 vs 101 side by side only
-- [Phase 09]: [09-06] OPEN: re-confirm 6-dp public GPS precision at Phase 11 push checkpoint
-- [Phase 10]: [10-03] JS core location identity = toFixed(6) coordinate key; pontos 99 on run 1
-- [Phase 10]: [10-02] source_runs top-level RLE + meta.workbook_reference (only with --golden); schema stays 1
-- [Phase 10]: [10-01] Oracle rules: th2=ceil(t*4096), manual off2=floor(g*4096+0.5), gap counts unclassified rows, time jump event-to-event strict >2000ms, impact-basis priority
-- [Phase 10]: [10-04] Priority impact-basis by class index (peak trecho); conforme driven by JSON workbook_reference, full-run only
-- [Phase 10]: [10-05] Parity fixture: 10 synthetic + 8 run-1 seeded cases; inputs_sha256 over analysis inputs only; pytest guards freshness
-- [Phase 11]: [11-01] Invalid threshold sets never reach params; last valid kept with Portuguese error; dates composed from explicit formatters in America/Sao_Paulo
-- [Phase 11]: [11-03] Percentiles use Excel PERCENTILE.INC; Maior = max abs with sign preserved; quality summary is full-run
-- [Phase 11]: [11-02] classPct denominator = classified masked rows; no sentido field = sentido 0; unclassified rows dropped by eixo/classe filters
-- [Phase 11]: [11-04] CI runs full non-slow pytest under xvfb on ubuntu-latest; confirm on first Actions run in 11-07
-- [Phase 11]: [11-05] analyze memoized on paramsKey; buildView/stats per state change; quality computed once; badge rendered by overview panel
-- [Phase 11]: [11-06] Local preview uses python -m tools.serve_site (no-cache) because browsers cached stale ES modules under http.server
-- [Phase 11]: [11-06] Map + filter-driven map routed to Phase 12 (MAP-06); CSV upload to new Phase 14 (UPLOAD-01)
-- [Phase 11]: [11-07] Published to M-rfl/painel-sapata (Pages via Actions); 6 dp GPS confirmed public by user 2026-10-13; CI full pytest passes on Linux/xvfb
-- [Phase 12]: [12-01] Vendored uPlot 1.6.32/Leaflet 1.9.4/leaflet.heat 0.2.0 without Leaflet images/
-- [Phase 12]: [12-02] Threshold lines from th2/off2 (medido offset by off2); gap rows only for dt > maxJumpMs; no decimation
-- [Phase 12]: [12-03] Track breaks at sentido change or fix gap >120s; heat scale fixed at Critico threshold; unplacedCounts returns pontos and eventos
-- [Phase 12]: [12-04] Charts mount once outside PANELS; axis charts built on first render, channels on first details toggle; link hover deduped
-- [Phase 12]: [12-05] Map view fitted once at mount; heat toggle local to panel, fixed scale via maxZoom 0
-- [Phase 12]: [12-06] Map shows only filtered impact points + OSM-relation route outlines per sentido; no line connecting impacts; GPS-derived track removed
-- [Phase 12]: [12-06] sem-GPS note wording kept: N pontos de impacto sem GPS (M eventos)
-- [Phase 13]: [13-02] GPS jump filter is a derived run outside analyze(); run 1 shows pontos 98 (fix 31 rejected), raw stays 99
-- [Phase 13]: [13-03] Classe filter applies to trecho-table counts/IQ; trecho filter only marks rows; sem Critico from full-run top-class medicoes
-- [Phase 13]: [13-01] GPS limits in params.gps/paramsKey only (analyze untouched); hash keys decoded per part, last duplicate wins, invalid keys ignored and reported
-- [Phase 13]: [13-04] IQ band label stored as flat T keys; analysis group is a closed <details> synced without rewriting matching fields
-- [Phase 13]: [13-05] Matrix tables rebuilt only on counts-affecting filters; trecho/classe clicks only toggle .selected
-- [Phase 13]: [13-06] Hash read before store creation; debounced replaceState writer; charts keep mount-time run, other panels use GPS-derived run
-- [Phase 13]: IQ bands >=98 Bom, 90-98 Regular, <90 Ruim
-- [Phase 13]: Dashboard GPS baseline 98 pontos at 50 km/h / 120 s (raw-run tests keep 99)
-- [Phase 14]: [14-02] Session controller with generation token; uploaded/restored mounts start from defaults, no hash I/O for uploads, share disabled
-- [Phase 14]: [14-01] Upload oracle fixture generated by Python only; tunnel limited so forward-only geofence still reaches terminal; fixture dates avoid strftime
-- [Phase 14]: [14-04] Geofence ported line-by-line; float tolerance only on min_dist_m/gap_s; no-gps emits no 'no station hit' note (as Python)
-- [Phase 14]: [14-03] log10 round-up uses fixture-derived boundary table (V8 Math.log10 differs); fromisoformat ported from CPython C implementation, fuzz-verified vs Python
-- [Phase 14]: [14-05] unknown_line is the only JS-only rejection (no station of any line hit); run-1 parity strict, 1-ulp min_dist_m diff (EQD) recorded for 14-07
-- [Phase 14]: Upload failure notice wraps reason with uploadFailed/uploadKept (failureNotice); stations fetched lazily and cached, failure -> stations_unavailable
-- [Phase 15]: [15-01] Autotable UMD classic-script globals: jspdf, autoTable, applyPlugin; vm sandbox needs navigator stub
-- [Phase 15]: [15-02] Report glyphs: arrows become » / «; report model lives in app/report.js, always full run (filters ignored)
-- [Phase 15]: [15-04] Renderer is a dumb mapper with injected libs; link annotations counted via '/S /URI'; vm sandbox needs host Date
-- [Phase 15]: [15-05] Snapshot taken at click start; map failure is a warning, any other failure downloads nothing and changes nothing else
-- [Phase 16]: [16-01] Axis image WebP 1024x683 q78 (108 KB) embedded as base64 module via tools/gen_axis_image.py
-- [Phase 16]: [16-02] Axis popup uses native dialog; Esc native, focus returns to icon; mountAxes first in start()
-
-### Key Constraints for v1.2
-
-- `winsdk` is the new library required for Windows Location API access
-- All existing 79 tests must remain GREEN after integration — currently 95 GREEN
-- GPS columns appear as the last 3 columns in the CSV (after the existing 18)
-- None → "" serialization already established in CSVLogger — reused the same pattern
-
-### Roadmap Evolution
-
-- Phase 15 added: PDF report generation button — PDF of the current run's results, with the tables and heatmap screenshot exactly as displayed on the page
-- Phase 16 added: Axis orientation popup. A header icon opens a modal showing the "Orientação dos eixos" image, embedded as base64 (source PNG saved in the phase dir)
+The full decision log with outcomes is in PROJECT.md (Key Decisions). The per-phase decisions for v1.3 are in `.planning/milestones/v1.3-ROADMAP.md` (Milestone Summary) and the phase SUMMARY files.
 
 ## Session Continuity
 
-Stopped at: Completed 16-03-PLAN.md
+Stopped at: v1.3 milestone archived and tagged
 
-Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)
+Next action: `/gsd:new-milestone`, which defines fresh requirements (`.planning/REQUIREMENTS.md` was archived).

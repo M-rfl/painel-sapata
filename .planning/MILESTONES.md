@@ -1,5 +1,36 @@
 # Milestones
 
+## v1.3 Field Run Dashboard (Shipped: 2026-10-14)
+
+**Phases completed:** 8 phases (9-16), 47 plans, ~100 tasks | **Commits:** 210 (`v1.2..v1.3`)
+**Code added:** ~6,600 LOC JS (`site/js`, excluding vendored libs and the generated image module) + ~3,550 LOC Python (`tools/`) + tests; 329 files changed (+39.572 / −3.024)
+**Timeline:** 2026-10-08 → 2026-10-14 (7 days) | **Tests:** pytest 95 → 289, `node --test` 0 → 296 (all GREEN)
+**Public site:** https://github.com/M-rfl/painel-sapata (GitHub Pages, deployed by Actions only after pytest + node tests pass)
+
+**Delivered:** A public Portuguese GitHub Pages dashboard for the first field run (VLT Carioca · Linha 4 · Trem 102 · 02/10/2026). It is built from the raw logger CSVs. Thresholds, filters, display and analysis parameters are all recomputed live in the browser. It reproduces the treated workbook's class counts, eventos and impactos exactly, accepts any raw logger CSV upload, and exports a PDF report.
+
+**Key accomplishments:**
+- **Converter (Phase 9):** `python -m tools.dashboard_converter` turns the raw logger CSVs into schema-versioned compact JSON. It recovers the pt-BR Excel-mangled values (or reports them), assigns trecho by station geofence, detects sentido from the station sequence and flags "sem GPS" tunnel samples. The output matches the workbook exactly: classes 21.031/1.611/512/173/56, 2.352 eventos, 1.749 impactos.
+- **Analysis engine (Phase 10):** a pure JS engine (`site/js/core/`) computes dynamics, classes, eventos, impactos, pontos and trecho priority, and drives the "conforme planilha" badge. Golden tests and seeded Python↔JS parity tests protect it.
+- **Public site (Phases 11-12):** published to GitHub Pages with a test-gated Actions deploy. It has KPIs, the class/axis breakdown, stats and a data-quality card, plus pt-BR controls with one-click reset. The synchronized uPlot time series (medido/dinâmico, threshold lines, gaps, secondary channels) link to a Leaflet map with OSM routes, severity markers and a fixed-scale heat map. Hover and click link the charts and the map.
+- **Matrix, ranking and sharing (Phase 13):** a trecho × severidade matrix whose cell clicks filter every view; top-50 pontos and trecho priority tables with CSV export; a track quality index (96,4 % on run 1); analysis parameters including a GPS jump filter; and a URL hash that restores the full view.
+- **Browser upload (Phase 14):** any raw CSV (comma or pt-BR `;`) can be uploaded. A JS port of the converter, bit-for-bit parity-tested against Python on run 1, re-renders the whole dashboard with no backend. Errors are shown in Portuguese and the previous view is kept.
+- **PDF report and axis help (Phases 15-16):** "Gerar PDF" builds an A4 landscape report in the browser (jsPDF) with the KPIs, map heat raster, matrices and ranking tables. An "Orientação dos eixos" header popup shows a base64-embedded WebP.
+
+**Known gaps accepted at ship** (from `v1.3-MILESTONE-AUDIT.md`, status `tech_debt`, 50/50 requirements):
+- Per-trecho deviation at inferred stations (CTR/EQD/SCT) is still unfixed. Trechos 1 and 4 show 0 impactos, and the top trecho differs from the workbook (427 'Pereira Reis – Vila Olímpica' vs 304 'Vila Olímpica – Central'). This affects the matrix, ranking, priority, per-trecho IQ and the PDF.
+- Accepted deviations: the sentido split is at row 11.835 vs about 10.839; pontos are 99 vs 101 (98 with the default GPS filter).
+- MAP-01 and MAP-02 were implemented as OSM route outlines and station markers instead of the GPS-fix track and trecho segments (engineer-approved).
+- Minor: a PDF made before the route GeoJSON loads has no route lines; the quality card ignores the GPS filter; an upload-failure rollback drops the example URL state; no automated test covers `main.js` mount wiring.
+- `09-VALIDATION.md` is not Nyquist compliant.
+
+**Archive:**
+- Roadmap: `.planning/milestones/v1.3-ROADMAP.md`
+- Requirements: `.planning/milestones/v1.3-REQUIREMENTS.md`
+- Audit: `.planning/milestones/v1.3-MILESTONE-AUDIT.md`
+
+---
+
 ## v1.2 GPS Data Integration (Shipped: 2026-05-25)
 
 **Phases completed:** 2 phases, 4 plans | **Python LOC added:** ~1,661 net (+1,728 / −67)
