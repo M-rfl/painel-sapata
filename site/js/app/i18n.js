@@ -23,6 +23,11 @@ export const T = Object.freeze({
   secThresholds: 'Limiares de severidade',
   secFilters: 'Filtros',
   secDisplay: 'Exibição',
+  secCharts: 'Séries temporais',
+  maisCanais: 'Mais canais',
+  resetZoom: 'Ver corrida inteira',
+  foraFiltro: 'Fora do filtro',
+  semDados: 'Sem dados para este canal.',
 
   // Filters
   fSentido: 'Sentido',
@@ -117,6 +122,9 @@ export const INFO = Object.freeze({
   dMetrica: 'Grandeza que o mapa de calor usará: eixo dominante, um eixo isolado ou a resultante dinâmica. Ainda sem efeito nesta etapa.',
   dRaio: 'Raio dos pontos do mapa de calor. Ainda sem efeito nesta etapa.',
   dIntensidade: 'Intensidade do mapa de calor. Ainda sem efeito nesta etapa.',
+  charts: 'Aceleração em g nos eixos AX, AY e AZ ao longo da corrida, no modo escolhido em Exibição (medido ou dinâmico). Arraste sobre um gráfico para ampliar; clique duas vezes ou use o botão para voltar à corrida inteira. As linhas tracejadas são os limiares de severidade (±), nas cores das classes; no modo medido elas são deslocadas pelo valor de repouso do eixo. Cinza são as amostras fora dos filtros. Quebras na linha são intervalos sem dados (virada no terminal, amostras ausentes). Nenhuma amostra é escondida em qualquer ampliação.',
+  maisCanais: 'Velocidade (mm/s), deslocamento (µm), frequência (Hz) e temperatura (°C) medidos pelo sensor, com o mesmo eixo de tempo e a mesma ampliação dos gráficos de aceleração. Canais com todas as leituras iguais a zero indicam ausência de sinal (veja Qualidade dos dados).',
+  resetZoom: 'Volta todos os gráficos para a corrida inteira. Os filtros não são alterados.',
 });
 
 export function pontosNote(engine, ref) {
