@@ -4,14 +4,14 @@ milestone: v1.3
 milestone_name: Field Run Dashboard
 current_plan: Not started
 status: completed
-stopped_at: Completed 15-04-PLAN.md
-last_updated: "2026-10-14T16:32:52.295Z"
+stopped_at: Completed 15-05-PLAN.md
+last_updated: "2026-10-14T16:34:38.640Z"
 last_activity: 2026-10-14
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 44
-  completed_plans: 42
+  completed_plans: 43
   percent: 67
 ---
 
@@ -87,6 +87,7 @@ Progress: [███████░░░] 67%
 | Phase 15 P03 | 25min | 2 tasks | 3 files |
 | Phase 15 P02 | 20min | 2 tasks | 3 files |
 | Phase 15 P04 | 25min | 2 tasks | 2 files |
+| Phase 15 P05 | 15min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -179,6 +180,7 @@ Progress: [███████░░░] 67%
 - [Phase 15]: [15-01] Autotable UMD classic-script globals: jspdf, autoTable, applyPlugin; vm sandbox needs navigator stub
 - [Phase 15]: [15-02] Report glyphs: arrows become » / «; report model lives in app/report.js, always full run (filters ignored)
 - [Phase 15]: [15-04] Renderer is a dumb mapper with injected libs; link annotations counted via '/S /URI'; vm sandbox needs host Date
+- [Phase 15]: [15-05] Snapshot taken at click start; map failure is a warning, any other failure downloads nothing and changes nothing else
 
 ### Key Constraints for v1.2
 
@@ -193,6 +195,6 @@ Progress: [███████░░░] 67%
 
 ## Session Continuity
 
-Stopped at: Completed 15-04-PLAN.md
+Stopped at: Completed 15-05-PLAN.md
 
 Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)
