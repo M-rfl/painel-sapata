@@ -65,7 +65,7 @@ Float tolerance is allowed ONLY on geofence `min_dist_m` / unrounded turnaround 
 | 14-06-T2 | 06 | 4 | UPLOAD-01 (SC1) | button, hidden input, drop overlay, notices, banner, page shell | static + info | `node --test tests/js/info.test.js && python -m pytest tests/test_site_static.py -q` | extend | ✅ green |
 | 14-06-T3 | 06 | 4 | UPLOAD-01 (SC1, SC3c) | main.js wiring (tryLoad ok/error/stale/fatal, stations fetch, restore); no-network static guard | static + full JS | `python -m pytest tests/test_site_static.py tests/test_upload_fixture.py -q && node --test "tests/js/*.test.js"` | extend | ✅ green |
 | 14-07-T1 | 07 | 5 | UPLOAD-01 | full gates + local run-1 parity (`# skipped 0`) + record | full suites | `python -m pytest -q && node --test "tests/js/*.test.js" && node --test --test-reporter=tap tests/js/convert_run1.test.js` | — | ✅ green |
-| 14-07-T2 | 07 | 5 | UPLOAD-01 | browser checklist | manual | n/a (checkpoint) | — | ⬜ pending (manual) |
+| 14-07-T2 | 07 | 5 | UPLOAD-01 | browser checklist | manual | n/a (checkpoint) | — | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -115,7 +115,7 @@ Float tolerance is allowed ONLY on geofence `min_dist_m` / unrounded turnaround 
 - [x] Local run-1 parity executed (`# skipped 0`)
 - [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** gates green; manual browser checklist (14-07 Task 2) pending
+**Approval:** approved 2026-10-14 (gates green; browser checklist approved by engineer)
 
 ---
 
@@ -124,3 +124,13 @@ Float tolerance is allowed ONLY on geofence `min_dist_m` / unrounded turnaround 
 - `python -m pytest -q`: all pass. `node --test "tests/js/*.test.js"`: 241 pass, 0 fail, 0 skipped.
 - Local run-1 parity (`node --test --test-reporter=tap tests/js/convert_run1.test.js`): `# pass 1`, `# fail 0`, `# skipped 0`; conversion of 23,383 rows took 1731 ms. Zero diffs under `RUN1_IGNORED_META`.
 - The earlier one-ulp `min_dist_m` diff was not libm: `haversineM` operation order was fixed to match `geo.py` (commit 3eb96f8). No libm deviation remains, so checklist item 12 needs no decision.
+
+## 14-07 Task 2 Manual Results (2026-10-14)
+
+Engineer typed "approved" for the browser checklist at http://localhost:8000.
+
+| Item | Result |
+|------|--------|
+| 1-11 | Pass |
+| 12 (libm deviation decision) | N/A - resolved by haversine operation-order fix (3eb96f8) |
+| 13 | Pass |

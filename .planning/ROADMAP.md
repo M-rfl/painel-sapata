@@ -52,7 +52,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 - [x] **Phase 12: Time Series & Map** - Zoomable synchronized charts and the OSM route/impact/heat map, linked by hover and click
  (completed 2026-10-14)
 - [x] **Phase 13: Matrix, Ranking & Shareable State** - Trecho × severidade matrix, ranking tables with CSV export, analysis parameters and shareable URLs (completed 2026-10-14)
-- [ ] **Phase 14: CSV Upload** - User uploads any raw logger CSV in the browser and the whole dashboard re-renders from it (JS port of the converter, no backend)
+- [x] **Phase 14: CSV Upload** - User uploads any raw logger CSV in the browser and the whole dashboard re-renders from it (JS port of the converter, no backend) (completed 2026-10-14)
 
 ## Phase Details
 
@@ -195,4 +195,4 @@ Plans:
 | 11. Public Site, Overview & Controls | v1.3 | 7/7 | Complete | 2026-10-14 |
 | 12. Time Series & Map | v1.3 | 6/6 | Complete | 2026-10-14 |
 | 13. Matrix, Ranking & Shareable State | v1.3 | 7/7 | Complete | 2026-10-14 |
-| 14. CSV Upload | v1.3 | 5/7 | In Progress | - |
+| 14. CSV Upload | v1.3 | 7/7 | Complete | 2026-10-14 |
