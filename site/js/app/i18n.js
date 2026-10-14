@@ -49,7 +49,21 @@ export const T = Object.freeze({
   dResDin: 'Resultante dinâmica',
   dRaio: 'Raio',
   dIntensidade: 'Intensidade',
-  dNota: 'Usado pelo mapa (próxima etapa).',
+  dNota: 'Métrica, raio e intensidade valem para o mapa de calor (ative-o no mapa).',
+
+  // Map
+  secMap: 'Mapa do percurso',
+  mapCalor: 'Mapa de calor',
+  popHora: 'Hora',
+  popTrecho: 'Trecho',
+  popSentido: 'Sentido',
+  popAxDin: 'AX din.',
+  popAyDin: 'AY din.',
+  popAzDin: 'AZ din.',
+  popClasse: 'Classe',
+  popGoogle: 'Abrir no Google Maps',
+  legSentidos: 'Sentidos',
+  legClasses: 'Pontos de impacto',
 
   // Conformity badge
   badgeOk: 'Conforme planilha',
@@ -117,16 +131,29 @@ export const INFO = Object.freeze({
   fEixo: 'Mostra só as amostras cujo eixo de maior desvio dinâmico é o marcado. Amostras sem classificação saem quando este filtro é usado. Vazio significa todos.',
   fClasse: 'Mostra só as amostras da classe de severidade marcada. Amostras sem classificação saem quando este filtro é usado. Vazio significa todas.',
   fTempo: 'Limita as amostras ao intervalo entre os horários De e Até, em passos de 1 s, no horário de Brasília.',
-  display: 'Opções de exibição. Valores muda as tabelas de estatísticas; as demais opções serão usadas pelo mapa de calor na próxima etapa.',
+  display: 'Opções de exibição. Valores muda as tabelas de estatísticas; métrica, raio e intensidade controlam o mapa de calor.',
   dValores: 'Medido é a leitura do sensor em g. Dinâmico é a leitura menos o valor de repouso (mediana de cada eixo na corrida).',
-  dMetrica: 'Grandeza que o mapa de calor usará: eixo dominante, um eixo isolado ou a resultante dinâmica. Ainda sem efeito nesta etapa.',
-  dRaio: 'Raio dos pontos do mapa de calor. Ainda sem efeito nesta etapa.',
-  dIntensidade: 'Intensidade do mapa de calor. Ainda sem efeito nesta etapa.',
+  dMetrica: 'Grandeza que pesa cada posição GPS no mapa de calor: eixo dominante, um eixo isolado ou a resultante dinâmica.',
+  dRaio: 'Raio, em pixels, de cada ponto do mapa de calor.',
+  dIntensidade: 'Multiplica o peso de cada posição antes da escala fixa, em que o limiar Crítico vale o máximo (cor mais forte).',
   charts: 'Aceleração em g nos eixos AX, AY e AZ ao longo da corrida, no modo escolhido em Exibição (medido ou dinâmico). Arraste sobre um gráfico para ampliar; clique duas vezes ou use o botão para voltar à corrida inteira. As linhas tracejadas são os limiares de severidade (±), nas cores das classes; no modo medido elas são deslocadas pelo valor de repouso do eixo. Cinza são as amostras fora dos filtros. Quebras na linha são intervalos sem dados (virada no terminal, amostras ausentes). Nenhuma amostra é escondida em qualquer ampliação.',
   maisCanais: 'Velocidade (mm/s), deslocamento (µm), frequência (Hz) e temperatura (°C) medidos pelo sensor, com o mesmo eixo de tempo e a mesma ampliação dos gráficos de aceleração. Canais com todas as leituras iguais a zero indicam ausência de sinal (veja Qualidade dos dados).',
+  map: 'Mapa base OpenStreetMap. A linha segue o percurso GPS, colorida por sentido; trechos apagados estão fora do filtro e as quebras são intervalos sem GPS maiores que 120 s ou mudança de sentido. Os círculos são pontos de impacto, coloridos e dimensionados pela pior classe do ponto. Clicar num círculo ou na linha leva os gráficos àquele instante, com ampliação de ±30 s. A linha sob o mapa conta os pontos de impacto e eventos que não têm GPS e por isso não aparecem.',
+  mapCalor: 'Mostra um ponto por posição GPS. O peso é o maior valor da métrica escolhida entre as amostras filtradas daquela posição. A escala é fixa: o limiar Crítico corresponde à cor máxima e não depende dos filtros. Densidade de amostras não é usada.',
   resetZoom: 'Volta todos os gráficos para a corrida inteira. Os filtros não são alterados.',
 });
 
 export function pontosNote(engine, ref) {
   return `Pontos de impacto: ${fmtInt(engine)} aqui vs ${fmtInt(ref)} na planilha (chaves de GPS diferentes); comparação apenas informativa.`;
+}
+
+export function semGpsNote(pontos, eventos) {
+  if (pontos === 0 && eventos === 0) return 'Todos os pontos de impacto têm posição GPS.';
+  const p = pontos === 1 ? '1 ponto de impacto' : `${fmtInt(pontos)} pontos de impacto`;
+  const e = eventos === 1 ? '1 evento' : `${fmtInt(eventos)} eventos`;
+  return `${p} sem GPS (${e}) — não aparecem no mapa.`;
+}
+
+export function nImpactosNote(n) {
+  return n === 1 ? '1 impacto neste ponto' : `${fmtInt(n)} impactos neste ponto`;
 }
