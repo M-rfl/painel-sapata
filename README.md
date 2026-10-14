@@ -283,6 +283,8 @@ https://github.com/WITMOTION/WitStandardProtocol_JY61/tree/master
 
 O painel é um site estático em português (`site/`) que mostra a visão geral de uma corrida de campo: indicadores, classes de severidade, médias e máximos, estatísticas por eixo e qualidade dos dados, com limiares, filtros e opções de exibição editáveis no navegador.
 
+URL pública: https://m-rfl.github.io/painel-sapata/ (publicada pelo GitHub Actions somente depois que `pytest` e `node --test` passam).
+
 ### Prévia local
 
 ```
