@@ -192,6 +192,7 @@ Progress: [███████░░░] 67%
 ### Roadmap Evolution
 
 - Phase 15 added: PDF report generation button — PDF of the current run's results, with the tables and heatmap screenshot exactly as displayed on the page
+- Phase 16 added: Axis orientation popup. A header icon opens a modal showing the "Orientação dos eixos" image, embedded as base64 (source PNG saved in the phase dir)
 
 ## Session Continuity
 

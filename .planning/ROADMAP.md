@@ -54,6 +54,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 - [x] **Phase 13: Matrix, Ranking & Shareable State** - Trecho × severidade matrix, ranking tables with CSV export, analysis parameters and shareable URLs (completed 2026-10-14)
 - [x] **Phase 14: CSV Upload** - User uploads any raw logger CSV in the browser and the whole dashboard re-renders from it (JS port of the converter, no backend) (completed 2026-10-14)
 - [x] **Phase 15: PDF Report Generation** - "Gerar PDF" button builds a report of the currently loaded run (bundled or uploaded) with the tables and heatmap exactly as shown on the page (completed 2026-10-14)
+- [ ] **Phase 16: Axis Orientation Popup** - Header icon opens a popup with the "Orientação dos eixos" image (X/Y/Z on the vehicle), embedded as base64
 
 ## Phase Details
 
@@ -198,6 +199,21 @@ Plans:
 - [ ] 15-05-PLAN.md — Report controller + "Gerar PDF" header button, click-time snapshot in main.js, partial/total failure UX, static guards (W3)
 - [ ] 15-06-PLAN.md — Full gates, validation record, engineer browser checkpoint (W4, checkpoint)
 
+### Phase 16: Axis Orientation Popup
+**Goal**: User clicks an icon in the page header and sees a popup with the "Orientação dos eixos" image, which shows the X/Y/Z sensor axes on the vehicle. The image is embedded in the page as base64.
+**Depends on**: Phase 15
+**Requirements**: TBD
+**Success Criteria** (what must be TRUE):
+  1. The page header has an icon next to the existing header buttons. Clicking it opens a popup titled "Orientação dos eixos" that shows the image: X along the track (red), Y lateral (green), Z vertical (blue)
+  2. The image is embedded inline as a base64 data URI, with no separate image request
+  3. The popup closes with a close button, the Esc key, or a click on the backdrop. It is keyboard accessible, the text is in Portuguese, and it works at phone width
+**Source asset**: `.planning/phases/16-axis-orientation-popup/orientacao-eixos.png` (1536×1024 PNG, 2.6 MB). Re-encode it smaller (for example WebP or JPEG at popup size, ~100–200 KB) before base64 so the page stays light
+**Plans**: 0 plans
+**UI hint**: yes
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 16 to break down)
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -217,3 +233,4 @@ Plans:
 | 13. Matrix, Ranking & Shareable State | v1.3 | 7/7 | Complete | 2026-10-14 |
 | 14. CSV Upload | v1.3 | 7/7 | Complete | 2026-10-14 |
 | 15. PDF Report Generation | v1.3 | 6/6 | Complete | 2026-10-14 |
+| 16. Axis Orientation Popup | v1.3 | 0/0 | Not started | - |
