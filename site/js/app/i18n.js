@@ -13,8 +13,22 @@ export const T = Object.freeze({
   kpiImpactos: 'impactos',
   kpiPontos: 'pontos de impacto',
   kpiTrecho: 'trecho com mais eventos',
+  kpiIQ: 'índice de qualidade da via',
+  iqBom: 'Bom',
+  iqRegular: 'Regular',
+  iqRuim: 'Ruim',
 
   // Sections
+  // Analysis parameters
+  secAnalise: 'Parâmetros de análise',
+  pOffset: 'Valor de repouso (offset)',
+  pMediana: 'Mediana',
+  pManual: 'Manual',
+  pGap: 'Agrupamento (amostras)',
+  pSalto: 'Separar impactos após intervalo de (s)',
+  pGpsVel: 'GPS: velocidade máxima (km/h)',
+  pGpsFix: 'GPS: intervalo máximo entre fixes (s)',
+
   secOverview: 'Visão geral',
   secClasses: 'Classes de severidade',
   secMeans: 'Médias e máximos',
@@ -102,9 +116,16 @@ export const INFO_LABEL = 'Explicar parâmetro';
 export const INFO_CLOSE = 'Fechar explicação';
 
 export const INFO = Object.freeze({
+  kpiIQ: 'Índice de qualidade da via: IQ = 100 % × (1 − (0,25·Leve + 0,5·Moderado + 0,75·Severo + 1·Crítico) / N), onde N é o número de medições classificadas nos filtros atuais (as não classificadas ficam fora). Os pesos seguem a ordem das classes e valem também para limiares editados. Faixas: 95 % ou mais é Bom, de 85 a 95 % é Regular, abaixo de 85 % é Ruim (95 % exato conta como Bom; o valor exibido é arredondado a 1 casa, então 94,96 % aparece como 95,0 % mas é Regular). Com filtro de classe, o índice considera só as classes marcadas. Mostra "—" quando não há medições.',
+  analise: 'Parâmetros que mudam o cálculo da análise: valor de repouso (offset), agrupamento e separação de impactos. Alterar offset, agrupamento ou separação desliga a comparação "Conforme planilha". Os limites de GPS não afetam essa comparação.',
+  pOffset: 'Valor de repouso de cada eixo. Mediana usa a mediana da corrida inteira por eixo, nunca filtrada. Manual aceita valores em g, com vírgula ou ponto e com sinal; ao escolher Manual, os campos são preenchidos com a mediana atual.',
+  pGap: 'Número de amostras abaixo de Leve toleradas dentro de um mesmo impacto. Com 0, só amostras consecutivas formam um impacto.',
+  pSalto: 'Intervalo de tempo entre amostras que inicia um novo impacto. Também quebra as linhas dos gráficos.',
+  pGpsVel: 'Um fix de GPS que implicaria velocidade acima deste valor desde o último fix aceito é descartado, e suas amostras ficam sem GPS. Isso muda pontos, mapa e ranking.',
+  pGpsFix: 'A checagem de velocidade só vale quando o intervalo entre fixes é de até este valor. Fixes mais distantes no tempo são aceitos.',
   kpiRegistros: 'Número de amostras (linhas) do sensor que passam pelos filtros atuais. Sem filtros, é a corrida inteira.',
   kpiEventos: 'Amostra classificada como Leve ou pior. A classe vem do maior desvio entre os eixos AX, AY e AZ em relação ao valor de repouso (dinâmico), comparado com os limiares de severidade.',
-  kpiImpactos: 'Agrupamento de eventos em sequência: amostras consecutivas com classe Leve ou pior formam um único impacto. Um intervalo maior que 2 s entre amostras inicia um novo impacto. A classe do impacto é a maior classe do grupo.',
+  kpiImpactos: 'Agrupamento de eventos em sequência: amostras consecutivas com classe Leve ou pior formam um único impacto. Um intervalo maior que o configurado em Parâmetros de análise (padrão 2 s) entre amostras inicia um novo impacto. A classe do impacto é a maior classe do grupo.',
   kpiPontos: 'Um ponto por local (posição GPS); quando não há GPS, um por trecho. Cada ponto representa o evento mais forte do local; em empate vale o primeiro.',
   kpiTrecho: 'Trecho com o maior número de eventos dentro dos filtros atuais. Em empate, vale o trecho que vem primeiro no percurso.',
   badge: 'Indica se classes, eventos, impactos e a divisão por sentido calculados aqui são iguais aos da planilha de referência, com os limiares padrão. Se os limiares forem alterados, a comparação deixa de se aplicar.',

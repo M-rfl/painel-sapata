@@ -1,11 +1,12 @@
 // KPI cards + conformity badge. No DOM access at import time.
 import { h, clear } from '../dom.js';
 import { T, pontosNote } from '../i18n.js';
-import { fmtInt } from '../format.js';
+import { fmtInt, fmtPct } from '../format.js';
 import { infoBtn } from '../info.js';
+import { qualityIndex } from '../../core/quality_index.js';
 
-function card(label, value, note, key) {
-  return h('div', { class: 'card' },
+function card(label, value, note, key, extra) {
+  return h('div', { class: extra ? 'card ' + extra : 'card' },
     h('div', { class: 'label' }, label, infoBtn(key, label)),
     h('div', { class: 'value' }, value),
     note ? h('div', { class: 'note' }, note) : null);
@@ -34,9 +35,13 @@ export function render(el, ctx) {
   const ref = run.reference && run.reference.pontos;
   const pontosExtra = !filt && ref != null ? pontosNote(view.pontos, ref) : null;
   const top = view.topTrecho;
+  const iq = qualityIndex(view.classCounts);
 
   el.appendChild(h('h2', null, T.secOverview, mark));
   el.appendChild(h('div', { class: 'cards' },
+    card(T.kpiIQ, iq.value === null ? '—' : fmtPct(iq.value, 1),
+      iq.band ? h('span', { class: 'iq-pill' }, T['iq' + iq.band[0].toUpperCase() + iq.band.slice(1)]) : null, 'kpiIQ',
+      iq.band ? `card-iq iq-${iq.band}` : 'card-iq'),
     card(T.kpiRegistros, fmtInt(view.registros), total(run.n), 'kpiRegistros'),
     card(T.kpiEventos, fmtInt(view.eventos), total(analysis.eventos), 'kpiEventos'),
     card(T.kpiImpactos, fmtInt(view.impactos), total(analysis.impactos), 'kpiImpactos'),

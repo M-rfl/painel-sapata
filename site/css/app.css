@@ -28,6 +28,14 @@ main h3 { font-size: 0.95rem; margin: 0.75rem 0 0.4rem; }
 .card .label { color: var(--muted); font-size: 0.85rem; text-transform: capitalize; }
 .card .note { color: var(--muted); font-size: 0.75rem; margin-top: 0.3rem; }
 .panel { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.75rem; }
+.card-iq .value { color: var(--muted); }
+.card-iq.iq-bom .value { color: var(--normal); }
+.card-iq.iq-regular .value { color: #b26a00; }
+.card-iq.iq-ruim .value { color: var(--severo); }
+.iq-pill { display: inline-block; border-radius: 999px; padding: 0 0.5rem; font-weight: 600; color: #fff; background: var(--muted); }
+.iq-bom .iq-pill { background: var(--normal); }
+.iq-regular .iq-pill { background: #b26a00; }
+.iq-ruim .iq-pill { background: var(--severo); }
 .tag-filtered { font-size: 0.75rem; background: #e0e7ff; color: #3730a3; border-radius: 4px; padding: 0 0.4rem; margin-left: 0.4rem; }
 table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
 th, td { padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }

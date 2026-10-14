@@ -8,7 +8,7 @@ const sources = readdirSync(dir).filter((f) => f.endsWith('.js'))
   .map((f) => readFileSync(new URL(f, dir), 'utf8')).join('\n');
 
 const REQUIRED = [
-  'kpiRegistros', 'kpiEventos', 'kpiImpactos', 'kpiPontos', 'kpiTrecho', 'badge',
+  'kpiRegistros', 'kpiEventos', 'kpiImpactos', 'kpiPontos', 'kpiTrecho', 'kpiIQ', 'badge',
   'classes', 'classesMedicoes', 'classesImpactos', 'classesPontos', 'means', 'axisStats',
   'quality', 'qCobertura', 'qSemPosicao', 'qCanaisVazios', 'qRetorno', 'qInferidas',
   'qNaoClassificadas', 'qIrrecuperaveis', 'qAmbiguos', 'qAvisos', 'qCanais',
