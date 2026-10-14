@@ -2,18 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Field Run Dashboard
-current_plan: Not started
-status: completed
-stopped_at: Completed 16-01-PLAN.md
-last_updated: "2026-10-14T17:19:40.856Z"
+current_plan: 3
+status: executing
+stopped_at: Completed 16-02-PLAN.md
+last_updated: "2026-10-14T17:22:57.497Z"
 last_activity: 2026-10-14
 progress:
   total_phases: 8
   completed_phases: 7
   total_plans: 47
-  completed_plans: 45
+  completed_plans: 46
   percent: 67
 ---
+
 
 # Project State
 
@@ -27,9 +28,9 @@ See: .planning/PROJECT.md (updated 2026-10-08 after v1.3 start)
 ## Current Position
 
 Phase: 16 (Axis Orientation Popup)
-**Current Plan:** 2
+**Current Plan:** 3
 **Total Plans in Phase:** 3
-**Status:** In progress
+**Status:** Ready to execute
 **Last Activity:** 2026-10-14
 
 Progress: [███████░░░] 67%
@@ -89,6 +90,7 @@ Progress: [███████░░░] 67%
 | Phase 15 P04 | 25min | 2 tasks | 2 files |
 | Phase 15 P05 | 15min | 2 tasks | 7 files |
 | Phase 16 P01 | 10min | 2 tasks | 7 files |
+| Phase 16 P02 | 10min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -183,6 +185,7 @@ Progress: [███████░░░] 67%
 - [Phase 15]: [15-04] Renderer is a dumb mapper with injected libs; link annotations counted via '/S /URI'; vm sandbox needs host Date
 - [Phase 15]: [15-05] Snapshot taken at click start; map failure is a warning, any other failure downloads nothing and changes nothing else
 - [Phase 16]: [16-01] Axis image WebP 1024x683 q78 (108 KB) embedded as base64 module via tools/gen_axis_image.py
+- [Phase 16]: [16-02] Axis popup uses native dialog; Esc native, focus returns to icon; mountAxes first in start()
 
 ### Key Constraints for v1.2
 
@@ -198,6 +201,6 @@ Progress: [███████░░░] 67%
 
 ## Session Continuity
 
-Stopped at: Completed 16-01-PLAN.md
+Stopped at: Completed 16-02-PLAN.md
 
 Next action: `/gsd:plan-phase 9` (first commit must be .gitignore; REPO-02 remote creation needs a user checkpoint in Phase 11)

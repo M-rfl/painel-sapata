@@ -92,7 +92,7 @@
 
 ### Help
 
-- [ ] **HELP-01**: User opens a popup titled "Orientação dos eixos" from a header icon and sees the vehicle image with the X (red, along track), Y (green, lateral) and Z (blue, vertical) sensor axes; the image is embedded as base64 (no extra request); closes with button, Esc or backdrop click; keyboard accessible, pt-BR, usable at phone width
+- [x] **HELP-01**: User opens a popup titled "Orientação dos eixos" from a header icon and sees the vehicle image with the X (red, along track), Y (green, lateral) and Z (blue, vertical) sensor axes; the image is embedded as base64 (no extra request); closes with button, Esc or backdrop click; keyboard accessible, pt-BR, usable at phone width
 
 ## Future Requirements
 
@@ -175,7 +175,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SHARE-01 | Phase 13 | Complete |
 | UPLOAD-01 | Phase 14 | Complete |
 | REPORT-01 | Phase 15 | Complete |
-| HELP-01 | Phase 16 | Pending |
+| HELP-01 | Phase 16 | Complete |
 
 **Coverage:**
 - v1.3 requirements: 50 total

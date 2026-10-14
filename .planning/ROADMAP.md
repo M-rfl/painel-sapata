@@ -235,4 +235,4 @@ Plans:
 | 13. Matrix, Ranking & Shareable State | v1.3 | 7/7 | Complete | 2026-10-14 |
 | 14. CSV Upload | v1.3 | 7/7 | Complete | 2026-10-14 |
 | 15. PDF Report Generation | v1.3 | 6/6 | Complete | 2026-10-14 |
-| 16. Axis Orientation Popup | v1.3 | 1/3 | In Progress | - |
+| 16. Axis Orientation Popup | v1.3 | 2/3 | In Progress | - |
