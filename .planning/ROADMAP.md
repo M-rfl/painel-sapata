@@ -47,8 +47,10 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
  (completed 2026-10-08)
 - [x] **Phase 10: Analysis Engine** - Pure JS core recomputes classes, eventos, impactos, pontos and trecho priority, protected by golden and Python↔JS parity tests
  (completed 2026-10-08)
-- [x] **Phase 11: Public Site, Overview & Controls** - Public Portuguese GitHub Pages site with test-gated deploy, KPI overview, and threshold/filter/display controls (completed 2026-10-14)
-- [x] **Phase 12: Time Series & Map** - Zoomable synchronized charts and the OSM route/impact/heat map, linked by hover and click (completed 2026-10-14)
+- [x] **Phase 11: Public Site, Overview & Controls** - Public Portuguese GitHub Pages site with test-gated deploy, KPI overview, and threshold/filter/display controls
+ (completed 2026-10-14)
+- [x] **Phase 12: Time Series & Map** - Zoomable synchronized charts and the OSM route/impact/heat map, linked by hover and click
+ (completed 2026-10-14)
 - [ ] **Phase 13: Matrix, Ranking & Shareable State** - Trecho × severidade matrix, ranking tables with CSV export, analysis parameters and shareable URLs
 - [ ] **Phase 14: CSV Upload** - User uploads any raw logger CSV in the browser and the whole dashboard re-renders from it (JS port of the converter, no backend)
 
@@ -144,8 +146,17 @@ Plans:
   3. User sets rest-level offset per axis (median default or manual), event-grouping gap, GPS max speed and max fix interval, and all views recompute
   4. Copying the page URL and opening it elsewhere restores the same thresholds, filters, display and analysis parameters
   5. User sees a track quality index card (0–100 %, Bom/Regular/Ruim) first in the KPI row that reacts to filters and parameters (96,4 % on run 1 at defaults), and the same index per trecho in the trecho table
-**Plans**: TBD
+**Plans**: 7 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 13-01-PLAN.md — State: analysis params + ui slice + validators, parseSignedDecimal, URL hash serialize/parse (W1)
+- [ ] 13-02-PLAN.md — core/gpsfilter.js derived run (fix 31 rejected, pontos 98) + core/matrix.js with click reducer (W1)
+- [ ] 13-03-PLAN.md — core/quality_index.js (IQ 96,4 %), core/ranking.js trecho/pontos rows, app/csv.js pt-BR export (W1)
+- [ ] 13-04-PLAN.md — IQ card first in KPI row + "Parâmetros de análise" control group (W2)
+- [ ] 13-05-PLAN.md — Matrix panel + ranking panel (trecho table, top-50 pontos, CSV), page sections (W3)
+- [ ] 13-06-PLAN.md — Derived GPS run wiring, map focus/heat state, live URL hash + Copiar link (W4)
+- [ ] 13-07-PLAN.md — Full gates, validation record, engineer browser check incl. GPS 98-pontos decision (W5, checkpoint)
 
 ### Phase 14: CSV Upload
 **Goal**: User can upload any raw logger CSV in the browser and the whole dashboard (overview, charts, map, matrix, ranking) re-renders from it, with no backend
@@ -174,5 +185,5 @@ Plans:
 | 10. Analysis Engine | v1.3 | 5/5 | Complete | 2026-10-08 |
 | 11. Public Site, Overview & Controls | v1.3 | 7/7 | Complete | 2026-10-14 |
 | 12. Time Series & Map | v1.3 | 6/6 | Complete | 2026-10-14 |
-| 13. Matrix, Ranking & Shareable State | v1.3 | 0/TBD | Not started | - |
+| 13. Matrix, Ranking & Shareable State | v1.3 | 0/7 | Planned | - |
 | 14. CSV Upload | v1.3 | 0/TBD | Not started | - |

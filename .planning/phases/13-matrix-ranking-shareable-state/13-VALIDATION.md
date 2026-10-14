@@ -38,13 +38,21 @@ created: 2026-10-14
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| TBD (filled by planner) | — | — | KPI-06 | unit | `node --test tests/js/quality_index.test.js` | ❌ W0 | ⬜ pending |
-| TBD | — | — | MTX-01, MTX-02 | unit | `node --test tests/js/matrix.test.js` | ❌ W0 | ⬜ pending |
-| TBD | — | — | RANK-01, RANK-02 | unit | `node --test tests/js/ranking.test.js` | ❌ W0 | ⬜ pending |
-| TBD | — | — | RANK-03 | unit | `node --test tests/js/csv.test.js` | ❌ W0 | ⬜ pending |
-| TBD | — | — | PARAM-04 | unit | `node --test tests/js/state.test.js tests/js/gpsfilter.test.js tests/js/golden.test.js` | state ✅ / gpsfilter ❌ W0 | ⬜ pending |
-| TBD | — | — | SHARE-01 | unit | `node --test tests/js/urlstate.test.js` | ❌ W0 | ⬜ pending |
-| TBD | — | — | (all UI) | static | `node --test tests/js/info.test.js` + `python -m pytest tests/test_site_static.py -q` | ✅ extend | ⬜ pending |
+| 13-01-T1 | 01 | 1 | PARAM-04 | unit | `node --test tests/js/state.test.js tests/js/format.test.js tests/js/golden.test.js tests/js/parity.test.js` | state/format ✅ extend | ⬜ pending |
+| 13-01-T2 | 01 | 1 | SHARE-01 | unit | `node --test tests/js/urlstate.test.js` | ❌ W0 (created in task) | ⬜ pending |
+| 13-02-T1 | 02 | 1 | PARAM-04 (GPS filter) | unit | `node --test tests/js/gpsfilter.test.js tests/js/golden.test.js` | ❌ W0 (created in task) | ⬜ pending |
+| 13-02-T2 | 02 | 1 | MTX-01, MTX-02 | unit | `node --test tests/js/matrix.test.js` | ❌ W0 (created in task) | ⬜ pending |
+| 13-03-T1 | 03 | 1 | KPI-06, RANK-02 | unit | `node --test tests/js/quality_index.test.js tests/js/ranking.test.js` | ❌ W0 (created in task) | ⬜ pending |
+| 13-03-T2 | 03 | 1 | RANK-01 | unit | `node --test tests/js/ranking.test.js` | ❌ W0 (created in 13-03-T1) | ⬜ pending |
+| 13-03-T3 | 03 | 1 | RANK-03 | unit | `node --test tests/js/csv.test.js` | ❌ W0 (created in task) | ⬜ pending |
+| 13-04-T1 | 04 | 2 | KPI-06 | static | `node --test "tests/js/*.test.js" && python -m pytest tests/test_site_static.py -q` | ✅ extend info.test | ⬜ pending |
+| 13-04-T2 | 04 | 2 | PARAM-04 | static | `node --test "tests/js/*.test.js" && python -m pytest tests/test_site_static.py -q` | ✅ extend info.test | ⬜ pending |
+| 13-05-T1 | 05 | 3 | MTX-01, MTX-02 | static | `node --test "tests/js/*.test.js" && python -m pytest tests/test_site_static.py -q` | ✅ extend section order | ⬜ pending |
+| 13-05-T2 | 05 | 3 | RANK-01, RANK-02, RANK-03, KPI-06 | static | `node --test "tests/js/*.test.js" && python -m pytest -q` | ✅ extend info.test | ⬜ pending |
+| 13-06-T1 | 06 | 4 | PARAM-04, RANK-01 | static | `python -m pytest tests/test_site_static.py -q && node --test "tests/js/*.test.js"` | ✅ extend map contract | ⬜ pending |
+| 13-06-T2 | 06 | 4 | SHARE-01 | static | `python -m pytest -q && node --test "tests/js/*.test.js"` | ✅ new test_share_wiring | ⬜ pending |
+| 13-07-T1 | 07 | 5 | all | full suite | `python -m pytest -q && node --test "tests/js/*.test.js"` | ✅ | ⬜ pending |
+| 13-07-T2 | 07 | 5 | all (visual) | manual checkpoint | browser checklist (`python -m tools.serve_site`) | manual | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
