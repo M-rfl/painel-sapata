@@ -24,7 +24,7 @@ export const SCALED_RANGES = {
   freq: [0.0, 6553.5],
 };
 
-// Python str.strip() whitespace (differs from JS trim at \x1c-\x1f, \x85, ﻿).
+// Python str.strip() whitespace (differs from JS trim at \x1c-\x1f, \x85, U+FEFF).
 const PY_WS = '\t\n\v\f\r\x1c-\x20\x85\xa0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000';
 const STRIP_RE = new RegExp(`^[${PY_WS}]+|[${PY_WS}]+$`, 'g');
 export function pyStrip(text) { return text.replace(STRIP_RE, ''); }
