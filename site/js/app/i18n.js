@@ -8,6 +8,7 @@ export const T = Object.freeze({
   loadError: 'Não foi possível carregar os dados da corrida.',
   share: 'Copiar link',
   shareOk: 'Link copiado',
+  shareUnavailable: 'Link indisponível para dados enviados',
   shareFail: 'Não foi possível copiar; copie o endereço da barra do navegador.',
   linkIgnored: 'Alguns parâmetros do link foram ignorados',
   close: 'Fechar',

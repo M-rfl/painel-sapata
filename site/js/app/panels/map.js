@@ -214,5 +214,11 @@ export function mountMap(el, link, run, store) {
     console.debug('map ms', (performance.now() - t0).toFixed(1));
   }
 
-  return { render, focus };
+  function destroy() {
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = 0;
+    map.remove();
+  }
+
+  return { render, focus, destroy };
 }

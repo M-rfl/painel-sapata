@@ -27,10 +27,12 @@ async function copyText(text) {
 export function mountShare(el, getUrl) {
   const feedback = h('span', { class: 'share-feedback', 'aria-live': 'polite' });
   let timer = 0;
+  let enabled = true;
   const btn = h('button', {
     type: 'button',
     class: 'share-btn',
     onClick: async () => {
+      if (!enabled) return;
       const ok = await copyText(getUrl());
       feedback.textContent = ok ? T.shareOk : T.shareFail;
       clearTimeout(timer);
@@ -38,6 +40,15 @@ export function mountShare(el, getUrl) {
     },
   }, T.share);
   el.replaceChildren(btn, infoBtn('share', T.share), feedback);
+  return {
+    setEnabled(value) {
+      enabled = !!value;
+      btn.disabled = !enabled;
+      if (enabled) btn.removeAttribute('title');
+      else btn.title = T.shareUnavailable;
+      if (!enabled) feedback.textContent = '';
+    },
+  };
 }
 
 export function showIgnoredNotice(el, keys) {

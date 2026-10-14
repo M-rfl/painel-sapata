@@ -200,3 +200,17 @@ def test_share_wiring():
     assert "clipboard" in sh and "execCommand" in sh
     html = (SITE / "index.html").read_text(encoding="utf-8")
     assert 'id="share"' in html and 'id="notice"' in html
+
+
+def test_dashboard_lifecycle():
+    main = _strip_comments(MAIN.read_text(encoding="utf-8"))
+    for needle in ("mountDashboard(", "createSession(", "createDisposers(", "removeEventListener('hashchange'", "clearTimeout("):
+        assert needle in main, needle
+    assert main.count("disposers.run()") >= 2
+    app = SITE / "js" / "app"
+    charts = _strip_comments((app / "panels" / "charts.js").read_text(encoding="utf-8"))
+    assert ".disconnect()" in charts and ".destroy()" in charts
+    mp = _strip_comments((app / "panels" / "map.js").read_text(encoding="utf-8"))
+    assert ".remove()" in mp
+    session = _strip_comments((app / "session.js").read_text(encoding="utf-8"))
+    assert "document" not in session and "window" not in session

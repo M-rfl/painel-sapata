@@ -181,12 +181,21 @@ export function mountCharts(el, link, run) {
     else for (const c of channelCharts) c.u.setSize({ width: c.container.clientWidth || 800, height: c.height });
   });
 
-  new ResizeObserver(() => {
+  const resizeObserver = new ResizeObserver(() => {
     for (const c of [...axisCharts, ...channelCharts]) {
       const w = c.container.clientWidth;
       if (w > 0) c.u.setSize({ width: w, height: c.height });
     }
-  }).observe(el);
+  });
+  resizeObserver.observe(el);
+
+  function destroy() {
+    resizeObserver.disconnect();
+    for (const c of [...axisCharts, ...channelCharts]) c.u.destroy();
+    axisCharts.length = 0;
+    channelCharts.length = 0;
+    frame = null;
+  }
 
   function render(ctx) {
     const t0 = performance.now();
@@ -218,5 +227,5 @@ export function mountCharts(el, link, run) {
     console.debug('charts ms', (performance.now() - t0).toFixed(1));
   }
 
-  return { render };
+  return { render, destroy };
 }

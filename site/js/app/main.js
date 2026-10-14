@@ -5,7 +5,8 @@ import { buildView } from '../core/view.js';
 import { applyGpsFilter, gpsKey } from '../core/gpsfilter.js';
 import { meansMaxima, axisStatsTable } from '../core/stats.js';
 import { qualitySummary } from '../core/quality.js';
-import { createStore, paramsKey } from './state.js';
+import { createStore, defaultState, paramsKey } from './state.js';
+import { createSession, createDisposers, isShareable } from './session.js';
 import { parseHash, serialize, hashContext } from './urlstate.js';
 import { fmtDateTime } from './format.js';
 import { T } from './i18n.js';
@@ -34,6 +35,130 @@ function setStatus(text) {
   document.getElementById('status').textContent = text;
 }
 
+const MOUNT_IDS = ['controls', 'overview', 'map', 'charts', 'matrix', 'ranking', 'classes', 'stats', 'quality'];
+
+// Header share control persists across mounts; getUrl reads whichever store is current.
+let share = null;
+let currentStore = null;
+
+function writeHash(hsh) {
+  try { history.replaceState(null, '', hsh ? '#' + hsh : location.pathname + location.search); } catch (_) { /* ignore */ }
+}
+
+function mountDashboard(run, { uploaded = false, fresh = false } = {}) {
+  const disposers = createDisposers();
+  try {
+    for (const id of MOUNT_IDS) {
+      const old = document.getElementById(id);
+      old.replaceWith(old.cloneNode(false));
+    }
+    document.getElementById('title').textContent = run.meta.title;
+    document.getElementById('run-date').textContent = fmtDateTime(run.meta.t0);
+
+    const quality = qualitySummary(run, null);
+    const noticeEl = document.getElementById('notice');
+    noticeEl.hidden = true;
+
+    let init;
+    if (uploaded || fresh) {
+      init = { state: defaultState(), ignored: [] };
+      writeHash('');
+    } else {
+      init = parseHash(location.hash, hashContext(run));
+    }
+    const store = createStore(init.state);
+    currentStore = store;
+    if (init.ignored.length) showIgnoredNotice(noticeEl, init.ignored);
+
+    if (!share) {
+      share = mountShare(document.getElementById('share'), () => {
+        const hsh = serialize(currentStore.get());
+        return location.origin + location.pathname + location.search + (hsh ? '#' + hsh : '');
+      });
+    }
+    share.setEnabled(isShareable(run));
+
+    // Live URL: debounced replaceState (no history entries); empty state -> no hash. Never for uploaded runs.
+    if (!uploaded) {
+      let lastWritten = serialize(store.get());
+      if (location.hash.replace(/^#/, '') !== lastWritten) writeHash(lastWritten);
+      let timer = 0;
+      disposers.add(() => clearTimeout(timer));
+      disposers.add(store.subscribe(() => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          const hsh = serialize(store.get());
+          if (hsh === lastWritten) return;
+          lastWritten = hsh;
+          writeHash(hsh);
+        }, 250);
+      }));
+      const onHashChange = () => {
+        const hsh = location.hash.replace(/^#/, '');
+        if (hsh === lastWritten) return;
+        const p = parseHash(location.hash, hashContext(run));
+        lastWritten = serialize(p.state);
+        store.set(() => p.state);
+        if (p.ignored.length) showIgnoredNotice(noticeEl, p.ignored);
+      };
+      window.addEventListener('hashchange', onHashChange);
+      disposers.add(() => window.removeEventListener('hashchange', onHashChange));
+    }
+
+    const link = createLink();
+    const charts = mountCharts(document.getElementById('charts'), link, run);
+    disposers.add(() => charts.destroy());
+    const map = mountMap(document.getElementById('map'), link, run, store);
+    disposers.add(() => map.destroy());
+    const matrix = mountMatrix(document.getElementById('matrix'), store);
+    const ranking = mountRanking(document.getElementById('ranking'), store, { onRowClick: (row) => { link.select(row); map.focus(row); } });
+
+    let memoKey = null;
+    let analysis = null;
+    let gpsMemo = { key: null, run: null };
+
+    function update() {
+      const state = store.get();
+      const gk = gpsKey(state.params.gps);
+      if (gk !== gpsMemo.key) gpsMemo = { key: gk, run: applyGpsFilter(run, state.params.gps) };
+      const r = gpsMemo.run;
+      const key = paramsKey(state.params);
+      if (key !== memoKey) {
+        const t0 = performance.now();
+        analysis = analyze(r, state.params);
+        memoKey = key;
+        // Pitfall 7: if this exceeds ~50 ms, Plan 06 coalesces updates with requestAnimationFrame.
+        console.debug('analyze ms', (performance.now() - t0).toFixed(1));
+      }
+      const view = buildView(r, analysis, state.filters);
+      const stats = {
+        mm: meansMaxima(r, analysis, view.mask),
+        table: axisStatsTable(r, analysis, view.mask, state.display.valueMode),
+      };
+      const ctx = { run: r, baseRun: run, analysis, view, state, stats, quality: { ...quality, naoClassificadas: analysis.naoClassificadas } };
+      for (const [id, render] of PANELS) render(document.getElementById(id), ctx);
+      charts.render(ctx);
+      map.render(ctx);
+      matrix.render(ctx);
+      ranking.render(ctx);
+      renderControls(state);
+    }
+
+    mountControls(document.getElementById('controls'), store, run);
+    disposers.add(store.subscribe(update));
+    // Debug handle for manual inspection in the console.
+    window.__painel = { store, run, link, session };
+    setStatus('');
+    update();
+    return { destroy: () => disposers.run() };
+  } catch (err) {
+    disposers.run();
+    throw err;
+  }
+}
+
+const session = createSession(mountDashboard);
+
 async function start() {
   let run;
   try {
@@ -45,88 +170,7 @@ async function start() {
     setStatus(T.loadError);
     return;
   }
-
-  document.getElementById('title').textContent = run.meta.title;
-  document.getElementById('run-date').textContent = fmtDateTime(run.meta.t0);
-
-  const quality = qualitySummary(run, null);
-  const noticeEl = document.getElementById('notice');
-  const init = parseHash(location.hash, hashContext(run));
-  const store = createStore(init.state);
-  if (init.ignored.length) showIgnoredNotice(noticeEl, init.ignored);
-
-  // Live URL: debounced replaceState (no history entries); empty state -> no hash.
-  function writeHash(hsh) {
-    try { history.replaceState(null, '', hsh ? '#' + hsh : location.pathname + location.search); } catch (_) { /* ignore */ }
-  }
-  let lastWritten = serialize(store.get());
-  if (location.hash.replace(/^#/, '') !== lastWritten) writeHash(lastWritten);
-  let timer = 0;
-  store.subscribe(() => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      const hsh = serialize(store.get());
-      if (hsh === lastWritten) return;
-      lastWritten = hsh;
-      writeHash(hsh);
-    }, 250);
-  });
-  window.addEventListener('hashchange', () => {
-    const hsh = location.hash.replace(/^#/, '');
-    if (hsh === lastWritten) return;
-    const p = parseHash(location.hash, hashContext(run));
-    lastWritten = serialize(p.state);
-    store.set(() => p.state);
-    if (p.ignored.length) showIgnoredNotice(noticeEl, p.ignored);
-  });
-  mountShare(document.getElementById('share'), () => {
-    const hsh = serialize(store.get());
-    return location.origin + location.pathname + location.search + (hsh ? '#' + hsh : '');
-  });
-
-  const link = createLink();
-  const charts = mountCharts(document.getElementById('charts'), link, run);
-  const map = mountMap(document.getElementById('map'), link, run, store);
-  const matrix = mountMatrix(document.getElementById('matrix'), store);
-  const ranking = mountRanking(document.getElementById('ranking'), store, { onRowClick: (row) => { link.select(row); map.focus(row); } });
-
-  let memoKey = null;
-  let analysis = null;
-  let gpsMemo = { key: null, run: null };
-
-  function update() {
-    const state = store.get();
-    const gk = gpsKey(state.params.gps);
-    if (gk !== gpsMemo.key) gpsMemo = { key: gk, run: applyGpsFilter(run, state.params.gps) };
-    const r = gpsMemo.run;
-    const key = paramsKey(state.params);
-    if (key !== memoKey) {
-      const t0 = performance.now();
-      analysis = analyze(r, state.params);
-      memoKey = key;
-      // Pitfall 7: if this exceeds ~50 ms, Plan 06 coalesces updates with requestAnimationFrame.
-      console.debug('analyze ms', (performance.now() - t0).toFixed(1));
-    }
-    const view = buildView(r, analysis, state.filters);
-    const stats = {
-      mm: meansMaxima(r, analysis, view.mask),
-      table: axisStatsTable(r, analysis, view.mask, state.display.valueMode),
-    };
-    const ctx = { run: r, baseRun: run, analysis, view, state, stats, quality: { ...quality, naoClassificadas: analysis.naoClassificadas } };
-    for (const [id, render] of PANELS) render(document.getElementById(id), ctx);
-    charts.render(ctx);
-    map.render(ctx);
-    matrix.render(ctx);
-    ranking.render(ctx);
-    renderControls(state);
-  }
-
-  mountControls(document.getElementById('controls'), store, run);
-  store.subscribe(update);
-  // Debug handle for manual inspection in the console.
-  window.__painel = { store, run, link };
-  setStatus('');
-  update();
+  session.showExample(run);
 }
 
 start();
